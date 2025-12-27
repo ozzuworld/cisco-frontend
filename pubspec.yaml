@@ -19,6 +19,9 @@ dependencies:
   # Secure Storage
   flutter_secure_storage: ^9.0.0
 
+  # URL Launcher for downloads
+  url_launcher: ^6.2.2
+
   # UI Components
   cupertino_icons: ^1.0.6
 

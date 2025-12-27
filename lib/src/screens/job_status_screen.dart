@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/job_status.dart';
 import '../services/http_client.dart';
+import 'artifacts_screen.dart';
 
 class JobStatusScreen extends StatefulWidget {
   final String jobId;
@@ -564,10 +565,9 @@ class _JobStatusScreenState extends State<JobStatusScreen> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () {
-                // TODO: Navigate to artifacts view
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Artifacts view not yet implemented'),
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => ArtifactsScreen(jobId: status.jobId),
                   ),
                 );
               },

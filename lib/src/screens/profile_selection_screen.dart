@@ -383,7 +383,13 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
         // Profile cards
         ..._profiles!.map((profile) => _buildProfileCard(profile)),
 
-        // Overrides section (only shown when profile is selected)
+        // Time selection section (always visible when profile is selected)
+        if (_selectedProfile != null) ...[
+          const SizedBox(height: 16),
+          _buildTimeSelectionCard(),
+        ],
+
+        // Other overrides section (collapsible, only shown when profile is selected)
         if (_selectedProfile != null) ...[
           const SizedBox(height: 16),
           _buildOverridesSection(),
@@ -519,6 +525,132 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
     );
   }
 
+  Widget _buildTimeSelectionCard() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.schedule, color: Colors.blue.shade700),
+                const SizedBox(width: 8),
+                Text(
+                  'Collection Time Range',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade700,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Time selection mode toggle
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(
+                  value: 'relative',
+                  label: Text('Last X minutes'),
+                  icon: Icon(Icons.access_time),
+                ),
+                ButtonSegment(
+                  value: 'absolute',
+                  label: Text('Time range'),
+                  icon: Icon(Icons.date_range),
+                ),
+              ],
+              selected: {_timeMode},
+              onSelectionChanged: (Set<String> newSelection) {
+                setState(() {
+                  _timeMode = newSelection.first;
+                  _timeRangeError = null;
+                  if (_timeMode == 'relative') {
+                    _startTime = null;
+                    _endTime = null;
+                  } else {
+                    _overrideReltimeMinutes = null;
+                  }
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Relative time input (only show in relative mode)
+            if (_timeMode == 'relative')
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Relative Time (minutes)',
+                  hintText: 'Default: ${_selectedProfile!.reltimeMinutes}',
+                  helperText: 'Number of minutes to look back from now',
+                  border: const OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  setState(() {
+                    _overrideReltimeMinutes = int.tryParse(value);
+                  });
+                },
+              ),
+
+            // Time range pickers (only show in absolute mode)
+            if (_timeMode == 'absolute') ...[
+              _buildDateTimePicker(
+                label: 'Start Time',
+                value: _startTime,
+                onSelected: (DateTime? dateTime) {
+                  setState(() {
+                    _startTime = dateTime;
+                    _timeRangeError = null;
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildDateTimePicker(
+                label: 'End Time',
+                value: _endTime,
+                onSelected: (DateTime? dateTime) {
+                  setState(() {
+                    _endTime = dateTime;
+                    _timeRangeError = null;
+                  });
+                },
+              ),
+              if (_timeRangeError != null) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _timeRangeError!,
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildOverridesSection() {
     return Card(
       child: Padding(
@@ -530,7 +662,7 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Override Settings',
+                  'Additional Options',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -550,111 +682,6 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
             if (_showOverrides) ...[
               const Divider(),
               const SizedBox(height: 8),
-
-              // Time selection mode toggle
-              Text(
-                'Time Selection Mode',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(
-                    value: 'relative',
-                    label: Text('Last X minutes'),
-                    icon: Icon(Icons.access_time),
-                  ),
-                  ButtonSegment(
-                    value: 'absolute',
-                    label: Text('Time range'),
-                    icon: Icon(Icons.date_range),
-                  ),
-                ],
-                selected: {_timeMode},
-                onSelectionChanged: (Set<String> newSelection) {
-                  setState(() {
-                    _timeMode = newSelection.first;
-                    _timeRangeError = null;
-                    if (_timeMode == 'relative') {
-                      _startTime = null;
-                      _endTime = null;
-                    } else {
-                      _overrideReltimeMinutes = null;
-                    }
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Relative time input (only show in relative mode)
-              if (_timeMode == 'relative')
-                TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Relative Time (minutes)',
-                    hintText: 'Default: ${_selectedProfile!.reltimeMinutes}',
-                    helperText: 'Number of minutes to look back from now',
-                  ),
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    setState(() {
-                      _overrideReltimeMinutes = int.tryParse(value);
-                    });
-                  },
-                ),
-
-              // Time range pickers (only show in absolute mode)
-              if (_timeMode == 'absolute') ...[
-                _buildDateTimePicker(
-                  label: 'Start Time',
-                  value: _startTime,
-                  onSelected: (DateTime? dateTime) {
-                    setState(() {
-                      _startTime = dateTime;
-                      _timeRangeError = null;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildDateTimePicker(
-                  label: 'End Time',
-                  value: _endTime,
-                  onSelected: (DateTime? dateTime) {
-                    setState(() {
-                      _endTime = dateTime;
-                      _timeRangeError = null;
-                    });
-                  },
-                ),
-                if (_timeRangeError != null) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _timeRangeError!,
-                            style: TextStyle(
-                              color: Colors.red.shade700,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-              const SizedBox(height: 16),
 
               // Compress toggle
               SwitchListTile(

@@ -263,6 +263,12 @@ class _JobStatusScreenState extends State<JobStatusScreen> {
           _buildTimestampsCard(status),
           const SizedBox(height: 16),
 
+          // Time Range Card (if time range is specified)
+          if (status.startTime != null || status.endTime != null || status.reltimeMinutes != null) ...[
+            _buildTimeRangeCard(status),
+            const SizedBox(height: 16),
+          ],
+
           // Per-Node Status List
           _buildNodeStatusList(status),
           const SizedBox(height: 16),
@@ -434,6 +440,98 @@ class _JobStatusScreenState extends State<JobStatusScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildTimeRangeCard(JobStatus status) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Log Collection Time Range',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            if (status.reltimeMinutes != null) ...[
+              Row(
+                children: [
+                  Icon(Icons.access_time, size: 20, color: Colors.grey.shade600),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Mode',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        Text(
+                          'Last ${status.reltimeMinutes} minutes',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ] else if (status.startTime != null && status.endTime != null) ...[
+              Row(
+                children: [
+                  Icon(Icons.date_range, size: 20, color: Colors.grey.shade600),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Mode',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const Text(
+                          'Absolute time range',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _buildTimestampRow(
+                'Start Time',
+                _formatIso8601DateTime(status.startTime!),
+                Icons.play_arrow,
+              ),
+              const SizedBox(height: 8),
+              _buildTimestampRow(
+                'End Time',
+                _formatIso8601DateTime(status.endTime!),
+                Icons.stop,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatIso8601DateTime(String isoString) {
+    try {
+      final dateTime = DateTime.parse(isoString);
+      final date = '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
+      final time = '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}';
+      return '$date $time';
+    } catch (e) {
+      return isoString; // Return original if parsing fails
+    }
   }
 
   Widget _buildNodeStatusList(JobStatus status) {

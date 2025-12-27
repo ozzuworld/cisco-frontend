@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import '../services/http_client.dart';
 import '../models/cucm_node.dart';
 import '../models/api_error.dart';
+import '../models/collection_flow_state.dart';
 import 'settings_screen.dart';
 import 'profile_selection_screen.dart';
 
@@ -75,6 +76,19 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
           }
         }
       });
+
+      // Update flow state with cluster info
+      if (mounted) {
+        final flowState = context.read<CollectionFlowState>();
+        flowState.setClusterInfo(
+          publisherHost: request.publisherHost,
+          port: request.port,
+          username: request.username,
+          password: request.password,
+        );
+        // Update selected nodes (Publisher nodes auto-selected)
+        flowState.setSelectedNodes(_selectedNodeIps.toList());
+      }
 
       if (result.isEmpty && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -234,6 +248,9 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
         _selectedNodeIps.add(nodeIp);
       }
     });
+
+    // Update flow state
+    context.read<CollectionFlowState>().setSelectedNodes(_selectedNodeIps.toList());
   }
 
   void _selectAllNodes() {
@@ -242,12 +259,18 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
       _selectedNodeIps.clear();
       _selectedNodeIps.addAll(_discoveryResult!.nodes.map((n) => n.ip));
     });
+
+    // Update flow state
+    context.read<CollectionFlowState>().setSelectedNodes(_selectedNodeIps.toList());
   }
 
   void _clearSelection() {
     setState(() {
       _selectedNodeIps.clear();
     });
+
+    // Update flow state
+    context.read<CollectionFlowState>().setSelectedNodes(_selectedNodeIps.toList());
   }
 
   void _proceedToNextScreen() {

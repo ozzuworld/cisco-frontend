@@ -23,6 +23,7 @@ class _JobStatusScreenState extends State<JobStatusScreen> {
   String? _errorMessage;
   Timer? _pollingTimer;
   bool _isCancelling = false;
+  bool _isRetrying = false;
 
   @override
   void initState() {
@@ -127,6 +128,136 @@ class _JobStatusScreenState extends State<JobStatusScreen> {
         duration: Duration(seconds: 2),
       ),
     );
+  }
+
+  void _copyError(String error) {
+    Clipboard.setData(ClipboardData(text: error));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Error copied to clipboard'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _retryFailedNodes() async {
+    if (_jobStatus == null) return;
+
+    final failedNodes = _jobStatus!.nodes
+        .where((node) => node.isFailed)
+        .map((node) => node.node)
+        .toList();
+
+    if (failedNodes.isEmpty) return;
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Retry Failed Nodes'),
+        content: Text(
+          'This will create a new job to retry collection on ${failedNodes.length} failed node${failedNodes.length > 1 ? 's' : ''}.\n\nContinue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() {
+      _isRetrying = true;
+    });
+
+    try {
+      // TODO: Implementation will depend on having access to original job parameters
+      // For now, show a message that this feature requires backend support
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Retry feature requires storing original job parameters'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRetrying = false;
+        });
+      }
+    }
+  }
+
+  Map<String, String> _categorizeError(String error) {
+    final errorLower = error.toLowerCase();
+
+    if (errorLower.contains('authentication') ||
+        errorLower.contains('login') ||
+        errorLower.contains('credentials') ||
+        errorLower.contains('password')) {
+      return {
+        'category': 'Authentication',
+        'suggestion': 'Check username and password. Verify account is not locked.'
+      };
+    }
+
+    if (errorLower.contains('connection') ||
+        errorLower.contains('timeout') ||
+        errorLower.contains('refused') ||
+        errorLower.contains('unreachable')) {
+      return {
+        'category': 'Connection',
+        'suggestion': 'Check network connectivity and firewall rules. Verify node IP address.'
+      };
+    }
+
+    if (errorLower.contains('sftp') ||
+        errorLower.contains('ftp') ||
+        errorLower.contains('transfer')) {
+      return {
+        'category': 'File Transfer',
+        'suggestion': 'Check SFTP credentials and port (usually 22). Verify SFTP service is running.'
+      };
+    }
+
+    if (errorLower.contains('permission') ||
+        errorLower.contains('denied') ||
+        errorLower.contains('unauthorized')) {
+      return {
+        'category': 'Permissions',
+        'suggestion': 'Check user has sufficient privileges on the target system.'
+      };
+    }
+
+    if (errorLower.contains('disk') ||
+        errorLower.contains('space') ||
+        errorLower.contains('quota')) {
+      return {
+        'category': 'Disk Space',
+        'suggestion': 'Check available disk space on source or destination system.'
+      };
+    }
+
+    if (errorLower.contains('command') ||
+        errorLower.contains('execute') ||
+        errorLower.contains('cli')) {
+      return {
+        'category': 'Command Execution',
+        'suggestion': 'Verify command syntax and user has required privileges.'
+      };
+    }
+
+    return {
+      'category': 'General Error',
+      'suggestion': 'Check logs for more details. Contact support if issue persists.'
+    };
   }
 
   Color _getStatusColor(String status) {
@@ -686,27 +817,77 @@ class _JobStatusScreenState extends State<JobStatusScreen> {
               ),
           ],
 
-          // Error message
+          // Error message with category and suggestions
           if (node.error != null) ...[
             const SizedBox(height: 8),
             Container(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(12.0),
               decoration: BoxDecoration(
-                color: Colors.red.shade100,
-                borderRadius: BorderRadius.circular(4.0),
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(6.0),
+                border: Border.all(color: Colors.red.shade200),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.error_outline, size: 16, color: Colors.red),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      node.error!,
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontSize: 12,
+                  // Error category and copy button
+                  Row(
+                    children: [
+                      const Icon(Icons.error_outline, size: 18, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _categorizeError(node.error!)['category']!,
+                          style: TextStyle(
+                            color: Colors.red.shade900,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
+                      IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        iconSize: 18,
+                        icon: const Icon(Icons.copy, size: 18),
+                        onPressed: () => _copyError(node.error!),
+                        tooltip: 'Copy error',
+                        color: Colors.red.shade700,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Error message
+                  Text(
+                    node.error!,
+                    style: TextStyle(
+                      color: Colors.red.shade800,
+                      fontSize: 12,
                     ),
+                  ),
+
+                  const SizedBox(height: 10),
+                  const Divider(height: 1),
+                  const SizedBox(height: 10),
+
+                  // Friendly suggestion
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.lightbulb_outline, size: 16, color: Colors.orange.shade700),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _categorizeError(node.error!)['suggestion']!,
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -740,8 +921,33 @@ class _JobStatusScreenState extends State<JobStatusScreen> {
               ),
             ),
           ),
-        if (status.hasArtifacts) ...[
+        // Retry Failed Nodes button (show when job is complete and has failed nodes)
+        if (status.isTerminal && status.nodes.any((node) => node.isFailed)) ...[
           if (status.isCancellable) const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _isRetrying ? null : _retryFailedNodes,
+              icon: _isRetrying
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.refresh),
+              label: Text(_isRetrying
+                  ? 'Retrying...'
+                  : 'Retry Failed Nodes (${status.nodes.where((n) => n.isFailed).length})'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+            ),
+          ),
+        ],
+        if (status.hasArtifacts) ...[
+          if (status.isCancellable || status.nodes.any((node) => node.isFailed)) const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(

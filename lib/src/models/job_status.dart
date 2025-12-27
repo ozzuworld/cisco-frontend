@@ -58,16 +58,26 @@ class JobStatus {
     final nodesList = json['nodes'] as List<dynamic>? ?? [];
     final artifactsList = json['artifacts'] as List<dynamic>? ?? [];
 
+    // Parse nodes list
+    final parsedNodes = nodesList
+        .map((node) => NodeStatus.fromJson(node as Map<String, dynamic>))
+        .toList();
+
+    // Get total_nodes from backend, fallback to nodes list length
+    final totalNodes = json['total_nodes'] as int? ?? parsedNodes.length;
+
+    // Get completed_nodes from backend, fallback to counting completed nodes in list
+    final completedNodes = json['completed_nodes'] as int? ??
+        parsedNodes.where((node) => node.isCompleted).length;
+
     return JobStatus(
       jobId: json['job_id'] as String,
       status: json['status'] as String,
       startedAt: json['started_at'] as String?,
       completedAt: json['completed_at'] as String?,
-      totalNodes: json['total_nodes'] as int? ?? 0,
-      completedNodes: json['completed_nodes'] as int? ?? 0,
-      nodes: nodesList
-          .map((node) => NodeStatus.fromJson(node as Map<String, dynamic>))
-          .toList(),
+      totalNodes: totalNodes,
+      completedNodes: completedNodes,
+      nodes: parsedNodes,
       artifacts: artifactsList.map((a) => a.toString()).toList(),
     );
   }

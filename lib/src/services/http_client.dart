@@ -154,7 +154,9 @@ class HttpClientService {
     // Log response
     _logResponse('GET /profiles', response);
 
-    final profilesList = response.data as List<dynamic>? ?? [];
+    // Backend returns {profiles: [...]} not a direct list
+    final responseMap = response.data as Map<String, dynamic>;
+    final profilesList = responseMap['profiles'] as List<dynamic>? ?? [];
     return profilesList
         .map((profile) => Profile.fromJson(profile as Map<String, dynamic>))
         .toList();

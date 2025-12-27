@@ -686,6 +686,7 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
           ],
         ),
       ),
+      ),
     );
   }
 

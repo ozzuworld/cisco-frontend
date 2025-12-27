@@ -5,6 +5,7 @@ import '../services/http_client.dart';
 import '../models/cucm_node.dart';
 import '../models/api_error.dart';
 import 'settings_screen.dart';
+import 'profile_selection_screen.dart';
 
 class DiscoverClusterScreen extends StatefulWidget {
   const DiscoverClusterScreen({super.key});
@@ -252,34 +253,13 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
   void _proceedToNextScreen() {
     if (_selectedNodeIps.isEmpty) return;
 
-    final selectedNodes = _discoveryResult!.nodes
-        .where((node) => _selectedNodeIps.contains(node.ip))
-        .toList();
-
-    // TODO: Navigate to profile selection screen
-    // For now, show a dialog with selected nodes
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Selected Nodes'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('You selected ${selectedNodes.length} node(s):'),
-            const SizedBox(height: 12),
-            ...selectedNodes.map((node) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: Text('• ${node.displayName} (${node.ip})'),
-                )),
-          ],
+    // Navigate to profile selection screen with selected node IPs
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfileSelectionScreen(
+          selectedNodeIps: _selectedNodeIps.toList(),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
       ),
     );
   }

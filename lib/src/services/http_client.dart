@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../config/config_service.dart';
 import '../models/api_error.dart';
 import '../models/cucm_node.dart';
+import '../models/profile.dart';
 
 /// HTTP client service with global interceptor for auth and error handling
 class HttpClientService {
@@ -145,6 +146,34 @@ class HttpClientService {
     return DiscoveryResponse.fromJson(response.data as Map<String, dynamic>);
   }
 
+  /// Get available collection profiles
+  /// Throws DioException on error with normalized ApiError
+  Future<List<Profile>> getProfiles() async {
+    final response = await _dio.get('/profiles');
+
+    // Log response
+    _logResponse('GET /profiles', response);
+
+    final profilesList = response.data as List<dynamic>? ?? [];
+    return profilesList
+        .map((profile) => Profile.fromJson(profile as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Create a new collection job
+  /// Throws DioException on error with normalized ApiError
+  Future<CreateJobResponse> createJob(CreateJobRequest request) async {
+    final response = await _dio.post(
+      '/jobs',
+      data: request.toJson(),
+    );
+
+    // Log response
+    _logResponse('POST /jobs', response);
+
+    return CreateJobResponse.fromJson(response.data as Map<String, dynamic>);
+  }
+
   void _logRequest(RequestOptions options) {
     final url = '${options.baseUrl}${options.path}';
     final hasAuth = options.headers.containsKey('Authorization');
@@ -216,6 +245,40 @@ class HttpClientService {
     print('X-Request-ID: $requestId');
     // ignore: avoid_print
     print('Response Body (first 1KB - REAL JSON):');
+    // ignore: avoid_print
+    print(bodyPreview);
+    // ignore: avoid_print
+    print('========================');
+  }
+
+  void _logResponse(String endpoint, Response response) {
+    final statusCode = response.statusCode;
+    final requestId = response.headers.value('X-Request-ID') ?? 'none';
+
+    // Use jsonEncode to get proper JSON string representation
+    String bodyString;
+    try {
+      if (response.data is Map || response.data is List) {
+        bodyString = jsonEncode(response.data);
+      } else {
+        bodyString = response.data.toString();
+      }
+    } catch (e) {
+      bodyString = 'Error encoding response: $e';
+    }
+
+    final bodyPreview = bodyString.length > 1024
+        ? '${bodyString.substring(0, 1024)}... (truncated)'
+        : bodyString;
+
+    // ignore: avoid_print
+    print('=== $endpoint Response ===');
+    // ignore: avoid_print
+    print('Status Code: $statusCode');
+    // ignore: avoid_print
+    print('X-Request-ID: $requestId');
+    // ignore: avoid_print
+    print('Response Body (first 1KB):');
     // ignore: avoid_print
     print(bodyPreview);
     // ignore: avoid_print

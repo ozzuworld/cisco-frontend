@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/config_service.dart';
 import 'settings_screen.dart';
+import 'discover_cluster_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -101,11 +102,51 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                     ),
+                  if (config.hasApiKey)
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const DiscoverClusterScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.search),
+                      label: const Text('Discover Cluster'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                      ),
+                    ),
                 ],
               );
             },
           ),
         ),
+      ),
+      floatingActionButton: Consumer<ConfigService>(
+        builder: (context, configService, child) {
+          if (!configService.config.hasApiKey) {
+            return const SizedBox.shrink();
+          }
+          return FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const DiscoverClusterScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.search),
+            label: const Text('Discover'),
+            tooltip: 'Discover CUCM Cluster',
+          );
+        },
       ),
     );
   }

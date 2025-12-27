@@ -1,0 +1,502 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:dio/dio.dart';
+import '../services/http_client.dart';
+import '../models/cucm_node.dart';
+import '../models/api_error.dart';
+
+class DiscoverClusterScreen extends StatefulWidget {
+  const DiscoverClusterScreen({super.key});
+
+  @override
+  State<DiscoverClusterScreen> createState() => _DiscoverClusterScreenState();
+}
+
+class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _publisherHostController = TextEditingController();
+  final _portController = TextEditingController(text: '22');
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  bool _obscurePassword = true;
+  bool _isDiscovering = false;
+  DiscoveryResponse? _discoveryResult;
+  ApiError? _discoveryError;
+
+  @override
+  void dispose() {
+    _publisherHostController.dispose();
+    _portController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _discoverCluster() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isDiscovering = true;
+      _discoveryResult = null;
+      _discoveryError = null;
+    });
+
+    final httpClient = context.read<HttpClientService>();
+
+    final request = DiscoveryRequest(
+      publisherHost: _publisherHostController.text.trim(),
+      port: int.parse(_portController.text.trim()),
+      username: _usernameController.text.trim(),
+      password: _passwordController.text,
+      connectTimeoutSec: 30,
+      commandTimeoutSec: 120,
+    );
+
+    try {
+      final result = await httpClient.discoverNodes(request);
+
+      setState(() {
+        _discoveryResult = result;
+        _isDiscovering = false;
+      });
+
+      if (result.isEmpty && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No nodes discovered. Check credentials and try again.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } on DioException catch (e) {
+      final apiError = e.error as ApiError;
+
+      setState(() {
+        _discoveryError = apiError;
+        _isDiscovering = false;
+      });
+
+      if (mounted) {
+        _showErrorDialog(apiError);
+      }
+    } catch (e) {
+      setState(() {
+        _discoveryError = ApiError(
+          error: 'Unknown Error',
+          message: e.toString(),
+        );
+        _isDiscovering = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unexpected error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showErrorDialog(ApiError error) {
+    String title;
+    String message;
+
+    switch (error.statusCode) {
+      case 401:
+        title = 'Authentication Failed';
+        message = 'Invalid API key or CUCM credentials. Please check your configuration.';
+        break;
+      case 502:
+      case 504:
+        title = 'Network Error';
+        message = 'Connection timeout or gateway error. Please check your network and try again.';
+        break;
+      default:
+        title = 'Discovery Failed';
+        message = error.message;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.error, color: Colors.red),
+            const SizedBox(width: 12),
+            Text(title),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(message),
+            const SizedBox(height: 16),
+            if (error.requestId != null) ...[
+              const Divider(),
+              const SizedBox(height: 8),
+              Text(
+                'Request ID: ${error.requestId}',
+                style: const TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+            if (error.statusCode != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Status Code: ${error.statusCode}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Discover Cluster'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Discovery Form
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Publisher Credentials',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _publisherHostController,
+                        decoration: const InputDecoration(
+                          labelText: 'Publisher Host',
+                          hintText: 'IP address or FQDN',
+                          prefixIcon: Icon(Icons.dns),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Publisher host is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _portController,
+                        decoration: const InputDecoration(
+                          labelText: 'Port',
+                          hintText: '22',
+                          prefixIcon: Icon(Icons.settings_ethernet),
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Port is required';
+                          }
+                          final port = int.tryParse(value.trim());
+                          if (port == null || port < 1 || port > 65535) {
+                            return 'Port must be between 1 and 65535';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _usernameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Username',
+                          hintText: 'administrator',
+                          prefixIcon: Icon(Icons.person),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Username is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          hintText: 'Enter password',
+                          prefixIcon: const Icon(Icons.lock),
+                          border: const OutlineInputBorder(),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
+                        ),
+                        obscureText: _obscurePassword,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Password is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: _isDiscovering ? null : _discoverCluster,
+                        icon: _isDiscovering
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ),
+                              )
+                            : const Icon(Icons.search),
+                        label: Text(
+                            _isDiscovering ? 'Discovering...' : 'Discover'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.all(16.0),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Discovery Results
+            if (_discoveryResult != null) ...[
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.check_circle, color: Colors.green),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Discovered ${_discoveryResult!.nodes.length} Node(s)',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      if (_discoveryResult!.isEmpty) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12.0),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade50,
+                            border: Border.all(color: Colors.orange.shade300),
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(Icons.warning, color: Colors.orange),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'No nodes discovered',
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                              if (_discoveryResult!.rawOutput != null) ...[
+                                const SizedBox(height: 8),
+                                const Text('Raw output:'),
+                                const SizedBox(height: 4),
+                                Container(
+                                  padding: const EdgeInsets.all(8.0),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black87,
+                                    borderRadius: BorderRadius.circular(4.0),
+                                  ),
+                                  child: Text(
+                                    _discoveryResult!.rawOutput!,
+                                    style: const TextStyle(
+                                      fontFamily: 'monospace',
+                                      fontSize: 12,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                if (_discoveryResult!.rawOutputTruncated)
+                                  const Padding(
+                                    padding: EdgeInsets.only(top: 4.0),
+                                    child: Text(
+                                      '(Output truncated)',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ] else
+                        ..._discoveryResult!.nodes.map((node) => _buildNodeCard(node)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNodeCard(CucmNode node) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12.0),
+      elevation: 1,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    color: node.role?.toLowerCase() == 'publisher'
+                        ? Colors.blue.shade50
+                        : Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: Icon(
+                    Icons.computer,
+                    color: node.role?.toLowerCase() == 'publisher'
+                        ? Colors.blue.shade700
+                        : Colors.grey.shade700,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        node.displayName,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      if (node.fqdn != null)
+                        Text(
+                          node.fqdn!,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                    ],
+                  ),
+                ),
+                if (node.role != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12.0,
+                      vertical: 6.0,
+                    ),
+                    decoration: BoxDecoration(
+                      color: node.role?.toLowerCase() == 'publisher'
+                          ? Colors.blue
+                          : Colors.grey,
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: Text(
+                      node.role!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Divider(),
+            const SizedBox(height: 8),
+            _buildInfoRow('IP Address', node.ip, Icons.location_on),
+            if (node.host != null)
+              _buildInfoRow('Hostname', node.host!, Icons.dns),
+            if (node.product != null)
+              _buildInfoRow('Product', node.product!, Icons.apps),
+            if (node.dbrole != null)
+              _buildInfoRow('DB Role', node.dbrole!, Icons.storage),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey.shade600),
+          const SizedBox(width: 8),
+          Text(
+            '$label: ',
+            style: const TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

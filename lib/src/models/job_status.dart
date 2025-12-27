@@ -49,6 +49,9 @@ class JobStatus {
   final int completedNodes;
   final List<NodeStatus> nodes;
   final List<String> artifacts;
+  final int? reltimeMinutes;
+  final String? startTime;
+  final String? endTime;
 
   JobStatus({
     required this.jobId,
@@ -59,6 +62,9 @@ class JobStatus {
     required this.completedNodes,
     required this.nodes,
     required this.artifacts,
+    this.reltimeMinutes,
+    this.startTime,
+    this.endTime,
   });
 
   factory JobStatus.fromJson(Map<String, dynamic> json) {
@@ -86,6 +92,9 @@ class JobStatus {
       completedNodes: completedNodes,
       nodes: parsedNodes,
       artifacts: artifactsList.map((a) => a.toString()).toList(),
+      reltimeMinutes: json['reltime_minutes'] as int?,
+      startTime: json['start_time'] as String?,
+      endTime: json['end_time'] as String?,
     );
   }
 
@@ -99,6 +108,9 @@ class JobStatus {
       'completed_nodes': completedNodes,
       'nodes': nodes.map((n) => n.toJson()).toList(),
       'artifacts': artifacts,
+      if (reltimeMinutes != null) 'reltime_minutes': reltimeMinutes,
+      if (startTime != null) 'start_time': startTime,
+      if (endTime != null) 'end_time': endTime,
     };
   }
 

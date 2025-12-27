@@ -321,6 +321,9 @@ class _JobStatusScreenState extends State<JobStatusScreen> {
   }
 
   Widget _buildProgressCard(JobStatus status) {
+    final hasNodes = status.totalNodes > 0;
+    final progressPercent = (status.progress * 100).toStringAsFixed(0);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -337,7 +340,9 @@ class _JobStatusScreenState extends State<JobStatusScreen> {
                       ),
                 ),
                 Text(
-                  '${status.completedNodes} / ${status.totalNodes} nodes',
+                  hasNodes
+                      ? '${status.completedNodes} / ${status.totalNodes} nodes'
+                      : 'No nodes',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
@@ -345,16 +350,25 @@ class _JobStatusScreenState extends State<JobStatusScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            LinearProgressIndicator(
-              value: status.progress,
-              minHeight: 8,
-              backgroundColor: Colors.grey.shade200,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${(status.progress * 100).toStringAsFixed(0)}% complete',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            if (hasNodes) ...[
+              LinearProgressIndicator(
+                value: status.progress,
+                minHeight: 8,
+                backgroundColor: Colors.grey.shade200,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '$progressPercent% complete',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ] else
+              Text(
+                'This job has no nodes to process',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey.shade600,
+                      fontStyle: FontStyle.italic,
+                    ),
+              ),
           ],
         ),
       ),

@@ -5,6 +5,7 @@ import '../models/api_error.dart';
 import '../models/cucm_node.dart';
 import '../models/profile.dart';
 import '../models/job_status.dart';
+import '../models/artifact.dart';
 
 /// HTTP client service with global interceptor for auth and error handling
 class HttpClientService {
@@ -195,6 +196,37 @@ class HttpClientService {
 
     // Log response
     _logResponse('POST /jobs/$jobId/cancel', response);
+  }
+
+  /// Get detailed artifacts list for a job
+  /// Throws DioException on error with normalized ApiError
+  Future<List<Artifact>> getJobArtifacts(String jobId) async {
+    final response = await _dio.get('/jobs/$jobId/artifacts');
+
+    // Log response
+    _logResponse('GET /jobs/$jobId/artifacts', response);
+
+    // Backend returns {artifacts: [...]}
+    final responseMap = response.data as Map<String, dynamic>;
+    final artifactsList = responseMap['artifacts'] as List<dynamic>? ?? [];
+    return artifactsList
+        .map((artifact) => Artifact.fromJson(artifact as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Get download URL for a specific artifact
+  String getArtifactDownloadUrl(String jobId, String artifactId) {
+    return '${_configService.config.baseUrl}/jobs/$jobId/artifacts/$artifactId/download';
+  }
+
+  /// Get download URL for all artifacts from a specific node
+  String getNodeArtifactsDownloadUrl(String jobId, String nodeIp) {
+    return '${_configService.config.baseUrl}/jobs/$jobId/nodes/$nodeIp/download';
+  }
+
+  /// Get download URL for all job artifacts
+  String getJobDownloadUrl(String jobId) {
+    return '${_configService.config.baseUrl}/jobs/$jobId/download';
   }
 
   void _logRequest(RequestOptions options) {

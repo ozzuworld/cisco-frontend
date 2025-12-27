@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../config/config_service.dart';
 import '../models/api_error.dart';
+import '../models/cucm_node.dart';
 
 /// HTTP client service with global interceptor for auth and error handling
 class HttpClientService {
@@ -124,5 +125,16 @@ class HttpClientService {
   /// Update base URL (used when config changes)
   void updateBaseUrl(String baseUrl) {
     _dio.options.baseUrl = baseUrl;
+  }
+
+  /// Discover CUCM cluster nodes
+  /// Throws DioException on error with normalized ApiError
+  Future<DiscoveryResponse> discoverNodes(DiscoveryRequest request) async {
+    final response = await _dio.post(
+      '/discover-nodes',
+      data: request.toJson(),
+    );
+
+    return DiscoveryResponse.fromJson(response.data as Map<String, dynamic>);
   }
 }

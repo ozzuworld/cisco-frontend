@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import '../services/http_client.dart';
 import '../models/cucm_node.dart';
 import '../models/api_error.dart';
+import 'settings_screen.dart';
 
 class DiscoverClusterScreen extends StatefulWidget {
   const DiscoverClusterScreen({super.key});
@@ -105,16 +106,17 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
   void _showErrorDialog(ApiError error) {
     String title;
     String message;
+    final bool is401 = error.statusCode == 401;
 
     switch (error.statusCode) {
       case 401:
         title = 'Authentication Failed';
-        message = 'Invalid API key or CUCM credentials. Please check your configuration.';
+        message = 'Invalid API key or CUCM credentials.';
         break;
       case 502:
       case 504:
         title = 'Network Error';
-        message = 'Connection timeout or gateway error. Please check your network and try again.';
+        message = 'Connection timeout or gateway error.';
         break;
       default:
         title = 'Discovery Failed';
@@ -128,7 +130,7 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
           children: [
             const Icon(Icons.error, color: Colors.red),
             const SizedBox(width: 12),
-            Text(title),
+            Expanded(child: Text(title)),
           ],
         ),
         content: Column(
@@ -136,29 +138,56 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(message),
-            const SizedBox(height: 16),
-            if (error.requestId != null) ...[
-              const Divider(),
-              const SizedBox(height: 8),
-              Text(
-                'Request ID: ${error.requestId}',
-                style: const TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
+            const SizedBox(height: 12),
+            // Show backend error details
+            Container(
+              padding: const EdgeInsets.all(12.0),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8.0),
+                border: Border.all(color: Colors.grey.shade300),
               ),
-            ],
-            if (error.statusCode != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                'Status Code: ${error.statusCode}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (error.error.isNotEmpty) ...[
+                    Text(
+                      'Error: ${error.error}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                  ],
+                  Text(
+                    'Message: ${error.message}',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  if (error.requestId != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Request ID: ${error.requestId}',
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                  if (error.statusCode != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Status: ${error.statusCode}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ],
               ),
-            ],
+            ),
           ],
         ),
         actions: [
@@ -166,6 +195,20 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
             onPressed: () => Navigator.pop(context),
             child: const Text('OK'),
           ),
+          if (is401)
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.settings),
+              label: const Text('Reconfigure API Key'),
+            ),
         ],
       ),
     );

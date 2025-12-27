@@ -111,7 +111,7 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
     return true;
   }
 
-  Future<void> _startCollection() async {
+  Future<void> _showConfirmationDialog() async {
     if (_selectedProfile == null) return;
 
     // Validate time range if in absolute mode
@@ -120,6 +120,20 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
         return; // Error message already set by _validateTimeRange
       }
     }
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => _buildConfirmationDialog(),
+    );
+
+    if (confirmed == true) {
+      await _startCollection();
+    }
+  }
+
+  Future<void> _startCollection() async {
+    if (_selectedProfile == null) return;
 
     setState(() {
       _isLoading = true;
@@ -269,6 +283,150 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
     return '$date $time';
   }
 
+  String _getTimeRangeSummary() {
+    if (_timeMode == 'relative') {
+      final minutes = _overrideReltimeMinutes ?? _selectedProfile!.reltimeMinutes;
+      return 'Last $minutes minutes';
+    } else {
+      // Absolute mode
+      if (_startTime != null && _endTime != null) {
+        return '${_formatDateTime(_startTime!)} to ${_formatDateTime(_endTime!)}';
+      }
+      return 'Time range not set';
+    }
+  }
+
+  Widget _buildConfirmationDialog() {
+    final compress = _overrideCompress ?? _selectedProfile!.compress;
+    final recurs = _overrideRecurs ?? _selectedProfile!.recurs;
+    final match = _overrideMatch ?? _selectedProfile!.match;
+
+    return AlertDialog(
+      title: Row(
+        children: [
+          Icon(Icons.info_outline, color: Colors.blue.shade700),
+          const SizedBox(width: 12),
+          const Text('Confirm Collection'),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Please review the collection settings:',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey.shade700,
+                  ),
+            ),
+            const SizedBox(height: 20),
+
+            // Nodes
+            _buildSummaryItem(
+              icon: Icons.devices,
+              label: 'Nodes',
+              value: '${widget.selectedNodeIps.length} node${widget.selectedNodeIps.length > 1 ? 's' : ''} selected',
+            ),
+            const SizedBox(height: 12),
+
+            // Profile
+            _buildSummaryItem(
+              icon: Icons.description,
+              label: 'Profile',
+              value: _selectedProfile!.name,
+            ),
+            const SizedBox(height: 12),
+
+            // Time Range
+            _buildSummaryItem(
+              icon: _timeMode == 'relative' ? Icons.access_time : Icons.date_range,
+              label: 'Time Range',
+              value: _getTimeRangeSummary(),
+            ),
+            const SizedBox(height: 12),
+
+            // Compress
+            _buildSummaryItem(
+              icon: Icons.compress,
+              label: 'Compress',
+              value: compress ? 'Enabled' : 'Disabled',
+            ),
+            const SizedBox(height: 12),
+
+            // Recurs
+            _buildSummaryItem(
+              icon: Icons.repeat,
+              label: 'Recurs',
+              value: recurs ? 'Enabled' : 'Disabled',
+            ),
+
+            // Match (only if set)
+            if (match.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _buildSummaryItem(
+                icon: Icons.filter_alt,
+                label: 'Match Pattern',
+                value: match,
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton.icon(
+          onPressed: () => Navigator.of(context).pop(true),
+          icon: const Icon(Icons.play_arrow),
+          label: const Text('Start Collection'),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryItem({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: Colors.grey.shade600),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -295,7 +453,7 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
               ),
               child: SafeArea(
                 child: ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _startCollection,
+                  onPressed: _isLoading ? null : _showConfirmationDialog,
                   icon: const Icon(Icons.play_arrow),
                   label: Text(
                     'Start Collection (${widget.selectedNodeIps.length} node${widget.selectedNodeIps.length > 1 ? 's' : ''})',

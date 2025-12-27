@@ -32,6 +32,9 @@ class HttpClientService {
           options.headers['Content-Type'] = 'application/json';
           options.headers['Accept'] = 'application/json';
 
+          // Log request details (for debugging)
+          _logRequest(options);
+
           return handler.next(options);
         },
         onError: (error, handler) {
@@ -141,12 +144,33 @@ class HttpClientService {
     return DiscoveryResponse.fromJson(response.data as Map<String, dynamic>);
   }
 
+  void _logRequest(RequestOptions options) {
+    final url = '${options.baseUrl}${options.path}';
+    final hasAuth = options.headers.containsKey('Authorization');
+    final authHeader = hasAuth
+        ? 'Bearer ***${options.headers['Authorization'].toString().substring(options.headers['Authorization'].toString().length - 8)}'
+        : 'NONE';
+
+    // ignore: avoid_print
+    print('=== Discovery Request ===');
+    // ignore: avoid_print
+    print('URL: $url');
+    // ignore: avoid_print
+    print('Method: ${options.method}');
+    // ignore: avoid_print
+    print('Authorization: $authHeader');
+    // ignore: avoid_print
+    print('Has API Key in Config: ${_configService.config.hasApiKey}');
+    // ignore: avoid_print
+    print('========================');
+  }
+
   void _logDiscoveryResponse(Response response) {
     final statusCode = response.statusCode;
     final requestId = response.headers.value('X-Request-ID') ?? 'none';
     final bodyString = response.data.toString();
-    final bodyPreview = bodyString.length > 2048
-        ? '${bodyString.substring(0, 2048)}... (truncated)'
+    final bodyPreview = bodyString.length > 1024
+        ? '${bodyString.substring(0, 1024)}... (truncated)'
         : bodyString;
 
     // ignore: avoid_print
@@ -156,7 +180,7 @@ class HttpClientService {
     // ignore: avoid_print
     print('X-Request-ID: $requestId');
     // ignore: avoid_print
-    print('Response Body (first 2KB):');
+    print('Response Body (first 1KB):');
     // ignore: avoid_print
     print(bodyPreview);
     // ignore: avoid_print

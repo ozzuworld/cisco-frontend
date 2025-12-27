@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../config/config_service.dart';
 import '../models/api_error.dart';
@@ -151,6 +152,21 @@ class HttpClientService {
         ? 'Bearer ***${options.headers['Authorization'].toString().substring(options.headers['Authorization'].toString().length - 8)}'
         : 'NONE';
 
+    // Log request body with password length instead of actual password
+    String requestBodyLog = '';
+    if (options.data != null && options.data is Map) {
+      final dataMap = Map<String, dynamic>.from(options.data as Map);
+      if (dataMap.containsKey('password')) {
+        final passwordLength = (dataMap['password'] as String?)?.length ?? 0;
+        dataMap['password'] = '***<$passwordLength chars>***';
+      }
+      try {
+        requestBodyLog = jsonEncode(dataMap);
+      } catch (e) {
+        requestBodyLog = 'Error encoding request: $e';
+      }
+    }
+
     // ignore: avoid_print
     print('=== Discovery Request ===');
     // ignore: avoid_print
@@ -161,6 +177,12 @@ class HttpClientService {
     print('Authorization: $authHeader');
     // ignore: avoid_print
     print('Has API Key in Config: ${_configService.config.hasApiKey}');
+    if (requestBodyLog.isNotEmpty) {
+      // ignore: avoid_print
+      print('Request Body (password redacted):');
+      // ignore: avoid_print
+      print(requestBodyLog);
+    }
     // ignore: avoid_print
     print('========================');
   }
@@ -168,7 +190,20 @@ class HttpClientService {
   void _logDiscoveryResponse(Response response) {
     final statusCode = response.statusCode;
     final requestId = response.headers.value('X-Request-ID') ?? 'none';
-    final bodyString = response.data.toString();
+
+    // Parse response.data as Map (Dio already parses JSON)
+    // Use jsonEncode to get proper JSON string representation
+    String bodyString;
+    try {
+      if (response.data is Map || response.data is List) {
+        bodyString = jsonEncode(response.data);
+      } else {
+        bodyString = response.data.toString();
+      }
+    } catch (e) {
+      bodyString = 'Error encoding response: $e';
+    }
+
     final bodyPreview = bodyString.length > 1024
         ? '${bodyString.substring(0, 1024)}... (truncated)'
         : bodyString;
@@ -180,7 +215,7 @@ class HttpClientService {
     // ignore: avoid_print
     print('X-Request-ID: $requestId');
     // ignore: avoid_print
-    print('Response Body (first 1KB):');
+    print('Response Body (first 1KB - REAL JSON):');
     // ignore: avoid_print
     print(bodyPreview);
     // ignore: avoid_print

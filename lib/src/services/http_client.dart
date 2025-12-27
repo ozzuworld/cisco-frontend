@@ -4,6 +4,7 @@ import '../config/config_service.dart';
 import '../models/api_error.dart';
 import '../models/cucm_node.dart';
 import '../models/profile.dart';
+import '../models/job_status.dart';
 
 /// HTTP client service with global interceptor for auth and error handling
 class HttpClientService {
@@ -174,6 +175,26 @@ class HttpClientService {
     _logResponse('POST /jobs', response);
 
     return CreateJobResponse.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Get job status by job ID
+  /// Throws DioException on error with normalized ApiError
+  Future<JobStatus> getJobStatus(String jobId) async {
+    final response = await _dio.get('/jobs/$jobId');
+
+    // Log response
+    _logResponse('GET /jobs/$jobId', response);
+
+    return JobStatus.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Cancel a running job
+  /// Throws DioException on error with normalized ApiError
+  Future<void> cancelJob(String jobId) async {
+    final response = await _dio.post('/jobs/$jobId/cancel');
+
+    // Log response
+    _logResponse('POST /jobs/$jobId/cancel', response);
   }
 
   void _logRequest(RequestOptions options) {

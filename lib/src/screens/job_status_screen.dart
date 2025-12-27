@@ -572,7 +572,7 @@ class _JobStatusScreenState extends State<JobStatusScreen> {
                 );
               },
               icon: const Icon(Icons.download),
-              label: Text('View Artifacts (${status.artifacts.length})'),
+              label: Text('View Artifacts (${status.totalArtifactCount})'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),

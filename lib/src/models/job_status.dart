@@ -3,18 +3,23 @@ class NodeStatus {
   final String node;
   final String status;
   final String? error;
+  final List<String> artifacts;
 
   NodeStatus({
     required this.node,
     required this.status,
     this.error,
+    required this.artifacts,
   });
 
   factory NodeStatus.fromJson(Map<String, dynamic> json) {
+    final artifactsList = json['artifacts'] as List<dynamic>? ?? [];
+
     return NodeStatus(
       node: json['node'] as String,
       status: json['status'] as String,
       error: json['error'] as String?,
+      artifacts: artifactsList.map((a) => a.toString()).toList(),
     );
   }
 
@@ -23,6 +28,7 @@ class NodeStatus {
       'node': node,
       'status': status,
       if (error != null) 'error': error,
+      'artifacts': artifacts,
     };
   }
 
@@ -30,6 +36,7 @@ class NodeStatus {
   bool get isFailed => status == 'failed';
   bool get isRunning => status == 'running';
   bool get isQueued => status == 'queued';
+  bool get hasArtifacts => artifacts.isNotEmpty;
 }
 
 /// Job status response
@@ -109,5 +116,25 @@ class JobStatus {
   double get progress =>
       totalNodes > 0 ? completedNodes / totalNodes : 0.0;
 
-  bool get hasArtifacts => artifacts.isNotEmpty;
+  // Check if job has artifacts (from nodes or top-level)
+  bool get hasArtifacts {
+    // Check top-level artifacts first (backward compatibility)
+    if (artifacts.isNotEmpty) return true;
+
+    // Check if any node has artifacts
+    return nodes.any((node) => node.hasArtifacts);
+  }
+
+  // Get total artifact count across all nodes and top-level
+  int get totalArtifactCount {
+    // Count top-level artifacts
+    int count = artifacts.length;
+
+    // Add artifacts from all nodes
+    for (final node in nodes) {
+      count += node.artifacts.length;
+    }
+
+    return count;
+  }
 }

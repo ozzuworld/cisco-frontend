@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../config/config_service.dart';
 import 'settings_screen.dart';
 import 'discover_cluster_screen.dart';
+import 'job_history_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -13,6 +14,25 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Cisco Frontend'),
         actions: [
+          Consumer<ConfigService>(
+            builder: (context, configService, child) {
+              if (!configService.config.hasApiKey) {
+                return const SizedBox.shrink();
+              }
+              return IconButton(
+                icon: const Icon(Icons.history),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const JobHistoryScreen(),
+                    ),
+                  );
+                },
+                tooltip: 'Job History',
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
@@ -102,7 +122,7 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                  if (config.hasApiKey)
+                  if (config.hasApiKey) ...[
                     ElevatedButton.icon(
                       onPressed: () {
                         Navigator.push(
@@ -122,6 +142,26 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const JobHistoryScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.history),
+                      label: const Text('View Job History'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               );
             },

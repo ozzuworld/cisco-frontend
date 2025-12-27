@@ -178,6 +178,22 @@ class HttpClientService {
     return CreateJobResponse.fromJson(response.data as Map<String, dynamic>);
   }
 
+  /// List all jobs
+  /// Throws DioException on error with normalized ApiError
+  Future<List<JobStatus>> listJobs() async {
+    final response = await _dio.get('/jobs');
+
+    // Log response
+    _logResponse('GET /jobs', response);
+
+    // Backend returns {jobs: [...]}
+    final responseMap = response.data as Map<String, dynamic>;
+    final jobsList = responseMap['jobs'] as List<dynamic>? ?? [];
+    return jobsList
+        .map((job) => JobStatus.fromJson(job as Map<String, dynamic>))
+        .toList();
+  }
+
   /// Get job status by job ID
   /// Throws DioException on error with normalized ApiError
   Future<JobStatus> getJobStatus(String jobId) async {

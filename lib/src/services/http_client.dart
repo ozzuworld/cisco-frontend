@@ -135,6 +135,31 @@ class HttpClientService {
       data: request.toJson(),
     );
 
+    // Log response details (but not the password from request)
+    _logDiscoveryResponse(response);
+
     return DiscoveryResponse.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  void _logDiscoveryResponse(Response response) {
+    final statusCode = response.statusCode;
+    final requestId = response.headers.value('X-Request-ID') ?? 'none';
+    final bodyString = response.data.toString();
+    final bodyPreview = bodyString.length > 2048
+        ? '${bodyString.substring(0, 2048)}... (truncated)'
+        : bodyString;
+
+    // ignore: avoid_print
+    print('=== Discovery Response ===');
+    // ignore: avoid_print
+    print('Status Code: $statusCode');
+    // ignore: avoid_print
+    print('X-Request-ID: $requestId');
+    // ignore: avoid_print
+    print('Response Body (first 2KB):');
+    // ignore: avoid_print
+    print(bodyPreview);
+    // ignore: avoid_print
+    print('========================');
   }
 }

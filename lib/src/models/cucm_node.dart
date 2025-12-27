@@ -88,12 +88,36 @@ class DiscoveryResponse {
   });
 
   factory DiscoveryResponse.fromJson(Map<String, dynamic> json) {
+    // Debug logging
+    // ignore: avoid_print
+    print('=== Parsing DiscoveryResponse ===');
+    // ignore: avoid_print
+    print('JSON keys: ${json.keys.toList()}');
+    // ignore: avoid_print
+    print('nodes type: ${json['nodes'].runtimeType}');
+    // ignore: avoid_print
+    print('nodes value: ${json['nodes']}');
+
     final nodesList = json['nodes'] as List<dynamic>? ?? [];
 
+    // ignore: avoid_print
+    print('Parsed nodes count: ${nodesList.length}');
+
+    final parsedNodes = nodesList
+        .map((node) => CucmNode.fromJson(node as Map<String, dynamic>))
+        .toList();
+
+    // ignore: avoid_print
+    print('Final nodes count: ${parsedNodes.length}');
+    // ignore: avoid_print
+    print('raw_output: ${json['raw_output'] != null ? "present" : "null"}');
+    // ignore: avoid_print
+    print('raw_output_truncated: ${json['raw_output_truncated']}');
+    // ignore: avoid_print
+    print('================================');
+
     return DiscoveryResponse(
-      nodes: nodesList
-          .map((node) => CucmNode.fromJson(node as Map<String, dynamic>))
-          .toList(),
+      nodes: parsedNodes,
       rawOutput: json['raw_output'] as String?,
       rawOutputTruncated: json['raw_output_truncated'] as bool? ?? false,
     );

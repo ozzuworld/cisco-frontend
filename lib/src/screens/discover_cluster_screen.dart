@@ -253,12 +253,16 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
   void _proceedToNextScreen() {
     if (_selectedNodeIps.isEmpty) return;
 
-    // Navigate to profile selection screen with selected node IPs
+    // Navigate to profile selection screen with selected node IPs and CUCM credentials
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ProfileSelectionScreen(
           selectedNodeIps: _selectedNodeIps.toList(),
+          publisherHost: _publisherHostController.text,
+          port: int.parse(_portController.text),
+          username: _usernameController.text,
+          password: _passwordController.text,
         ),
       ),
     );

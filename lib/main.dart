@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'src/config/config_service.dart';
 import 'src/services/storage_service.dart';
 import 'src/services/http_client.dart';
+import 'src/models/collection_flow_state.dart';
 import 'src/screens/home_screen.dart';
 
 void main() async {
@@ -35,6 +36,9 @@ class CiscoApp extends StatelessWidget {
         ChangeNotifierProvider.value(value: configService),
         Provider(
           create: (context) => HttpClientService(configService),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => CollectionFlowState(),
         ),
       ],
       child: MaterialApp(

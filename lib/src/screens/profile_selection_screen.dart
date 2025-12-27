@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/profile.dart';
+import '../models/collection_flow_state.dart';
 import '../services/http_client.dart';
 import 'job_status_screen.dart';
 
@@ -578,6 +579,13 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
             _overrideMatch = null;
             _showOverrides = false;
           });
+
+          // Update flow state
+          final flowState = context.read<CollectionFlowState>();
+          flowState.setSelectedProfile(profile);
+          flowState.setTimeMode(isRelative: true);
+          flowState.setRelativeTime(null);
+          flowState.setAbsoluteTime(startTime: null, endTime: null);
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -602,6 +610,15 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
                         _overrideMatch = null;
                         _showOverrides = false;
                       });
+
+                      // Update flow state
+                      if (value != null) {
+                        final flowState = context.read<CollectionFlowState>();
+                        flowState.setSelectedProfile(value);
+                        flowState.setTimeMode(isRelative: true);
+                        flowState.setRelativeTime(null);
+                        flowState.setAbsoluteTime(startTime: null, endTime: null);
+                      }
                     },
                   ),
                   Expanded(
@@ -732,6 +749,10 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
                     _overrideReltimeMinutes = null;
                   }
                 });
+
+                // Update flow state
+                final flowState = context.read<CollectionFlowState>();
+                flowState.setTimeMode(isRelative: _timeMode == 'relative');
               },
             ),
             const SizedBox(height: 16),
@@ -750,6 +771,9 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
                   setState(() {
                     _overrideReltimeMinutes = int.tryParse(value);
                   });
+
+                  // Update flow state
+                  context.read<CollectionFlowState>().setRelativeTime(int.tryParse(value));
                 },
               ),
 
@@ -763,6 +787,12 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
                     _startTime = dateTime;
                     _timeRangeError = null;
                   });
+
+                  // Update flow state
+                  context.read<CollectionFlowState>().setAbsoluteTime(
+                    startTime: dateTime,
+                    endTime: _endTime,
+                  );
                 },
               ),
               const SizedBox(height: 16),
@@ -774,6 +804,12 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
                     _endTime = dateTime;
                     _timeRangeError = null;
                   });
+
+                  // Update flow state
+                  context.read<CollectionFlowState>().setAbsoluteTime(
+                    startTime: _startTime,
+                    endTime: dateTime,
+                  );
                 },
               ),
               if (_timeRangeError != null) ...[

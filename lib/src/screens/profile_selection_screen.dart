@@ -430,43 +430,51 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Select Profile'),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+    return Consumer<CollectionFlowState>(
+      builder: (context, flowState, child) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Select Profile'),
+          ),
+          body: _isLoading
+              ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
               ? _buildErrorView()
               : _buildProfileList(),
-      bottomNavigationBar: _selectedProfile != null
-          ? Container(
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, -2),
+          bottomNavigationBar: _selectedProfile != null
+              ? Container(
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, -2),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: SafeArea(
-                child: ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _showConfirmationDialog,
-                  icon: const Icon(Icons.play_arrow),
-                  label: Text(
-                    'Start Collection (${widget.selectedNodeIps.length} node${widget.selectedNodeIps.length > 1 ? 's' : ''})',
+                  child: SafeArea(
+                    child: ElevatedButton.icon(
+                      onPressed: _isLoading || !flowState.isReadyToCollect
+                          ? null
+                          : _showConfirmationDialog,
+                      icon: const Icon(Icons.play_arrow),
+                      label: Text(
+                        flowState.isReadyToCollect
+                            ? 'Start Collection (${widget.selectedNodeIps.length} node${widget.selectedNodeIps.length > 1 ? 's' : ''})'
+                            : 'Complete time selection to continue',
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        textStyle: const TextStyle(fontSize: 16),
+                      ),
+                    ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    textStyle: const TextStyle(fontSize: 16),
-                  ),
-                ),
-              ),
-            )
-          : null,
+                )
+              : null,
+        );
+      },
     );
   }
 
@@ -505,6 +513,92 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
     );
   }
 
+  Widget _buildFlowProgressCard(CollectionFlowState flowState) {
+    return Card(
+      color: Colors.blue.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Collection Setup Progress',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: Colors.blue.shade900,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                _buildProgressStep(
+                  icon: Icons.cloud_done,
+                  label: 'Cluster',
+                  isComplete: flowState.hasClusterInfo,
+                ),
+                _buildProgressArrow(),
+                _buildProgressStep(
+                  icon: Icons.devices,
+                  label: 'Nodes',
+                  isComplete: flowState.hasNodesSelected,
+                ),
+                _buildProgressArrow(),
+                _buildProgressStep(
+                  icon: Icons.description,
+                  label: 'Profile',
+                  isComplete: flowState.hasProfileSelected,
+                ),
+                _buildProgressArrow(),
+                _buildProgressStep(
+                  icon: Icons.schedule,
+                  label: 'Time',
+                  isComplete: flowState.hasValidTimeConfig,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressStep({
+    required IconData icon,
+    required String label,
+    required bool isComplete,
+  }) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            color: isComplete ? Colors.green.shade700 : Colors.grey.shade400,
+            size: 20,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: isComplete ? Colors.green.shade700 : Colors.grey.shade600,
+              fontWeight: isComplete ? FontWeight.bold : FontWeight.normal,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressArrow() {
+    return Icon(
+      Icons.arrow_forward,
+      size: 16,
+      color: Colors.grey.shade400,
+    );
+  }
+
   Widget _buildProfileList() {
     if (_profiles == null || _profiles!.isEmpty) {
       return const Center(
@@ -515,29 +609,35 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
-        // Header with node count
-        Card(
-          color: Colors.blue.shade50,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                const Icon(Icons.info_outline, color: Colors.blue),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Selected ${widget.selectedNodeIps.length} node${widget.selectedNodeIps.length > 1 ? 's' : ''} for collection',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      color: Colors.blue,
+        // Flow progress indicator
+        _buildFlowProgressCard(context.watch<CollectionFlowState>()),
+        const SizedBox(height: 16),
+
+        // Profile selection section header
+        if (_selectedProfile == null)
+          Card(
+            color: Colors.orange.shade50,
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                children: [
+                  Icon(Icons.touch_app, color: Colors.orange.shade700, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Select a collection profile to continue',
+                      style: TextStyle(
+                        color: Colors.orange.shade900,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 16),
+        if (_selectedProfile == null) const SizedBox(height: 16),
 
         // Profile cards
         ..._profiles!.map((profile) => _buildProfileCard(profile)),
@@ -701,8 +801,12 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
   }
 
   Widget _buildTimeSelectionCard() {
+    final flowState = context.watch<CollectionFlowState>();
+    final isTimeValid = flowState.hasValidTimeConfig;
+
     return Card(
       elevation: 2,
+      color: isTimeValid ? Colors.green.shade50 : null,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -710,15 +814,36 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.schedule, color: Colors.blue.shade700),
-                const SizedBox(width: 8),
-                Text(
-                  'Collection Time Range',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade700,
-                      ),
+                Icon(
+                  isTimeValid ? Icons.check_circle : Icons.schedule,
+                  color: isTimeValid ? Colors.green.shade700 : Colors.blue.shade700,
                 ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Collection Time Range',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isTimeValid ? Colors.green.shade700 : Colors.blue.shade700,
+                        ),
+                  ),
+                ),
+                if (isTimeValid)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade700,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'Ready',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
               ],
             ),
             const SizedBox(height: 16),
@@ -756,6 +881,34 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
               },
             ),
             const SizedBox(height: 16),
+
+            // Hint for absolute mode
+            if (_timeMode == 'absolute' && (_startTime == null || _endTime == null) && _timeRangeError == null)
+              Container(
+                padding: const EdgeInsets.all(10.0),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.orange.shade700, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Select both start and end times to continue',
+                        style: TextStyle(
+                          color: Colors.orange.shade900,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (_timeMode == 'absolute' && (_startTime == null || _endTime == null) && _timeRangeError == null)
+              const SizedBox(height: 12),
 
             // Relative time input (only show in relative mode)
             if (_timeMode == 'relative')

@@ -25,6 +25,9 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
   DiscoveryResponse? _discoveryResult;
   ApiError? _discoveryError;
 
+  // Node selection state
+  final Set<String> _selectedNodeIps = {};
+
   @override
   void dispose() {
     _publisherHostController.dispose();
@@ -62,6 +65,14 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
       setState(() {
         _discoveryResult = result;
         _isDiscovering = false;
+
+        // Auto-select Publisher nodes by default
+        _selectedNodeIps.clear();
+        for (final node in result.nodes) {
+          if (node.role?.toLowerCase() == 'publisher') {
+            _selectedNodeIps.add(node.ip);
+          }
+        }
       });
 
       if (result.isEmpty && mounted) {
@@ -214,6 +225,65 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
     );
   }
 
+  void _toggleNodeSelection(String nodeIp) {
+    setState(() {
+      if (_selectedNodeIps.contains(nodeIp)) {
+        _selectedNodeIps.remove(nodeIp);
+      } else {
+        _selectedNodeIps.add(nodeIp);
+      }
+    });
+  }
+
+  void _selectAllNodes() {
+    if (_discoveryResult == null) return;
+    setState(() {
+      _selectedNodeIps.clear();
+      _selectedNodeIps.addAll(_discoveryResult!.nodes.map((n) => n.ip));
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedNodeIps.clear();
+    });
+  }
+
+  void _proceedToNextScreen() {
+    if (_selectedNodeIps.isEmpty) return;
+
+    final selectedNodes = _discoveryResult!.nodes
+        .where((node) => _selectedNodeIps.contains(node.ip))
+        .toList();
+
+    // TODO: Navigate to profile selection screen
+    // For now, show a dialog with selected nodes
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Selected Nodes'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('You selected ${selectedNodes.length} node(s):'),
+            const SizedBox(height: 12),
+            ...selectedNodes.map((node) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4.0),
+                  child: Text('• ${node.displayName} (${node.ip})'),
+                )),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -359,12 +429,70 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                         children: [
                           const Icon(Icons.check_circle, color: Colors.green),
                           const SizedBox(width: 8),
-                          Text(
-                            'Discovered ${_discoveryResult!.nodes.length} Node(s)',
-                            style: Theme.of(context).textTheme.titleLarge,
+                          Expanded(
+                            child: Text(
+                              'Discovered ${_discoveryResult!.nodes.length} Node(s)',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
                           ),
+                          if (_discoveryResult!.hasNodes) ...[
+                            TextButton.icon(
+                              onPressed: _selectAllNodes,
+                              icon: const Icon(Icons.select_all, size: 18),
+                              label: const Text('All'),
+                            ),
+                            const SizedBox(width: 4),
+                            TextButton.icon(
+                              onPressed: _clearSelection,
+                              icon: const Icon(Icons.clear, size: 18),
+                              label: const Text('Clear'),
+                            ),
+                          ],
                         ],
                       ),
+                      if (_discoveryResult!.hasNodes) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12.0,
+                            vertical: 8.0,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _selectedNodeIps.isEmpty
+                                ? Colors.orange.shade50
+                                : Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(8.0),
+                            border: Border.all(
+                              color: _selectedNodeIps.isEmpty
+                                  ? Colors.orange.shade300
+                                  : Colors.blue.shade300,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                _selectedNodeIps.isEmpty
+                                    ? Icons.info_outline
+                                    : Icons.check_circle_outline,
+                                size: 18,
+                                color: _selectedNodeIps.isEmpty
+                                    ? Colors.orange.shade700
+                                    : Colors.blue.shade700,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Selected: ${_selectedNodeIps.length} node(s)',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  color: _selectedNodeIps.isEmpty
+                                      ? Colors.orange.shade900
+                                      : Colors.blue.shade900,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       if (_discoveryResult!.isEmpty) ...[
                         Container(
@@ -431,77 +559,120 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: _discoveryResult != null &&
+              _discoveryResult!.hasNodes
+          ? Container(
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: ElevatedButton.icon(
+                  onPressed:
+                      _selectedNodeIps.isEmpty ? null : _proceedToNextScreen,
+                  icon: const Icon(Icons.arrow_forward),
+                  label: Text(
+                    _selectedNodeIps.isEmpty
+                        ? 'Select at least one node to proceed'
+                        : 'Next (${_selectedNodeIps.length} selected)',
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    minimumSize: const Size(double.infinity, 48),
+                  ),
+                ),
+              ),
+            )
+          : null,
     );
   }
 
   Widget _buildNodeCard(CucmNode node) {
+    final isSelected = _selectedNodeIps.contains(node.ip);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12.0),
       elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8.0),
-                  decoration: BoxDecoration(
-                    color: node.role?.toLowerCase() == 'publisher'
-                        ? Colors.blue.shade50
-                        : Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(8.0),
+      child: InkWell(
+        onTap: () => _toggleNodeSelection(node.ip),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Checkbox(
+                    value: isSelected,
+                    onChanged: (_) => _toggleNodeSelection(node.ip),
                   ),
-                  child: Icon(
-                    Icons.computer,
-                    color: node.role?.toLowerCase() == 'publisher'
-                        ? Colors.blue.shade700
-                        : Colors.grey.shade700,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        node.displayName,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      if (node.fqdn != null)
-                        Text(
-                          node.fqdn!,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                    ],
-                  ),
-                ),
-                if (node.role != null)
+                  const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12.0,
-                      vertical: 6.0,
-                    ),
+                    padding: const EdgeInsets.all(8.0),
                     decoration: BoxDecoration(
                       color: node.role?.toLowerCase() == 'publisher'
-                          ? Colors.blue
-                          : Colors.grey,
-                      borderRadius: BorderRadius.circular(12.0),
+                          ? Colors.blue.shade50
+                          : Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(8.0),
                     ),
-                    child: Text(
-                      node.role!,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Icon(
+                      Icons.computer,
+                      color: node.role?.toLowerCase() == 'publisher'
+                          ? Colors.blue.shade700
+                          : Colors.grey.shade700,
                     ),
                   ),
-              ],
-            ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          node.displayName,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                        if (node.fqdn != null)
+                          Text(
+                            node.fqdn!,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (node.role != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12.0,
+                        vertical: 6.0,
+                      ),
+                      decoration: BoxDecoration(
+                        color: node.role?.toLowerCase() == 'publisher'
+                            ? Colors.blue
+                            : Colors.grey,
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      child: Text(
+                        node.role!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             const SizedBox(height: 12),
             const Divider(),
             const SizedBox(height: 8),

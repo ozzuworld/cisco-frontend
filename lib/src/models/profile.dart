@@ -41,30 +41,33 @@ class Profile {
 
 /// Request model for creating a collection job
 class CreateJobRequest {
-  final List<String> nodeIps;
-  final String profileName;
-  final int? reltimeMinutes;
-  final bool? compress;
-  final bool? recurs;
-  final String? match;
+  final String publisherHost;
+  final int port;
+  final String username;
+  final String password;
+  final List<String> nodes;
+  final String profile;
+  final Map<String, dynamic>? options;
 
   CreateJobRequest({
-    required this.nodeIps,
-    required this.profileName,
-    this.reltimeMinutes,
-    this.compress,
-    this.recurs,
-    this.match,
+    required this.publisherHost,
+    required this.port,
+    required this.username,
+    required this.password,
+    required this.nodes,
+    required this.profile,
+    this.options,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'node_ips': nodeIps,
-      'profile_name': profileName,
-      if (reltimeMinutes != null) 'reltime_minutes': reltimeMinutes,
-      if (compress != null) 'compress': compress,
-      if (recurs != null) 'recurs': recurs,
-      if (match != null) 'match': match,
+      'publisher_host': publisherHost,
+      'port': port,
+      'username': username,
+      'password': password,
+      'nodes': nodes,
+      'profile': profile,
+      'options': options,
     };
   }
 }

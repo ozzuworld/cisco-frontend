@@ -199,7 +199,7 @@ class HttpClientService {
     }
 
     // ignore: avoid_print
-    print('=== Discovery Request ===');
+    print('=== HTTP Request ===');
     // ignore: avoid_print
     print('URL: $url');
     // ignore: avoid_print
@@ -215,7 +215,7 @@ class HttpClientService {
       print(requestBodyLog);
     }
     // ignore: avoid_print
-    print('========================');
+    print('====================');
   }
 
   void _logDiscoveryResponse(Response response) {

@@ -6,10 +6,18 @@ import 'job_status_screen.dart';
 
 class ProfileSelectionScreen extends StatefulWidget {
   final List<String> selectedNodeIps;
+  final String publisherHost;
+  final int port;
+  final String username;
+  final String password;
 
   const ProfileSelectionScreen({
     super.key,
     required this.selectedNodeIps,
+    required this.publisherHost,
+    required this.port,
+    required this.username,
+    required this.password,
   });
 
   @override
@@ -68,13 +76,35 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
     try {
       final httpClient = Provider.of<HttpClientService>(context, listen: false);
 
+      // Build options map from overrides (only include if user specified overrides)
+      Map<String, dynamic>? options;
+      if (_overrideReltimeMinutes != null ||
+          _overrideCompress != null ||
+          _overrideRecurs != null ||
+          _overrideMatch != null) {
+        options = {};
+        if (_overrideReltimeMinutes != null) {
+          options['reltime_minutes'] = _overrideReltimeMinutes;
+        }
+        if (_overrideCompress != null) {
+          options['compress'] = _overrideCompress;
+        }
+        if (_overrideRecurs != null) {
+          options['recurs'] = _overrideRecurs;
+        }
+        if (_overrideMatch != null) {
+          options['match'] = _overrideMatch;
+        }
+      }
+
       final request = CreateJobRequest(
-        nodeIps: widget.selectedNodeIps,
-        profileName: _selectedProfile!.name,
-        reltimeMinutes: _overrideReltimeMinutes,
-        compress: _overrideCompress,
-        recurs: _overrideRecurs,
-        match: _overrideMatch,
+        publisherHost: widget.publisherHost,
+        port: widget.port,
+        username: widget.username,
+        password: widget.password,
+        nodes: widget.selectedNodeIps,
+        profile: _selectedProfile!.name,
+        options: options,
       );
 
       final response = await httpClient.createJob(request);

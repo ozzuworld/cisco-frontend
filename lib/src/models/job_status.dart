@@ -4,12 +4,18 @@ class NodeStatus {
   final String status;
   final String? error;
   final List<String> artifacts;
+  final String? step;
+  final String? message;
+  final double? percent;
 
   NodeStatus({
     required this.node,
     required this.status,
     this.error,
     required this.artifacts,
+    this.step,
+    this.message,
+    this.percent,
   });
 
   factory NodeStatus.fromJson(Map<String, dynamic> json) {
@@ -20,6 +26,9 @@ class NodeStatus {
       status: json['status'] as String,
       error: json['error'] as String?,
       artifacts: artifactsList.map((a) => a.toString()).toList(),
+      step: json['step'] as String?,
+      message: json['message'] as String?,
+      percent: (json['percent'] as num?)?.toDouble(),
     );
   }
 
@@ -29,6 +38,9 @@ class NodeStatus {
       'status': status,
       if (error != null) 'error': error,
       'artifacts': artifacts,
+      if (step != null) 'step': step,
+      if (message != null) 'message': message,
+      if (percent != null) 'percent': percent,
     };
   }
 
@@ -37,6 +49,7 @@ class NodeStatus {
   bool get isRunning => status == 'running';
   bool get isQueued => status == 'queued';
   bool get hasArtifacts => artifacts.isNotEmpty;
+  bool get hasProgress => step != null || message != null || percent != null;
 }
 
 /// Job status response

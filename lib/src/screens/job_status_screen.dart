@@ -604,6 +604,89 @@ class _JobStatusScreenState extends State<JobStatusScreen> {
               ),
             ],
           ),
+
+          // Progress information (step, message, percent)
+          if (node.hasProgress && node.isRunning) ...[
+            const SizedBox(height: 12),
+
+            // Progress bar with percentage
+            if (node.percent != null) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: LinearProgressIndicator(
+                      value: node.percent! / 100.0,
+                      minHeight: 6,
+                      backgroundColor: Colors.grey.shade200,
+                      color: Colors.blue,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${node.percent!.toStringAsFixed(0)}%',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+
+            // Step and message
+            if (node.step != null || node.message != null)
+              Container(
+                padding: const EdgeInsets.all(10.0),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(6.0),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade700),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (node.step != null)
+                            Text(
+                              node.step!,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blue.shade900,
+                              ),
+                            ),
+                          if (node.message != null) ...[
+                            if (node.step != null) const SizedBox(height: 3),
+                            Text(
+                              node.message!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+
+          // Error message
           if (node.error != null) ...[
             const SizedBox(height: 8),
             Container(

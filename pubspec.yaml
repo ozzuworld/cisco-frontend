@@ -19,10 +19,6 @@ dependencies:
   # Secure Storage
   flutter_secure_storage: ^9.0.0
 
-  # Platform Detection
-  flutter/foundation.dart:
-    sdk: flutter
-
   # UI Components
   cupertino_icons: ^1.0.6
 

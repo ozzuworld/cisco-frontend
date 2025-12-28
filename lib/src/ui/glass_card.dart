@@ -79,18 +79,9 @@ class GlassCard extends StatefulWidget {
   /// Default: EdgeInsets.zero
   final EdgeInsets? margin;
 
-  /// FE-UI-083: Debug mode to prove zero-fill
-  /// Shows hot pink overlay if any non-transparent fill is detected
-  final bool debugShowFillProof;
-
-  /// FE-UI-096: Debug mode to disable blur for intersection testing
-  /// Toggle blur OFF → see background features clearly
-  /// Toggle blur ON → see same features distort (proves refraction)
-  final bool debugDisableBlur;
-
-  /// FE-UI-110: Debug mode to exaggerate reflections 3× for tuning
-  /// Helps visualize and tune reflection system, then return to normal
-  final bool debugExaggerateReflections;
+  /// FE-REFACTOR-8: Reflection multiplier (for debug wrapper use)
+  /// Default: 1.0, Debug wrapper can use 3.0 to exaggerate reflections
+  final double reflectionMultiplier;
 
   const GlassCard({
     super.key,
@@ -103,9 +94,7 @@ class GlassCard extends StatefulWidget {
     this.borderRadius,
     this.showShadow = true,
     this.margin,
-    this.debugShowFillProof = false, // FE-UI-083: Debug overlay toggle
-    this.debugDisableBlur = false, // FE-UI-096: Blur toggle for intersection test
-    this.debugExaggerateReflections = false, // FE-UI-110: Reflection tuning mode
+    this.reflectionMultiplier = 1.0, // FE-REFACTOR-8: For debug wrapper
   });
 
   @override
@@ -162,17 +151,14 @@ class _GlassCardState extends State<GlassCard> {
         ),
         child: ClipRRect(
           borderRadius: effectiveBorderRadius,
-          // FE-UI-096: Conditionally apply blur for intersection testing
-          child: widget.debugDisableBlur
-              ? _buildGlassContent(effectiveBorderRadius, effectivePadding)
-              : BackdropFilter(
-                  filter: ImageFilter.blur(
-                    // FE-UI-048: Real blur sigma 16 (web-optimized)
-                    sigmaX: widget.blurStrength,
-                    sigmaY: widget.blurStrength,
-                  ),
-                  child: _buildGlassContent(effectiveBorderRadius, effectivePadding),
-                ),
+          // FE-REFACTOR-8: Blur always applied (debug wrapper can set blurStrength=0)
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: widget.blurStrength,
+              sigmaY: widget.blurStrength,
+            ),
+            child: _buildGlassContent(effectiveBorderRadius, effectivePadding),
+          ),
         ),
       ),
     );
@@ -271,6 +257,7 @@ class _GlassCardState extends State<GlassCard> {
           // FE-REFACTOR-7: Right edge removed (minimal visual impact, saves 19 lines)
           // FE-REFACTOR-7: Enhanced primary sheen (merged specular hotspot)
           // FE-036: Interactive light position creates "wet glass" effect
+          // FE-REFACTOR-8: Uses reflectionMultiplier for debug tuning
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -282,15 +269,9 @@ class _GlassCardState extends State<GlassCard> {
                   ),
                   radius: 1.5,
                   colors: [
-                    Colors.white.withOpacity(
-                      widget.debugExaggerateReflections ? 0.40 : 0.15 // Enhanced
-                    ),
-                    Colors.white.withOpacity(
-                      widget.debugExaggerateReflections ? 0.20 : 0.08 // Enhanced
-                    ),
-                    Colors.white.withOpacity(
-                      widget.debugExaggerateReflections ? 0.10 : 0.03
-                    ),
+                    Colors.white.withOpacity((0.15 * widget.reflectionMultiplier).clamp(0.0, 1.0)),
+                    Colors.white.withOpacity((0.08 * widget.reflectionMultiplier).clamp(0.0, 1.0)),
+                    Colors.white.withOpacity((0.03 * widget.reflectionMultiplier).clamp(0.0, 1.0)),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.3, 0.6, 1.0],
@@ -302,6 +283,7 @@ class _GlassCardState extends State<GlassCard> {
           // FE-REFACTOR-7: Secondary catchlight merged into unified top edge above
 
           // FE-REFACTOR-7: Unified corner glow (merged L+R corners)
+          // FE-REFACTOR-8: Uses reflectionMultiplier for debug tuning
           Positioned(
             top: 0,
             left: 0,
@@ -317,12 +299,8 @@ class _GlassCardState extends State<GlassCard> {
                   center: Alignment.topCenter,
                   radius: 0.8,
                   colors: [
-                    Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.70 : 0.15
-                    ),
-                    Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.35 : 0.06
-                    ),
+                    Colors.white.withOpacity((0.15 * widget.reflectionMultiplier).clamp(0.0, 1.0)),
+                    Colors.white.withOpacity((0.06 * widget.reflectionMultiplier).clamp(0.0, 1.0)),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.5, 1.0],
@@ -366,44 +344,7 @@ class _GlassCardState extends State<GlassCard> {
               ),
             ],
           ),
-          // FE-UI-083: Debug overlay - hot pink if fill is NOT transparent
-          if (widget.debugShowFillProof)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: effectiveBorderRadius,
-                    // Hot pink if _glassFillColor is not transparent
-                    // This should NEVER show if zero-fill is correct
-                    color: GlassCard._glassFillColor.opacity > 0.0
-                        ? const Color(0xFFFF1493).withOpacity(0.8) // Hot pink
-                        : Colors.transparent,
-                    border: Border.all(
-                      color: const Color(0xFF00FF00), // Green border = debug mode active
-                      width: 3,
-                    ),
-                  ),
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      color: Colors.black.withOpacity(0.8),
-                      child: Text(
-                        GlassCard._glassFillColor.opacity > 0.0
-                            ? 'FAIL: Fill opacity = ${(GlassCard._glassFillColor.opacity * 100).toStringAsFixed(1)}%'
-                            : 'PASS: Fill = 0% (transparent)',
-                        style: TextStyle(
-                          color: GlassCard._glassFillColor.opacity > 0.0
-                              ? const Color(0xFFFF1493)
-                              : const Color(0xFF00FF00),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          // FE-REFACTOR-8: Debug overlay moved to DebugGlassCard wrapper
         ],
       ),
     );

@@ -44,6 +44,11 @@ class CiscoApp extends StatelessWidget {
       useMaterial3: true,
       scaffoldBackgroundColor: isDark ? DesignTokens.backgroundBase : Colors.white,
 
+      // FE-UI-055: Disable Material surface/canvas color inheritance
+      canvasColor: isDark ? DesignTokens.backgroundBase : Colors.white,
+      cardColor: Colors.transparent, // Force cards to use explicit colors only
+      dialogBackgroundColor: isDark ? DesignTokens.backgroundBase : Colors.white,
+
       // FE-UI-049: Glass-styled input decoration
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -151,15 +156,17 @@ class CiscoApp extends StatelessWidget {
         ),
       ),
 
-      // Card theme
+      // FE-UI-055: Card theme - transparent to prevent grey slab
       cardTheme: CardThemeData(
         elevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: DesignTokens.cardBorderRadius,
         ),
-        color: isDark
-            ? Colors.white.withOpacity(DesignTokens.glassFillOpacity)
-            : Colors.white,
+        // Transparent - use GlassCard for actual glass styling
+        color: Colors.transparent,
+        margin: EdgeInsets.zero,
       ),
 
       // Text theme

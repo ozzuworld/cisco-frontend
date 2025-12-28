@@ -91,7 +91,7 @@ class GlassCard extends StatefulWidget {
 
   /// FE-UI-110: Debug mode to exaggerate reflections 3× for tuning
   /// Helps visualize and tune reflection system, then return to normal
-  final boolwidget.debugExaggerateReflections;
+  final bool debugExaggerateReflections;
 
   const GlassCard({
     super.key,
@@ -192,7 +192,7 @@ class _GlassCardState extends State<GlassCard> {
         // FE-UI-068: ZERO FILL (hard requirement)
         // Glass defined by reflections + environment, NOT fill
         // Any fill on black = grey slab
-        color: _glassFillColor, // Colors.transparent (0.0%)
+        color: GlassCard._glassFillColor, // Colors.transparent (0.0%)
       ),
       child: Stack(
         children: [
@@ -452,7 +452,7 @@ class _GlassCardState extends State<GlassCard> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (widget.widget.header != null) ...[
+              if (widget.header != null) ...[
                 Padding(
                   padding: EdgeInsets.only(
                     left: effectivePadding.left,
@@ -482,7 +482,7 @@ class _GlassCardState extends State<GlassCard> {
             ],
           ),
           // FE-UI-083: Debug overlay - hot pink if fill is NOT transparent
-          if (debugShowFillProof)
+          if (widget.debugShowFillProof)
             Positioned.fill(
               child: IgnorePointer(
                 child: Container(
@@ -490,7 +490,7 @@ class _GlassCardState extends State<GlassCard> {
                     borderRadius: effectiveBorderRadius,
                     // Hot pink if _glassFillColor is not transparent
                     // This should NEVER show if zero-fill is correct
-                    color: _glassFillColor.opacity > 0.0
+                    color: GlassCard._glassFillColor.opacity > 0.0
                         ? const Color(0xFFFF1493).withOpacity(0.8) // Hot pink
                         : Colors.transparent,
                     border: Border.all(
@@ -503,11 +503,11 @@ class _GlassCardState extends State<GlassCard> {
                       padding: const EdgeInsets.all(8),
                       color: Colors.black.withOpacity(0.8),
                       child: Text(
-                        _glassFillColor.opacity > 0.0
-                            ? 'FAIL: Fill opacity = ${(_glassFillColor.opacity * 100).toStringAsFixed(1)}%'
+                        GlassCard._glassFillColor.opacity > 0.0
+                            ? 'FAIL: Fill opacity = ${(GlassCard._glassFillColor.opacity * 100).toStringAsFixed(1)}%'
                             : 'PASS: Fill = 0% (transparent)',
                         style: TextStyle(
-                          color: _glassFillColor.opacity > 0.0
+                          color: GlassCard._glassFillColor.opacity > 0.0
                               ? const Color(0xFFFF1493)
                               : const Color(0xFF00FF00),
                           fontWeight: FontWeight.bold,

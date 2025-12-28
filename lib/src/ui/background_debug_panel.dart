@@ -109,10 +109,12 @@ class _BackgroundDebugPanelState extends State<BackgroundDebugPanel> {
                           _buildSeasonSelector(backgroundService),
                           const SizedBox(height: 16),
 
-                          // Snow Intensity
-                          _buildSectionLabel('Snow Intensity'),
+                          // FE-BG-106: Weather Effects Controls
+                          _buildSectionLabel('Weather Effects'),
                           const SizedBox(height: 8),
-                          _buildSnowIntensitySlider(backgroundService),
+                          _buildWeatherToggle(backgroundService),
+                          const SizedBox(height: 12),
+                          _buildWeatherIntensitySlider(backgroundService),
                           const SizedBox(height: 16),
 
                           // Current Preset Info
@@ -284,7 +286,29 @@ class _BackgroundDebugPanelState extends State<BackgroundDebugPanel> {
     );
   }
 
-  Widget _buildSnowIntensitySlider(BackgroundService service) {
+  // FE-BG-106: Weather effects toggle
+  Widget _buildWeatherToggle(BackgroundService service) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'Enabled',
+          style: TextStyle(
+            color: DesignTokens.textSecondary,
+            fontSize: 12,
+          ),
+        ),
+        Switch(
+          value: service.weatherEffectsEnabled,
+          onChanged: (value) => service.setWeatherEffectsEnabled(value),
+          activeColor: DesignTokens.accentPrimary,
+        ),
+      ],
+    );
+  }
+
+  // FE-BG-100-106: Weather intensity slider
+  Widget _buildWeatherIntensitySlider(BackgroundService service) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -292,7 +316,7 @@ class _BackgroundDebugPanelState extends State<BackgroundDebugPanel> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              service.snowIntensity.snowIntensityLabel,
+              _weatherIntensityLabel(service.weatherIntensity),
               style: TextStyle(
                 color: DesignTokens.textPrimary,
                 fontSize: 12,
@@ -300,7 +324,7 @@ class _BackgroundDebugPanelState extends State<BackgroundDebugPanel> {
               ),
             ),
             Text(
-              '${(service.snowIntensity * 100).round()}%',
+              '${(service.weatherIntensity * 100).round()}%',
               style: TextStyle(
                 color: DesignTokens.textMuted,
                 fontSize: 11,
@@ -318,15 +342,22 @@ class _BackgroundDebugPanelState extends State<BackgroundDebugPanel> {
             trackHeight: 3,
           ),
           child: Slider(
-            value: service.snowIntensity,
+            value: service.weatherIntensity,
             min: 0.0,
             max: 1.0,
             divisions: 3,
-            onChanged: (value) => service.setSnowIntensity(value),
+            onChanged: (value) => service.setWeatherIntensity(value),
           ),
         ),
       ],
     );
+  }
+
+  String _weatherIntensityLabel(double intensity) {
+    if (intensity == 0.0) return 'Off';
+    if (intensity <= 0.33) return 'Low';
+    if (intensity <= 0.66) return 'Medium';
+    return 'High';
   }
 
   Widget _buildPresetInfo(BackgroundService service) {

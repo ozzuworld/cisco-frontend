@@ -12,7 +12,7 @@ import '../services/background_service.dart';
 import '../ui/design_tokens.dart';
 import '../ui/glass_card.dart';
 import '../ui/background_renderer.dart';
-import '../ui/snow_effect.dart';
+import '../ui/weather_effect.dart';
 import '../ui/background_debug_panel.dart';
 import 'job_status_screen.dart';
 import 'settings_screen.dart';
@@ -260,9 +260,15 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                   ),
 
-                  // FE-BG-010: Snow particle system (performance-safe)
-                  SnowEffect(
-                    intensity: backgroundService.snowIntensity,
+                  // FE-BG-100-106: Lottie-based weather effects
+                  WeatherEffect(
+                    season: backgroundService.activePreset.season,
+                    intensity: backgroundService.weatherIntensity,
+                    timeOfDayOpacity: WeatherOpacityHelper.getTimeOfDayOpacity(
+                      backgroundService.activePreset.timeOfDay,
+                    ),
+                    enabled: backgroundService.weatherEffectsEnabled,
+                    enablePerformanceMode: backgroundService.weatherPerformanceMode,
                   ),
 
                   // FE-UI-066: Legacy test pattern for glass QA (preserved for backward compatibility)

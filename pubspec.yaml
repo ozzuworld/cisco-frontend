@@ -25,6 +25,9 @@ dependencies:
   # UI Components
   cupertino_icons: ^1.0.6
 
+  # FE-BG-100: Lottie animations for weather effects
+  lottie: ^3.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -32,3 +35,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # FE-BG-100: Lottie weather assets
+  assets:
+    - assets/lottie/weather_snow.json
+    - assets/lottie/weather_rain.json
+    - assets/lottie/weather_leaves.json
+    - assets/lottie/weather_petals.json

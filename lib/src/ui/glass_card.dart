@@ -5,14 +5,26 @@ import 'design_tokens.dart';
 
 /// FE-037: Reusable GlassCard component with glass morphism effect
 ///
+/// ⚠️ FE-UI-061: NON-NEGOTIABLE "NO FILL" RULE ⚠️
+/// GlassCard MUST have transparent fill (alpha = 0.0)
+/// Glass is defined by EDGES ONLY: borders + highlights
+/// Any future fill/tint MUST be rejected in code review
+/// This prevents grey slab regression permanently
+///
 /// Features:
 /// - Blur effect behind the card (glass effect)
-/// - Translucent fill with semi-transparent background
+/// - ZERO fill - edges define the glass
 /// - Subtle border for definition
 /// - Soft shadow for depth
 /// - Optional header and body slots for flexible content
 /// - Optimized for Flutter Web performance
 class GlassCard extends StatelessWidget {
+  // FE-UI-061: Enforce transparent fill rule
+  static const Color _glassFillColor = Colors.transparent;
+  static const String _noFillRuleWarning =
+      'GlassCard fill MUST be transparent (alpha = 0.0). '
+      'Glass is defined by edges only. Do not add fill/tint.';
+
   /// Optional header widget (typically used for titles or status)
   final Widget? header;
 
@@ -103,30 +115,31 @@ class GlassCard extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: effectiveBorderRadius,
-              // FE-UI-054: 1px outer border (25-35% range) - edge-only glass
+              // FE-UI-058: 1px outer border (35-45% range) - crisp crystal edges
               border: Border.all(
-                color: Colors.white.withOpacity(0.30),
+                color: Colors.white.withOpacity(0.40),
                 width: 1.0,
               ),
-              // FE-UI-053: HARD ZERO fill - rgba(255,255,255,0.0)
+              // FE-UI-061: HARD ZERO fill - rgba(255,255,255,0.0)
               // Glass defined ONLY by edges, NOT fill
-              color: Colors.transparent,
+              // Use constant to enforce no-fill rule permanently
+              color: _glassFillColor,
             ),
             child: Stack(
               children: [
-                // FE-UI-054: 1px inner border (10-15% range) - edge-only lighting
+                // FE-UI-058: 1px inner border (12-18% range) - sharper edge lighting
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: effectiveBorderRadius,
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.12),
+                        color: Colors.white.withOpacity(0.15),
                         width: 1.0,
                       ),
                     ),
                   ),
                 ),
-                // FE-UI-054: Top highlight band (very subtle)
+                // FE-UI-058: Top highlight band (reduced 30% for crisp look)
                 Positioned(
                   top: 0,
                   left: 0,
@@ -142,15 +155,15 @@ class GlassCard extends StatelessWidget {
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
                         colors: [
-                          Colors.white.withOpacity(0.15),
-                          Colors.white.withOpacity(0.25),
-                          Colors.white.withOpacity(0.15),
+                          Colors.white.withOpacity(0.10),
+                          Colors.white.withOpacity(0.17),
+                          Colors.white.withOpacity(0.10),
                         ],
                       ),
                     ),
                   ),
                 ),
-                // FE-UI-053: Subtle left edge highlight
+                // FE-UI-058: Left edge highlight (reduced 30%)
                 Positioned(
                   top: 0,
                   left: 0,
@@ -162,15 +175,15 @@ class GlassCard extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.white.withOpacity(0.20),
-                          Colors.white.withOpacity(0.10),
+                          Colors.white.withOpacity(0.14),
+                          Colors.white.withOpacity(0.07),
                           Colors.transparent,
                         ],
                       ),
                     ),
                   ),
                 ),
-                // FE-UI-053: Very subtle right edge
+                // FE-UI-058: Right edge highlight (reduced 30%)
                 Positioned(
                   top: 0,
                   right: 0,
@@ -182,8 +195,8 @@ class GlassCard extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.white.withOpacity(0.15),
-                          Colors.white.withOpacity(0.05),
+                          Colors.white.withOpacity(0.10),
+                          Colors.white.withOpacity(0.03),
                           Colors.transparent,
                         ],
                       ),

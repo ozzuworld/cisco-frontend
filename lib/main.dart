@@ -49,11 +49,11 @@ class CiscoApp extends StatelessWidget {
       cardColor: Colors.transparent, // Force cards to use explicit colors only
       dialogBackgroundColor: isDark ? DesignTokens.backgroundBase : Colors.white,
 
-      // FE-UI-055: Input decoration with TRANSPARENT background
-      // Only ONE translucent layer allowed (the card itself)
+      // FE-UI-059: Flat content mode - inputs etched directly on glass
+      // No pill containers, transparent background, border-only
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.transparent, // FE-UI-055: No background, border-only
+        fillColor: Colors.transparent, // FE-UI-059: No background, etched appearance
         border: OutlineInputBorder(
           borderRadius: DesignTokens.inputBorderRadius,
           borderSide: BorderSide(
@@ -76,7 +76,7 @@ class CiscoApp extends StatelessWidget {
           borderRadius: DesignTokens.inputBorderRadius,
           borderSide: BorderSide(
             color: DesignTokens.accentPrimary.withOpacity(DesignTokens.inputFocusBorderOpacity),
-            width: 1.5,
+            width: 1.0, // FE-UI-059: 1px for etched look (not thick pill)
           ),
         ),
         errorBorder: OutlineInputBorder(

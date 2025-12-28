@@ -84,6 +84,10 @@ class GlassCard extends StatelessWidget {
   /// Toggle blur ON → see same features distort (proves refraction)
   final bool debugDisableBlur;
 
+  /// FE-UI-110: Debug mode to exaggerate reflections 3× for tuning
+  /// Helps visualize and tune reflection system, then return to normal
+  final bool debugExaggerateReflections;
+
   const GlassCard({
     super.key,
     this.header,
@@ -97,6 +101,7 @@ class GlassCard extends StatelessWidget {
     this.margin,
     this.debugShowFillProof = false, // FE-UI-083: Debug overlay toggle
     this.debugDisableBlur = false, // FE-UI-096: Blur toggle for intersection test
+    this.debugExaggerateReflections = false, // FE-UI-110: Reflection tuning mode
   });
 
   @override
@@ -114,14 +119,14 @@ class GlassCard extends StatelessWidget {
       margin: effectiveMargin,
       decoration: BoxDecoration(
         borderRadius: effectiveBorderRadius,
-        // FE-UI-093: NO DARK ENERGY under card (shadow opacity ≤ 12%)
-        // Minimal contact shadow only - no dark mass/halo
+        // FE-UI-111: THIN SHEET contact shadow (not panel depth)
+        // Minimal contact shadow only - thin glass sheet on surface
         boxShadow: showShadow
             ? [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.10),  // Reduced to 10% (was 15%)
-                  blurRadius: 8,  // Reduced from 12 (tighter shadow)
-                  offset: const Offset(0, 1),  // Reduced from 2 (closer to card)
+                  color: Colors.black.withOpacity(0.07),  // FE-UI-111: 10% → 7%
+                  blurRadius: 6,  // FE-UI-111: 8 → 6 (tighter)
+                  offset: const Offset(0, 0.5),  // FE-UI-111: (0,1) → (0,0.5)
                   spreadRadius: 0,  // No spread (strict requirement)
                 ),
               ]
@@ -173,18 +178,18 @@ class GlassCard extends StatelessWidget {
               ),
             ),
           ),
-          // FE-UI-086: Inner shadow EXTREMELY subtle (not slab depth cue)
-          // Provides perceived thickness without dark fog band
+          // FE-UI-111: Inner shadow MINIMAL (thin sheet, not thick panel)
+          // Extremely subtle - just enough for perceived surface, no dark banding
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: effectiveBorderRadius,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.12), // Reduced from 25%
-                    blurRadius: 6, // Reduced from 8
-                    spreadRadius: -3, // Tighter than -4
-                    offset: const Offset(0, 1), // Reduced from 2
+                    color: Colors.black.withOpacity(0.08), // FE-UI-111: 12% → 8%
+                    blurRadius: 4, // FE-UI-111: 6 → 4 (tighter)
+                    spreadRadius: -2, // FE-UI-111: -3 → -2 (smaller)
+                    offset: const Offset(0, 0.5), // FE-UI-111: (0,1) → (0,0.5)
                   ),
                 ],
               ),
@@ -255,67 +260,147 @@ class GlassCard extends StatelessWidget {
               ),
             ),
           ),
-          // FE-UI-091: Diagonal specular sweep (top-left → bottom-right)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+          // FE-UI-110: SPECULAR REFLECTION SYSTEM V2
+          // Replaces FE-UI-091 (old diagonal sweep) and FE-UI-063 (old corner glow)
+          // Makes glass look "wet" and liquid, not just transparent
+
+          // Primary sheen sweep (broad diagonal highlight)
+          Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: effectiveBorderRadius,
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                  end: Alignment.center,
                   colors: [
-                    Colors.white.withOpacity(0.08), // Light source
-                    Colors.transparent,
+                    Colors.white.withOpacity(
+                      debugExaggerateReflections ? 0.35 : 0.12
+                    ),
+                    Colors.white.withOpacity(
+                      debugExaggerateReflections ? 0.15 : 0.05
+                    ),
                     Colors.transparent,
                   ],
-                  stops: const [0.0, 0.3, 1.0],
+                  stops: const [0.0, 0.15, 0.35],
                 ),
               ),
             ),
           ),
-          // FE-UI-063: Corner glow/bloom (subtle refraction at corners)
+
+          // Secondary tight edge catchlight (top + upper corners)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 1.5,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(effectiveBorderRadius.topLeft.x),
+                  topRight: Radius.circular(effectiveBorderRadius.topRight.x),
+                ),
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(
+                      debugExaggerateReflections ? 0.90 : 0.30
+                    ),
+                    Colors.white.withOpacity(
+                      debugExaggerateReflections ? 0.70 : 0.23
+                    ),
+                    Colors.white.withOpacity(
+                      debugExaggerateReflections ? 0.50 : 0.17
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Corner caustic glow - TOP LEFT (enhanced, very localized)
           Positioned(
             top: 0,
             left: 0,
             child: Container(
-              width: 40,
-              height: 40,
+              width: 60,
+              height: 60,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(effectiveBorderRadius.topLeft.x),
                 ),
                 gradient: RadialGradient(
+                  center: Alignment.topLeft,
+                  radius: 0.8,
                   colors: [
-                    Colors.white.withOpacity(0.18),
+                    Colors.white.withOpacity(
+                      debugExaggerateReflections ? 0.80 : 0.28
+                    ),
+                    Colors.white.withOpacity(
+                      debugExaggerateReflections ? 0.40 : 0.14
+                    ),
                     Colors.transparent,
                   ],
+                  stops: const [0.0, 0.4, 1.0],
                 ),
               ),
             ),
           ),
+
+          // Corner caustic glow - TOP RIGHT (offset, asymmetric)
           Positioned(
             top: 0,
             right: 0,
             child: Container(
-              width: 30,
-              height: 30,
+              width: 45,
+              height: 45,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
                   topRight: Radius.circular(effectiveBorderRadius.topRight.x),
                 ),
                 gradient: RadialGradient(
+                  center: Alignment.topRight,
+                  radius: 0.7,
                   colors: [
-                    Colors.white.withOpacity(0.12),
+                    Colors.white.withOpacity(
+                      debugExaggerateReflections ? 0.60 : 0.20
+                    ),
+                    Colors.white.withOpacity(
+                      debugExaggerateReflections ? 0.30 : 0.10
+                    ),
                     Colors.transparent,
                   ],
+                  stops: const [0.0, 0.5, 1.0],
                 ),
               ),
             ),
           ),
+
+          // Specular hotspot - upper-left quadrant (simulates angled light reflection)
+          Positioned(
+            top: effectiveBorderRadius.topLeft.y + 20,
+            left: effectiveBorderRadius.topLeft.x + 30,
+            child: Container(
+              width: 80,
+              height: 50,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(40),
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 0.9,
+                  colors: [
+                    Colors.white.withOpacity(
+                      debugExaggerateReflections ? 0.50 : 0.17
+                    ),
+                    Colors.white.withOpacity(
+                      debugExaggerateReflections ? 0.20 : 0.07
+                    ),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.6, 1.0],
+                ),
+              ),
+            ),
+          ),
+
           // FE-UI-048: Subtle noise/grain overlay (for refraction detail)
           Positioned.fill(
             child: ClipRRect(

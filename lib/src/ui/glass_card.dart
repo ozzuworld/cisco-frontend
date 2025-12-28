@@ -225,56 +225,56 @@ class _GlassCardState extends State<GlassCard> {
               ),
             ),
           ),
-          // FE-UI-091: LIGHT DIRECTION SYSTEM (top-left → bottom-right)
-          // Top highlight band - stronger on left (light source side)
+          // FE-UI-091 / FE-UI-120: Top edge highlight - refined for clean corners
+          // Inset slightly to avoid corner overlap artifacts
           Positioned(
             top: 0,
-            left: 0,
-            right: 0,
+            left: 2, // Inset to avoid corner conflict
+            right: 2,
             child: Container(
-              height: 2,
+              height: 1.5, // Slightly thinner
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(effectiveBorderRadius.topLeft.x),
-                  topRight: Radius.circular(effectiveBorderRadius.topRight.x),
+                  topLeft: Radius.circular(effectiveBorderRadius.topLeft.x - 2),
+                  topRight: Radius.circular(effectiveBorderRadius.topRight.x - 2),
                 ),
                 gradient: LinearGradient(
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: [
-                    Colors.white.withOpacity(0.22), // Brighter left (light source)
-                    Colors.white.withOpacity(0.17),
-                    Colors.white.withOpacity(0.08), // Dimmer right (away from light)
+                    Colors.white.withOpacity(0.18), // Reduced (was 0.22)
+                    Colors.white.withOpacity(0.14), // Reduced (was 0.17)
+                    Colors.white.withOpacity(0.06), // Reduced (was 0.08)
                   ],
                 ),
               ),
             ),
           ),
-          // FE-UI-091: Left edge highlight - STRONG (receiving light)
+          // FE-UI-091 / FE-UI-120: Left edge highlight - clean from corner
           Positioned(
-            top: 0,
+            top: effectiveBorderRadius.topLeft.y, // Start below corner radius
             left: 0,
-            bottom: 0,
+            bottom: effectiveBorderRadius.bottomLeft.y,
             child: Container(
-              width: 2, // Increased from 1.5
+              width: 1.5, // Thinner (was 2)
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white.withOpacity(0.20), // Brighter top (light)
-                    Colors.white.withOpacity(0.10),
-                    Colors.white.withOpacity(0.03), // Dimmer bottom
+                    Colors.white.withOpacity(0.16), // Reduced (was 0.20)
+                    Colors.white.withOpacity(0.08), // Reduced (was 0.10)
+                    Colors.white.withOpacity(0.02), // Reduced (was 0.03)
                   ],
                 ),
               ),
             ),
           ),
-          // FE-UI-091: Right edge highlight - WEAK (shadow side)
+          // FE-UI-091 / FE-UI-120: Right edge highlight - subtle, clean
           Positioned(
-            top: 0,
+            top: effectiveBorderRadius.topRight.y, // Start below corner radius
             right: 0,
-            bottom: 0,
+            bottom: effectiveBorderRadius.bottomRight.y,
             child: Container(
               width: 1,
               decoration: BoxDecoration(
@@ -282,7 +282,7 @@ class _GlassCardState extends State<GlassCard> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white.withOpacity(0.06), // Much dimmer (shadow side)
+                    Colors.white.withOpacity(0.05), // Reduced (was 0.06)
                     Colors.white.withOpacity(0.02),
                     Colors.transparent,
                   ],
@@ -321,28 +321,29 @@ class _GlassCardState extends State<GlassCard> {
             ),
           ),
 
-          // Secondary tight edge catchlight (top + upper corners)
+          // FE-UI-120: Secondary tight edge catchlight - clean corner rendering
+          // Inset slightly and reduced opacity for cleaner appearance
           Positioned(
             top: 0,
-            left: 0,
-            right: 0,
+            left: 1, // Slight inset to avoid corner artifacts
+            right: 1,
             child: Container(
-              height: 1.5,
+              height: 1,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(effectiveBorderRadius.topLeft.x),
-                  topRight: Radius.circular(effectiveBorderRadius.topRight.x),
+                  topLeft: Radius.circular(effectiveBorderRadius.topLeft.x - 1),
+                  topRight: Radius.circular(effectiveBorderRadius.topRight.x - 1),
                 ),
                 gradient: LinearGradient(
                   colors: [
                     Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.90 : 0.30
+                     widget.debugExaggerateReflections ? 0.90 : 0.24 // Reduced (was 0.30)
                     ),
                     Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.70 : 0.23
+                     widget.debugExaggerateReflections ? 0.70 : 0.18 // Reduced (was 0.23)
                     ),
                     Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.50 : 0.17
+                     widget.debugExaggerateReflections ? 0.50 : 0.12 // Reduced (was 0.17)
                     ),
                   ],
                 ),
@@ -350,59 +351,61 @@ class _GlassCardState extends State<GlassCard> {
             ),
           ),
 
-          // Corner caustic glow - TOP LEFT (enhanced, very localized)
+          // FE-UI-120: Corner caustic glow - TOP LEFT (refined for clean edges)
+          // Reduced intensity and tighter radius to prevent muddy corners
           Positioned(
             top: 0,
             left: 0,
             child: Container(
-              width: 60,
-              height: 60,
+              width: 50,
+              height: 50,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(effectiveBorderRadius.topLeft.x),
+                  topLeft: effectiveBorderRadius.topLeft,
                 ),
                 gradient: RadialGradient(
                   center: Alignment.topLeft,
-                  radius: 0.8,
+                  radius: 0.6, // Tighter (was 0.8)
                   colors: [
                     Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.80 : 0.28
+                     widget.debugExaggerateReflections ? 0.80 : 0.18 // Reduced (was 0.28)
                     ),
                     Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.40 : 0.14
+                     widget.debugExaggerateReflections ? 0.40 : 0.08 // Reduced (was 0.14)
                     ),
                     Colors.transparent,
                   ],
-                  stops: const [0.0, 0.4, 1.0],
+                  stops: const [0.0, 0.5, 1.0], // Faster falloff
                 ),
               ),
             ),
           ),
 
-          // Corner caustic glow - TOP RIGHT (offset, asymmetric)
+          // FE-UI-120: Corner caustic glow - TOP RIGHT (refined, asymmetric)
+          // More subtle to reduce corner complexity
           Positioned(
             top: 0,
             right: 0,
             child: Container(
-              width: 45,
-              height: 45,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(effectiveBorderRadius.topRight.x),
+                  topRight: effectiveBorderRadius.topRight,
                 ),
                 gradient: RadialGradient(
                   center: Alignment.topRight,
-                  radius: 0.7,
+                  radius: 0.55, // Tighter (was 0.7)
                   colors: [
                     Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.60 : 0.20
+                     widget.debugExaggerateReflections ? 0.60 : 0.12 // Reduced (was 0.20)
                     ),
                     Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.30 : 0.10
+                     widget.debugExaggerateReflections ? 0.30 : 0.05 // Reduced (was 0.10)
                     ),
                     Colors.transparent,
                   ],
-                  stops: const [0.0, 0.5, 1.0],
+                  stops: const [0.0, 0.55, 1.0], // Faster falloff
                 ),
               ),
             ),

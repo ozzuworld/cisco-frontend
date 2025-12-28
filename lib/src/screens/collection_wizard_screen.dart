@@ -62,6 +62,9 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
   // FE-UI-085: Environment plate toggle for A/B proof
   bool _showEnvironmentPlate = true; // Default ON
 
+  // FE-UI-096: Blur toggle for environment intersection test
+  bool _disableBlur = false;
+
   // Expansion state for accordion
   int? _expandedStepIndex;
 
@@ -192,6 +195,17 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                 },
                 color: _showEnvironmentPlate ? const Color(0xFF00FF00) : Colors.red,
               ),
+              // FE-UI-096: Blur toggle for intersection testing
+              IconButton(
+                icon: Icon(_disableBlur ? Icons.blur_off : Icons.blur_on),
+                tooltip: 'Toggle Blur (FE-UI-096 Intersection Test)',
+                onPressed: () {
+                  setState(() {
+                    _disableBlur = !_disableBlur;
+                  });
+                },
+                color: _disableBlur ? Colors.amber : const Color(0xFF00BFFF),
+              ),
               // FE-UI-066: Debug test pattern toggle
               IconButton(
                 icon: Icon(_showGlassTestPattern ? Icons.grid_on : Icons.grid_off),
@@ -222,15 +236,17 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                 // ≥ 3 large gradients (800-1200px), ≥ 2 mid blobs (300-500px)
                 // Visible luminance contrast (12-18% delta minimum)
                 if (_showEnvironmentPlate) ...[
-                  // Large bloom #1: Top center (blue/white @ 12-15%)
+                  // FE-UI-096: Large bloom #1 repositioned to INTERSECT glass card
+                  // Was: top: -200 (mostly off-screen)
+                  // Now: top: 150 (visibly passes through center where card lives)
                   Positioned(
-                  top: -200,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Container(
-                      width: 1000, // Increased from 800
-                      height: 1000,
+                    top: 150, // FE-UI-096: Moved down to intersect card area
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        width: 1000, // Increased from 800
+                        height: 1000,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
@@ -280,6 +296,26 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                           Colors.transparent,
                         ],
                         stops: const [0.0, 0.5, 0.9],
+                      ),
+                    ),
+                  ),
+                ),
+                // FE-UI-096: Diagonal gradient band that crosses glass card
+                // This provides clear linear structure for blur distortion
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.transparent,
+                          DesignTokens.bloomPrimary.withOpacity(0.10),
+                          Colors.transparent,
+                          DesignTokens.bloomSecondary.withOpacity(0.08),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
                       ),
                     ),
                   ),
@@ -689,6 +725,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
       padding: const EdgeInsets.all(DesignTokens.paddingLarge),
       // FE-UI-083: Pass debug fill proof toggle
       debugShowFillProof: _showFillProof,
+      // FE-UI-096: Pass blur toggle for intersection testing
+      debugDisableBlur: _disableBlur,
       header: Row(
         children: [
           // FE-UI-042: Icon with subtle background

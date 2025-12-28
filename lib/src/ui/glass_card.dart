@@ -383,15 +383,15 @@ class BreadcrumbChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: effectivePadding,
         decoration: BoxDecoration(
-          // FE-UI-046: Use design tokens for consistent glass look
+          // FE-UI-066: Use liquid glass tokens for consistent look
           color: isSelected
               ? DesignTokens.accentPrimary.withOpacity(0.20)
-              : Colors.white.withOpacity(DesignTokens.glassFillOpacity),
+              : Colors.white.withOpacity(DesignTokens.glassFrostOpacity),
           borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
           border: Border.all(
             color: isSelected
                 ? DesignTokens.accentPrimary.withOpacity(0.50)
-                : Colors.white.withOpacity(DesignTokens.glassBorderOpacity),
+                : Colors.white.withOpacity(DesignTokens.glassRimInnerOpacity),
             width: 1,
           ),
         ),

@@ -102,30 +102,30 @@ class GlassCard extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: effectiveBorderRadius,
-              // BRIGHT visible border for glass effect
+              // LUMINOUS border like the reference
               border: Border.all(
-                color: Colors.white.withOpacity(0.25),
-                width: 1.5,
+                color: Colors.white.withOpacity(0.40),
+                width: 2,
               ),
-              // Translucent glass fill - lighter for visibility
+              // Much brighter translucent fill
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.white.withOpacity(0.15),
-                  Colors.white.withOpacity(0.12),
+                  Colors.white.withOpacity(0.22),
+                  Colors.white.withOpacity(0.18),
                 ],
               ),
             ),
             child: Stack(
               children: [
-                // BRIGHT top edge highlight - this is what makes it look like glass
+                // SUPER BRIGHT top edge highlight - KEY to glass look
                 Positioned(
                   top: 0,
                   left: 0,
                   right: 0,
                   child: Container(
-                    height: 2,
+                    height: 3,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(effectiveBorderRadius.topLeft.x),
@@ -135,18 +135,38 @@ class GlassCard extends StatelessWidget {
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
                         colors: [
-                          Colors.white.withOpacity(0.4),
-                          Colors.white.withOpacity(0.6),
-                          Colors.white.withOpacity(0.4),
+                          Colors.white.withOpacity(0.5),
+                          Colors.white.withOpacity(0.8),
+                          Colors.white.withOpacity(0.5),
                         ],
                       ),
                     ),
                   ),
                 ),
-                // Left edge highlight
+                // Bright left edge
                 Positioned(
                   top: 0,
                   left: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 2,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withOpacity(0.5),
+                          Colors.white.withOpacity(0.2),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Right edge highlight
+                Positioned(
+                  top: 0,
+                  right: 0,
                   bottom: 0,
                   child: Container(
                     width: 1,
@@ -163,7 +183,7 @@ class GlassCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Diagonal sheen
+                // Strong diagonal sheen
                 Positioned.fill(
                   child: ClipRRect(
                     borderRadius: effectiveBorderRadius,
@@ -173,11 +193,11 @@ class GlassCard extends StatelessWidget {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Colors.white.withOpacity(0.15),
-                            Colors.transparent,
+                            Colors.white.withOpacity(0.25),
+                            Colors.white.withOpacity(0.05),
                             Colors.transparent,
                           ],
-                          stops: const [0.0, 0.4, 1.0],
+                          stops: const [0.0, 0.5, 1.0],
                         ),
                       ),
                     ),

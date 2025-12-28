@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
 import '../services/http_client.dart';
+import '../services/background_service.dart';
 import '../models/cucm_node.dart';
 import '../models/api_error.dart';
 import '../models/collection_flow_state.dart';
+import '../ui/background_renderer.dart';
+import '../ui/design_tokens.dart';
 import 'settings_screen.dart';
 import 'profile_selection_screen.dart';
 
@@ -162,9 +165,9 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
             Container(
               padding: const EdgeInsets.all(12.0),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: Colors.white.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(8.0),
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,14 +290,32 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Discover Cluster'),
+        title: Text('Discover Cluster', style: TextStyle(color: DesignTokens.textPrimary)),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(color: DesignTokens.textPrimary),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      body: Consumer<BackgroundService>(
+        builder: (context, backgroundService, child) {
+          return Stack(
+            children: [
+              // Blue gradient background
+              Positioned.fill(
+                child: BackgroundRenderer(
+                  preset: backgroundService.activePreset,
+                  enabled: true,
+                ),
+              ),
+              // Main content
+              SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
             // Discovery Form
             Card(
               child: Padding(
@@ -461,13 +482,13 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: _selectedNodeIps.isEmpty
-                                ? Colors.red.shade50
-                                : Colors.blue.shade50,
+                                ? Colors.red.withOpacity(0.1)
+                                : Colors.blue.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8.0),
                             border: Border.all(
                               color: _selectedNodeIps.isEmpty
-                                  ? Colors.red.shade300
-                                  : Colors.blue.shade300,
+                                  ? Colors.red.withOpacity(0.3)
+                                  : Colors.blue.withOpacity(0.3),
                             ),
                           ),
                           child: Row(
@@ -487,8 +508,8 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                                   key: ValueKey(_selectedNodeIps.isEmpty),
                                   size: 18,
                                   color: _selectedNodeIps.isEmpty
-                                      ? Colors.red.shade700
-                                      : Colors.blue.shade700,
+                                      ? Colors.red
+                                      : Colors.blue,
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -503,8 +524,8 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.w500,
                                       color: _selectedNodeIps.isEmpty
-                                          ? Colors.red.shade900
-                                          : Colors.blue.shade900,
+                                          ? Colors.red.shade200
+                                          : Colors.blue.shade200,
                                     ),
                                   ),
                                 ),
@@ -518,8 +539,8 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                         Container(
                           padding: const EdgeInsets.all(12.0),
                           decoration: BoxDecoration(
-                            color: Colors.orange.shade50,
-                            border: Border.all(color: Colors.orange.shade300),
+                            color: Colors.orange.withOpacity(0.1),
+                            border: Border.all(color: Colors.orange.withOpacity(0.3)),
                             borderRadius: BorderRadius.circular(8.0),
                           ),
                           child: Column(
@@ -527,7 +548,7 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.warning, color: Colors.orange.shade700),
+                                  Icon(Icons.warning, color: Colors.orange),
                                   const SizedBox(width: 8),
                                   const Expanded(
                                     child: Text(
@@ -542,7 +563,7 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                                 'Check your credentials and try again.',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Colors.orange.shade900,
+                                  color: Colors.orange.shade200,
                                 ),
                               ),
                               if (_discoveryResult!.rawOutput != null) ...[
@@ -552,7 +573,7 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(8.0),
                                   decoration: BoxDecoration(
-                                    color: Colors.black87,
+                                    color: Colors.black.withOpacity(0.3),
                                     borderRadius: BorderRadius.circular(4.0),
                                   ),
                                   child: Text(
@@ -586,19 +607,23 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                 ),
               ),
             ],
-          ],
-        ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
       bottomNavigationBar: _discoveryResult != null &&
               _discoveryResult!.hasNodes
           ? Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
+                color: DesignTokens.backgroundBase.withOpacity(0.8),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 8,
                     offset: const Offset(0, -2),
                   ),
                 ],
@@ -647,15 +672,15 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                     padding: const EdgeInsets.all(8.0),
                     decoration: BoxDecoration(
                       color: node.role?.toLowerCase() == 'publisher'
-                          ? Colors.blue.shade50
-                          : Colors.grey.shade50,
+                          ? Colors.blue.withOpacity(0.2)
+                          : Colors.grey.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: Icon(
                       Icons.computer,
                       color: node.role?.toLowerCase() == 'publisher'
-                          ? Colors.blue.shade700
-                          : Colors.grey.shade700,
+                          ? Colors.blue
+                          : Colors.grey,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -686,8 +711,8 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: node.role?.toLowerCase() == 'publisher'
-                            ? Colors.blue
-                            : Colors.grey,
+                            ? Colors.blue.withOpacity(0.8)
+                            : Colors.grey.withOpacity(0.6),
                         borderRadius: BorderRadius.circular(12.0),
                       ),
                       child: Text(

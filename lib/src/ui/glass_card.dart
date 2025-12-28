@@ -61,8 +61,12 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // FE-043: Reduced default padding from 24 to 16
-    final effectivePadding = padding ?? const EdgeInsets.all(16);
+    // FE-UI-050: Use card-specific padding tokens
+    final effectivePadding = padding ??
+        const EdgeInsets.symmetric(
+          horizontal: DesignTokens.paddingCardHorizontal,
+          vertical: DesignTokens.paddingCardVertical,
+        );
     final effectiveBorderRadius = borderRadius ?? DesignTokens.cardBorderRadius;
     final effectiveMargin = margin ?? EdgeInsets.zero;
 
@@ -70,17 +74,18 @@ class GlassCard extends StatelessWidget {
       margin: effectiveMargin,
       decoration: BoxDecoration(
         borderRadius: effectiveBorderRadius,
+        // FE-UI-048: Soft shadows (not heavy gray block)
         boxShadow: showShadow
             ? [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 24,
+                  color: Colors.black.withOpacity(DesignTokens.shadowOuterOpacity),
+                  blurRadius: DesignTokens.shadowOuterBlur,
                   offset: const Offset(0, 8),
-                  spreadRadius: -4,
+                  spreadRadius: DesignTokens.shadowOuterSpread,
                 ),
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 12,
+                  color: Colors.black.withOpacity(DesignTokens.shadowInnerOpacity),
+                  blurRadius: DesignTokens.shadowInnerBlur,
                   offset: const Offset(0, 4),
                 ),
               ]
@@ -90,60 +95,103 @@ class GlassCard extends StatelessWidget {
         borderRadius: effectiveBorderRadius,
         child: BackdropFilter(
           filter: ImageFilter.blur(
-            // FE-UI-042: Stronger blur for frosted effect
-            sigmaX: blurStrength * 1.2,
-            sigmaY: blurStrength * 1.2,
+            // FE-UI-048: Real blur sigma 16 (web-optimized)
+            sigmaX: blurStrength,
+            sigmaY: blurStrength,
           ),
           child: Container(
             decoration: BoxDecoration(
-              // FE-UI-047: Black glass - dark tint for "dark glass on black" look
-              color: Colors.black.withOpacity(0.28),
               borderRadius: effectiveBorderRadius,
-              // Thin border highlight
+              // FE-UI-048: Outer border - white 14-18%
               border: Border.all(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withOpacity(DesignTokens.glassBorderOpacity),
                 width: 1,
               ),
-              // Subtle dark gradient for depth
+              // FE-UI-048: Glass fill with vertical gradient (top brighter)
               gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withOpacity(0.25),
-                  Colors.black.withOpacity(0.35),
+                  Colors.white.withOpacity(DesignTokens.glassFillOpacityFocus),
+                  Colors.white.withOpacity(DesignTokens.glassFillOpacity),
                 ],
               ),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: Stack(
               children: [
-                if (header != null) ...[
-                  Padding(
-                    padding: EdgeInsets.only(
-                      left: effectivePadding.left,
-                      right: effectivePadding.right,
-                      top: effectivePadding.top,
-                      bottom: DesignTokens.spacingComponent,
-                    ),
-                    child: header!,
-                  ),
-                  Divider(
+                // FE-UI-048: Inner highlight rim (top edge stronger)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
                     height: 1,
-                    thickness: 1,
-                    color: Colors.white.withOpacity(0.12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [
+                          Colors.white.withOpacity(DesignTokens.glassHighlightOpacity),
+                          Colors.white.withOpacity(DesignTokens.glassHighlightOpacity * 0.5),
+                          Colors.white.withOpacity(DesignTokens.glassHighlightOpacity),
+                        ],
+                      ),
+                    ),
                   ),
-                  SizedBox(height: effectivePadding.bottom),
-                ],
-                Padding(
-                  padding: header != null
-                      ? EdgeInsets.only(
+                ),
+                // FE-UI-048: Optional subtle specular sheen (diagonal)
+                Positioned.fill(
+                  child: ClipRRect(
+                    borderRadius: effectiveBorderRadius,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withOpacity(0.04),
+                            Colors.transparent,
+                            Colors.transparent,
+                          ],
+                          stops: const [0.0, 0.3, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // Content
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (header != null) ...[
+                      Padding(
+                        padding: EdgeInsets.only(
                           left: effectivePadding.left,
                           right: effectivePadding.right,
-                          bottom: effectivePadding.bottom,
-                        )
-                      : effectivePadding,
-                  child: body,
+                          top: effectivePadding.top,
+                          bottom: DesignTokens.spacingComponent,
+                        ),
+                        child: header!,
+                      ),
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: Colors.white.withOpacity(0.12),
+                      ),
+                      SizedBox(height: effectivePadding.bottom),
+                    ],
+                    Padding(
+                      padding: header != null
+                          ? EdgeInsets.only(
+                              left: effectivePadding.left,
+                              right: effectivePadding.right,
+                              bottom: effectivePadding.bottom,
+                            )
+                          : effectivePadding,
+                      child: body,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -173,7 +221,6 @@ class BreadcrumbChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // FE-043: Compact padding
     final effectivePadding = padding ??
         const EdgeInsets.symmetric(horizontal: 12, vertical: 6);
 
@@ -184,15 +231,15 @@ class BreadcrumbChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: effectivePadding,
         decoration: BoxDecoration(
-          // FE-UI-044: Colors for dark background
+          // FE-UI-046: Use design tokens for consistent glass look
           color: isSelected
-              ? DesignTokens.accentColor.shade700.withOpacity(0.25)
-              : Colors.white.withOpacity(0.08),
+              ? DesignTokens.accentPrimary.withOpacity(0.20)
+              : Colors.white.withOpacity(DesignTokens.glassFillOpacity),
           borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
           border: Border.all(
             color: isSelected
-                ? DesignTokens.accentColor.shade400.withOpacity(0.5)
-                : Colors.white.withOpacity(0.12),
+                ? DesignTokens.accentPrimary.withOpacity(0.50)
+                : Colors.white.withOpacity(DesignTokens.glassBorderOpacity),
             width: 1,
           ),
         ),

@@ -153,12 +153,12 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
         });
 
         return Scaffold(
-          backgroundColor: const Color(0xFF0A0A0F),
+          backgroundColor: DesignTokens.backgroundBase,
           appBar: AppBar(
-            title: const Text('Collection Wizard', style: TextStyle(color: Colors.white)),
+            title: Text('Collection Wizard', style: TextStyle(color: DesignTokens.textPrimary)),
             backgroundColor: Colors.transparent,
             elevation: 0,
-            iconTheme: const IconThemeData(color: Colors.white),
+            iconTheme: IconThemeData(color: DesignTokens.textPrimary),
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh),
@@ -167,59 +167,67 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
               ),
             ],
           ),
-          // FE-UI-046: True near-black background (no visible pastel wash)
+          // FE-UI-047: True dark background with Apple-style bloom
           body: Container(
-            decoration: const BoxDecoration(
-              // Solid near-black base - no gradient
-              color: Color(0xFF0A0A0F),
+            decoration: BoxDecoration(
+              // Base layer: solid #05060A (avoids banding)
+              color: DesignTokens.backgroundBase,
             ),
             child: Stack(
               children: [
-                // FE-UI-046: VERY subtle glow only behind center card area
-                // Positioned to only affect the card region, not entire viewport
+                // FE-UI-047: Subtle bloom - top center (white/blue @ 6-8%)
                 Positioned(
-                  top: 200,
+                  top: -200,
                   left: 0,
                   right: 0,
                   child: Center(
                     child: Container(
-                      width: 600,
-                      height: 600,
+                      width: 800,
+                      height: 800,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            Colors.blue.shade900.withOpacity(0.025),
+                            DesignTokens.bloomSecondary.withOpacity(0.07),
+                            DesignTokens.bloomPrimary.withOpacity(0.04),
                             Colors.transparent,
                           ],
-                          stops: const [0.0, 0.7],
+                          stops: const [0.0, 0.4, 0.8],
                         ),
                       ),
                     ),
                   ),
                 ),
-                // Darker vignette for true black edges
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: Alignment.center,
-                      radius: 1.0,
-                      colors: [
-                        Colors.transparent,
-                        const Color(0xFF0A0A0F).withOpacity(0.8),
-                      ],
-                      stops: const [0.5, 1.0],
+                // FE-UI-047: Subtle bloom - bottom left (purple @ 4-6%)
+                Positioned(
+                  bottom: -250,
+                  left: -250,
+                  child: Container(
+                    width: 700,
+                    height: 700,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          DesignTokens.bloomTertiary.withOpacity(0.05),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.7],
+                      ),
                     ),
                   ),
                 ),
+                // FE-UI-047: Noise texture overlay
+                // TODO: Implement monochrome noise at 3-6% opacity (requires CustomPainter or image asset)
+
                 // Main content
                 SingleChildScrollView(
                   controller: _scrollController,
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
                   child: Center(
                     child: ConstrainedBox(
-                      // FE-UI-043: Max width for desktop
-                      constraints: const BoxConstraints(maxWidth: 950),
+                      // FE-UI-050: Max width for wizard card
+                      constraints: const BoxConstraints(maxWidth: DesignTokens.wizardCardMaxWidth),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [

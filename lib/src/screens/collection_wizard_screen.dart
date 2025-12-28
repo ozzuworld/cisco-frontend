@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
 import '../models/collection_flow_state.dart';
@@ -176,61 +177,65 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
             elevation: 0,
             iconTheme: IconThemeData(color: DesignTokens.textPrimary),
             actions: [
-              // FE-UI-083: Fill proof debug toggle
-              IconButton(
-                icon: Icon(_showFillProof ? Icons.bug_report : Icons.bug_report_outlined),
-                tooltip: 'Toggle Fill Proof (FE-UI-083)',
-                onPressed: () {
-                  setState(() {
-                    _showFillProof = !_showFillProof;
-                  });
-                },
-                color: _showFillProof ? const Color(0xFFFF1493) : DesignTokens.textPrimary,
-              ),
-              // FE-UI-085: Environment plate A/B toggle
-              IconButton(
-                icon: Icon(_showEnvironmentPlate ? Icons.landscape : Icons.landscape_outlined),
-                tooltip: 'Toggle Environment Plate (FE-UI-085 A/B Test)',
-                onPressed: () {
-                  setState(() {
-                    _showEnvironmentPlate = !_showEnvironmentPlate;
-                  });
-                },
-                color: _showEnvironmentPlate ? const Color(0xFF00FF00) : Colors.red,
-              ),
-              // FE-UI-096: Blur toggle for intersection testing
-              IconButton(
-                icon: Icon(_disableBlur ? Icons.blur_off : Icons.blur_on),
-                tooltip: 'Toggle Blur (FE-UI-096 Intersection Test)',
-                onPressed: () {
-                  setState(() {
-                    _disableBlur = !_disableBlur;
-                  });
-                },
-                color: _disableBlur ? Colors.amber : const Color(0xFF00BFFF),
-              ),
-              // FE-UI-066: Debug test pattern toggle
-              IconButton(
-                icon: Icon(_showGlassTestPattern ? Icons.grid_on : Icons.grid_off),
-                tooltip: 'Toggle Glass Test Pattern (Debug)',
-                onPressed: () {
-                  setState(() {
-                    _showGlassTestPattern = !_showGlassTestPattern;
-                  });
-                },
-                color: _showGlassTestPattern ? Colors.orange : DesignTokens.textPrimary,
-              ),
-              // FE-UI-109: Glass stage toggle (hard-edge bands)
-              IconButton(
-                icon: Icon(_showGlassStage ? Icons.layers : Icons.layers_outlined),
-                tooltip: 'Toggle Glass Stage (FE-UI-109 Hard-Edge Bands)',
-                onPressed: () {
-                  setState(() {
-                    _showGlassStage = !_showGlassStage;
-                  });
-                },
-                color: _showGlassStage ? const Color(0xFF9D7FFF) : DesignTokens.textSecondary,
-              ),
+              // FE-UI-116: Debug toggles hidden in production builds
+              if (kDebugMode) ...[
+                // FE-UI-083: Fill proof debug toggle
+                IconButton(
+                  icon: Icon(_showFillProof ? Icons.bug_report : Icons.bug_report_outlined),
+                  tooltip: 'Toggle Fill Proof (FE-UI-083)',
+                  onPressed: () {
+                    setState(() {
+                      _showFillProof = !_showFillProof;
+                    });
+                  },
+                  color: _showFillProof ? const Color(0xFFFF1493) : DesignTokens.textPrimary,
+                ),
+                // FE-UI-085: Environment plate A/B toggle
+                IconButton(
+                  icon: Icon(_showEnvironmentPlate ? Icons.landscape : Icons.landscape_outlined),
+                  tooltip: 'Toggle Environment Plate (FE-UI-085 A/B Test)',
+                  onPressed: () {
+                    setState(() {
+                      _showEnvironmentPlate = !_showEnvironmentPlate;
+                    });
+                  },
+                  color: _showEnvironmentPlate ? const Color(0xFF00FF00) : Colors.red,
+                ),
+                // FE-UI-096: Blur toggle for intersection testing
+                IconButton(
+                  icon: Icon(_disableBlur ? Icons.blur_off : Icons.blur_on),
+                  tooltip: 'Toggle Blur (FE-UI-096 Intersection Test)',
+                  onPressed: () {
+                    setState(() {
+                      _disableBlur = !_disableBlur;
+                    });
+                  },
+                  color: _disableBlur ? Colors.amber : const Color(0xFF00BFFF),
+                ),
+                // FE-UI-066: Debug test pattern toggle
+                IconButton(
+                  icon: Icon(_showGlassTestPattern ? Icons.grid_on : Icons.grid_off),
+                  tooltip: 'Toggle Glass Test Pattern (Debug)',
+                  onPressed: () {
+                    setState(() {
+                      _showGlassTestPattern = !_showGlassTestPattern;
+                    });
+                  },
+                  color: _showGlassTestPattern ? Colors.orange : DesignTokens.textPrimary,
+                ),
+                // FE-UI-109: Glass stage toggle (hard-edge bands)
+                IconButton(
+                  icon: Icon(_showGlassStage ? Icons.layers : Icons.layers_outlined),
+                  tooltip: 'Toggle Glass Stage (FE-UI-109 Hard-Edge Bands)',
+                  onPressed: () {
+                    setState(() {
+                      _showGlassStage = !_showGlassStage;
+                    });
+                  },
+                  color: _showGlassStage ? const Color(0xFF9D7FFF) : DesignTokens.textSecondary,
+                ),
+              ],
+              // FE-UI-116: Reset button available in both debug and production
               IconButton(
                 icon: const Icon(Icons.refresh),
                 tooltip: 'Reset Wizard',
@@ -507,112 +512,56 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                   ),
                 ], // End environment plate elements
 
-                // FE-UI-109: GLASS STAGE - Mandatory high-contrast intersection layer
-                // CRITICAL: Hard-edge bands that MUST intersect card area
-                // This layer ensures blur always has sharp structure to refract
+                // FE-UI-118: GLASS STAGE V2 - Thin, sharp, high-frequency structures
+                // CRITICAL: 1-2px line bands with hard edges (not soft gradients)
+                // Creates "liquid refraction" look instead of grey fog
                 if (_showGlassStage) ...[
-                  // Hard-edge diagonal band #1 (45° angle, sharp transitions)
+                  // FE-UI-118: Sharp diagonal line bands (CustomPaint for pixel-perfect edges)
                   Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.transparent,
-                            Colors.white.withOpacity(0.12),
-                            Colors.transparent,
-                          ],
-                          stops: const [0.42, 0.50, 0.58], // 8% wide band, very sharp
-                        ),
-                      ),
+                    child: CustomPaint(
+                      painter: _SharpLineBandsPainter(),
                     ),
                   ),
-                  // Hard-edge diagonal band #2 (-45° angle, intersects center)
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topRight,
-                          end: Alignment.bottomLeft,
-                          colors: [
-                            Colors.transparent,
-                            DesignTokens.bloomTertiary.withOpacity(0.10),
-                            Colors.transparent,
-                          ],
-                          stops: const [0.55, 0.62, 0.69], // Offset from first band
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Hard-edge horizontal band (provides vertical structure)
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            DesignTokens.bloomSecondary.withOpacity(0.08),
-                            Colors.transparent,
-                          ],
-                          stops: const [0.35, 0.40, 0.45], // Upper third
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Medium-frequency shape #1 (positioned to intersect card)
+                  // Subtle micro-contrast accents (very localized, not big blooms)
                   Positioned(
-                    top: 280, // Card vertical center area
-                    left: MediaQuery.of(context).size.width * 0.3,
+                    top: 260,
+                    left: 200,
                     child: Container(
-                      width: 180,
-                      height: 180,
+                      width: 60,
+                      height: 60,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.15),
-                          width: 2,
-                        ),
                         gradient: RadialGradient(
                           colors: [
-                            Colors.transparent,
                             Colors.white.withOpacity(0.06),
                             Colors.transparent,
                           ],
-                          stops: const [0.0, 0.5, 1.0],
                         ),
                       ),
                     ),
                   ),
-                  // Medium-frequency shape #2 (offset, different size)
                   Positioned(
-                    top: 320,
-                    right: MediaQuery.of(context).size.width * 0.25,
+                    top: 350,
+                    right: 180,
                     child: Container(
-                      width: 140,
-                      height: 140,
+                      width: 50,
+                      height: 50,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(70),
-                        border: Border.all(
-                          color: DesignTokens.bloomSecondary.withOpacity(0.12),
-                          width: 1.5,
-                        ),
+                        shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            DesignTokens.bloomSecondary.withOpacity(0.04),
+                            DesignTokens.bloomSecondary.withOpacity(0.05),
                             Colors.transparent,
                           ],
                         ),
                       ),
                     ),
                   ),
-                  // Microtexture layer (fine grain, not blurred blobs)
+                  // Microtexture layer (fine grain for additional refraction detail)
                   Positioned.fill(
                     child: CustomPaint(
                       painter: _GlassStageMicrotexturePainter(
-                        opacity: 0.06,
+                        opacity: 0.05, // FE-UI-118: Reduced from 0.06 (more subtle)
                         seed: 456,
                       ),
                     ),
@@ -738,6 +687,45 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                   ),
                 ),
+
+                // FE-UI-115: Renderer badge (dev-only, bottom-left)
+                // Shows which web renderer is active (HTML vs CanvasKit)
+                if (kDebugMode && kIsWeb)
+                  Positioned(
+                    bottom: 16,
+                    left: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.75),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.web,
+                            size: 14,
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Renderer: CanvasKit', // FE-UI-115: Production baseline
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 11,
+                              fontFamily: 'monospace',
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -3289,4 +3277,79 @@ class _GlassStageMicrotexturePainter extends CustomPainter {
   @override
   bool shouldRepaint(_GlassStageMicrotexturePainter oldDelegate) =>
       oldDelegate.opacity != opacity || oldDelegate.seed != seed;
+}
+
+/// FE-UI-118: Sharp Line Bands Painter
+/// Draws 1-2px diagonal line bands with hard edges for liquid refraction effect
+/// No gradients - pure sharp lines that create clear warping when blurred
+class _SharpLineBandsPainter extends CustomPainter {
+  _SharpLineBandsPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.butt; // Hard edges, no rounding
+
+    // FE-UI-118: Diagonal line bands (1-2px width, sharp)
+    // Band #1: Top-left to bottom-right (45°) - white
+    paint.color = Colors.white.withOpacity(0.15);
+    paint.strokeWidth = 2.0; // 2px sharp line
+
+    // Draw multiple parallel lines for the "band" effect
+    for (double offset = -200; offset <= 200; offset += 100) {
+      canvas.drawLine(
+        Offset(-100 + offset, size.height / 2 - 200),
+        Offset(size.width / 2 + 200 + offset, size.height + 100),
+        paint,
+      );
+    }
+
+    // Band #2: Top-right to bottom-left (-45°) - purple tint
+    paint.color = DesignTokens.bloomTertiary.withOpacity(0.12);
+    paint.strokeWidth = 1.5; // Slightly thinner for variety
+
+    for (double offset = -150; offset <= 250; offset += 120) {
+      canvas.drawLine(
+        Offset(size.width + 100 + offset, size.height / 2 - 250),
+        Offset(size.width / 2 - 200 + offset, size.height + 100),
+        paint,
+      );
+    }
+
+    // Band #3: Horizontal lines (provides vertical structure)
+    paint.color = DesignTokens.bloomSecondary.withOpacity(0.10);
+    paint.strokeWidth = 1.0; // Thinnest
+
+    // Three horizontal lines crossing card area
+    final horizontalLines = [
+      size.height * 0.35, // Upper third
+      size.height * 0.50, // Center
+      size.height * 0.65, // Lower third
+    ];
+
+    for (final y in horizontalLines) {
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(size.width, y),
+        paint,
+      );
+    }
+
+    // FE-UI-118: Thin curved accent lines (adds organic "liquid" feel)
+    paint.color = Colors.white.withOpacity(0.08);
+    paint.strokeWidth = 1.0;
+    paint.style = PaintingStyle.stroke;
+
+    final path = Path();
+    path.moveTo(size.width * 0.2, size.height * 0.3);
+    path.quadraticBezierTo(
+      size.width * 0.5, size.height * 0.35,
+      size.width * 0.8, size.height * 0.4,
+    );
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_SharpLineBandsPainter oldDelegate) => false;
 }

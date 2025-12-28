@@ -1499,12 +1499,28 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                 _startTime = dateTime;
                 _timeRangeError = null;
               });
-              context.read<CollectionFlowState>().setAbsoluteTime(
-                    startTime: dateTime,
-                    endTime: _endTime,
-                  );
+
+              // Validate before updating flow state
               if (dateTime != null && _endTime != null) {
-                _validateTimeRange();
+                final isValid = _validateTimeRange();
+                if (isValid) {
+                  context.read<CollectionFlowState>().setAbsoluteTime(
+                        startTime: dateTime,
+                        endTime: _endTime,
+                      );
+                } else {
+                  // Clear flow state if invalid
+                  context.read<CollectionFlowState>().setAbsoluteTime(
+                        startTime: null,
+                        endTime: null,
+                      );
+                }
+              } else {
+                // Update flow state with partial selection
+                context.read<CollectionFlowState>().setAbsoluteTime(
+                      startTime: dateTime,
+                      endTime: _endTime,
+                    );
               }
             },
           ),
@@ -1517,12 +1533,28 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                 _endTime = dateTime;
                 _timeRangeError = null;
               });
-              context.read<CollectionFlowState>().setAbsoluteTime(
-                    startTime: _startTime,
-                    endTime: dateTime,
-                  );
+
+              // Validate before updating flow state
               if (dateTime != null && _startTime != null) {
-                _validateTimeRange();
+                final isValid = _validateTimeRange();
+                if (isValid) {
+                  context.read<CollectionFlowState>().setAbsoluteTime(
+                        startTime: _startTime,
+                        endTime: dateTime,
+                      );
+                } else {
+                  // Clear flow state if invalid
+                  context.read<CollectionFlowState>().setAbsoluteTime(
+                        startTime: null,
+                        endTime: null,
+                      );
+                }
+              } else {
+                // Update flow state with partial selection
+                context.read<CollectionFlowState>().setAbsoluteTime(
+                      startTime: _startTime,
+                      endTime: dateTime,
+                    );
               }
             },
           ),
@@ -1700,7 +1732,71 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           value: '${_selectedNodeIps.length} node${_selectedNodeIps.length > 1 ? 's' : ''} selected',
           iconColor: Colors.blue.shade700,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
+        // Expandable node list
+        Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: 8.0),
+            childrenPadding: const EdgeInsets.only(left: 40, right: 8, bottom: 8),
+            title: Text(
+              'View selected nodes',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.blue.shade700,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            children: _discoveryResult!.nodes
+                .where((node) => _selectedNodeIps.contains(node.ip))
+                .map((node) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4.0),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.computer,
+                            size: 14,
+                            color: node.role?.toLowerCase() == 'publisher'
+                                ? Colors.blue.shade600
+                                : Colors.grey.shade600,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              node.displayName,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                          if (node.role != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: node.role?.toLowerCase() == 'publisher'
+                                    ? Colors.blue.shade100
+                                    : Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                node.role!,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: node.role?.toLowerCase() == 'publisher'
+                                      ? Colors.blue.shade800
+                                      : Colors.grey.shade700,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ))
+                .toList(),
+          ),
+        ),
+        const SizedBox(height: 8),
         _buildSummaryItem(
           icon: Icons.description,
           label: 'Profile',

@@ -468,9 +468,9 @@ class _BackgroundDebugPanelState extends State<BackgroundDebugPanel> {
   void _copyScreenshotName() {
     final service = context.read<BackgroundService>();
     final preset = service.activePreset;
-    final snow = service.snowIntensity.snowIntensityLabel.toLowerCase();
+    final weather = service.weatherIntensity.snowIntensityLabel.toLowerCase();
 
-    final filename = 'bg-${preset.id}-snow-$snow-${DateTime.now().millisecondsSinceEpoch}.png';
+    final filename = 'bg-${preset.id}-weather-$weather-${DateTime.now().millisecondsSinceEpoch}.png';
 
     Clipboard.setData(ClipboardData(text: filename));
 

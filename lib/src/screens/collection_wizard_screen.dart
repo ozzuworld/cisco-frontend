@@ -167,7 +167,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
         });
 
         return Scaffold(
-          backgroundColor: DesignTokens.backgroundBase,
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
             title: Text('Collection Wizard', style: TextStyle(color: DesignTokens.textPrimary)),
             backgroundColor: Colors.transparent,

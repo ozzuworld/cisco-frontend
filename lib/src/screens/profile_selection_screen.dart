@@ -424,19 +424,139 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
     );
   }
 
+  Future<bool> _onWillPop(CollectionFlowState flowState) async {
+    // If user hasn't made any selections, allow back without warning
+    if (_selectedProfile == null) {
+      return true;
+    }
+
+    // If user has made progress, show confirmation dialog
+    final shouldPop = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber, color: Colors.orange.shade700),
+            const SizedBox(width: 12),
+            const Text('Discard Changes?'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'You have unsaved configuration:',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 12),
+            if (_selectedProfile != null)
+              _buildDiscardItem('Selected profile: ${_selectedProfile!.name}'),
+            if (_timeMode == 'absolute' && (_startTime != null || _endTime != null))
+              _buildDiscardItem('Configured time range'),
+            if (_overrideReltimeMinutes != null ||
+                _overrideCompress != null ||
+                _overrideRecurs != null ||
+                _overrideMatch != null)
+              _buildDiscardItem('Custom options configured'),
+            const SizedBox(height: 12),
+            const Text(
+              'Going back will discard all selections and you\'ll need to reconfigure.',
+              style: TextStyle(fontSize: 13),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Stay Here'),
+          ),
+          TextButton(
+            onPressed: () {
+              // Reset from profile selection
+              setState(() {
+                _selectedProfile = null;
+                _timeMode = 'relative';
+                _overrideReltimeMinutes = null;
+                _startTime = null;
+                _endTime = null;
+                _timeRangeError = null;
+                _overrideCompress = null;
+                _overrideRecurs = null;
+                _overrideMatch = null;
+                _showOverrides = false;
+              });
+              flowState.resetFromProfileSelection();
+              Navigator.of(context).pop(false);
+            },
+            child: const Text('Reset Profile Only'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Go Back & Discard'),
+          ),
+        ],
+      ),
+    );
+
+    return shouldPop ?? false;
+  }
+
+  Widget _buildDiscardItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, bottom: 4),
+      child: Row(
+        children: [
+          Icon(Icons.check_circle, size: 16, color: Colors.green.shade600),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<CollectionFlowState>(
       builder: (context, flowState, child) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Select Profile'),
+        return PopScope(
+          canPop: false,
+          onPopInvoked: (bool didPop) async {
+            if (didPop) return;
+
+            final shouldPop = await _onWillPop(flowState);
+            if (shouldPop && context.mounted) {
+              Navigator.of(context).pop();
+            }
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              title: const Text('Select Profile'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () async {
+                  final shouldPop = await _onWillPop(flowState);
+                  if (shouldPop && context.mounted) {
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
+            ),
+            body: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+            : _errorMessage != null
+                ? _buildErrorView()
+                : _buildProfileList(),
           ),
-          body: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null
-              ? _buildErrorView()
-              : _buildProfileList(),
         );
       },
     );

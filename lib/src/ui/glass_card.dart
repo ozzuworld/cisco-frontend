@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'design_tokens.dart';
 
@@ -225,26 +224,25 @@ class _GlassCardState extends State<GlassCard> {
               ),
             ),
           ),
-          // FE-UI-091 / FE-UI-120: Top edge highlight - refined for clean corners
-          // Inset slightly to avoid corner overlap artifacts
+          // FE-REFACTOR-7: Unified top edge highlight (merged top + catchlight)
           Positioned(
             top: 0,
-            left: 2, // Inset to avoid corner conflict
-            right: 2,
+            left: 1,
+            right: 1,
             child: Container(
-              height: 1.5, // Slightly thinner
+              height: 2, // Combined height for both layers
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(effectiveBorderRadius.topLeft.x - 2),
-                  topRight: Radius.circular(effectiveBorderRadius.topRight.x - 2),
+                  topLeft: Radius.circular(effectiveBorderRadius.topLeft.x - 1),
+                  topRight: Radius.circular(effectiveBorderRadius.topRight.x - 1),
                 ),
                 gradient: LinearGradient(
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: [
-                    Colors.white.withOpacity(0.18), // Reduced (was 0.22)
-                    Colors.white.withOpacity(0.14), // Reduced (was 0.17)
-                    Colors.white.withOpacity(0.06), // Reduced (was 0.08)
+                    Colors.white.withOpacity(0.25), // Merged intensity
+                    Colors.white.withOpacity(0.16),
+                    Colors.white.withOpacity(0.08),
                   ],
                 ),
               ),
@@ -270,32 +268,9 @@ class _GlassCardState extends State<GlassCard> {
               ),
             ),
           ),
-          // FE-UI-091 / FE-UI-120: Right edge highlight - subtle, clean
-          Positioned(
-            top: effectiveBorderRadius.topRight.y, // Start below corner radius
-            right: 0,
-            bottom: effectiveBorderRadius.bottomRight.y,
-            child: Container(
-              width: 1,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white.withOpacity(0.05), // Reduced (was 0.06)
-                    Colors.white.withOpacity(0.02),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // FE-UI-110: SPECULAR REFLECTION SYSTEM V2
-          // FE-036: Now driven by interactive light position
-          // Makes glass look "wet" and liquid, not just transparent
-
-          // Primary sheen sweep (broad diagonal highlight)
-          // FE-036: Responds to light position for depth
+          // FE-REFACTOR-7: Right edge removed (minimal visual impact, saves 19 lines)
+          // FE-REFACTOR-7: Enhanced primary sheen (merged specular hotspot)
+          // FE-036: Interactive light position creates "wet glass" effect
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -308,148 +283,55 @@ class _GlassCardState extends State<GlassCard> {
                   radius: 1.5,
                   colors: [
                     Colors.white.withOpacity(
-                      widget.debugExaggerateReflections ? 0.35 : 0.12
+                      widget.debugExaggerateReflections ? 0.40 : 0.15 // Enhanced
                     ),
                     Colors.white.withOpacity(
-                      widget.debugExaggerateReflections ? 0.15 : 0.05
+                      widget.debugExaggerateReflections ? 0.20 : 0.08 // Enhanced
+                    ),
+                    Colors.white.withOpacity(
+                      widget.debugExaggerateReflections ? 0.10 : 0.03
                     ),
                     Colors.transparent,
                   ],
-                  stops: const [0.0, 0.3, 0.7],
+                  stops: const [0.0, 0.3, 0.6, 1.0],
                 ),
               ),
             ),
           ),
 
-          // FE-UI-120: Secondary tight edge catchlight - clean corner rendering
-          // Inset slightly and reduced opacity for cleaner appearance
-          Positioned(
-            top: 0,
-            left: 1, // Slight inset to avoid corner artifacts
-            right: 1,
-            child: Container(
-              height: 1,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(effectiveBorderRadius.topLeft.x - 1),
-                  topRight: Radius.circular(effectiveBorderRadius.topRight.x - 1),
-                ),
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.90 : 0.24 // Reduced (was 0.30)
-                    ),
-                    Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.70 : 0.18 // Reduced (was 0.23)
-                    ),
-                    Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.50 : 0.12 // Reduced (was 0.17)
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          // FE-REFACTOR-7: Secondary catchlight merged into unified top edge above
 
-          // FE-UI-120: Corner caustic glow - TOP LEFT (refined for clean edges)
-          // Reduced intensity and tighter radius to prevent muddy corners
+          // FE-REFACTOR-7: Unified corner glow (merged L+R corners)
           Positioned(
             top: 0,
             left: 0,
+            right: 0,
             child: Container(
-              width: 50,
-              height: 50,
+              height: 60,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
                   topLeft: effectiveBorderRadius.topLeft,
-                ),
-                gradient: RadialGradient(
-                  center: Alignment.topLeft,
-                  radius: 0.6, // Tighter (was 0.8)
-                  colors: [
-                    Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.80 : 0.18 // Reduced (was 0.28)
-                    ),
-                    Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.40 : 0.08 // Reduced (was 0.14)
-                    ),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.5, 1.0], // Faster falloff
-                ),
-              ),
-            ),
-          ),
-
-          // FE-UI-120: Corner caustic glow - TOP RIGHT (refined, asymmetric)
-          // More subtle to reduce corner complexity
-          Positioned(
-            top: 0,
-            right: 0,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
                   topRight: effectiveBorderRadius.topRight,
                 ),
                 gradient: RadialGradient(
-                  center: Alignment.topRight,
-                  radius: 0.55, // Tighter (was 0.7)
+                  center: Alignment.topCenter,
+                  radius: 0.8,
                   colors: [
                     Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.60 : 0.12 // Reduced (was 0.20)
+                     widget.debugExaggerateReflections ? 0.70 : 0.15
                     ),
                     Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.30 : 0.05 // Reduced (was 0.10)
+                     widget.debugExaggerateReflections ? 0.35 : 0.06
                     ),
                     Colors.transparent,
                   ],
-                  stops: const [0.0, 0.55, 1.0], // Faster falloff
+                  stops: const [0.0, 0.5, 1.0],
                 ),
               ),
             ),
           ),
 
-          // Specular hotspot - upper-left quadrant (simulates angled light reflection)
-          Positioned(
-            top: effectiveBorderRadius.topLeft.y + 20,
-            left: effectiveBorderRadius.topLeft.x + 30,
-            child: Container(
-              width: 80,
-              height: 50,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(40),
-                gradient: RadialGradient(
-                  center: Alignment.center,
-                  radius: 0.9,
-                  colors: [
-                    Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.50 : 0.17
-                    ),
-                    Colors.white.withOpacity(
-                     widget.debugExaggerateReflections ? 0.20 : 0.07
-                    ),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.6, 1.0],
-                ),
-              ),
-            ),
-          ),
-
-          // FE-UI-048: Subtle noise/grain overlay (for refraction detail)
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: effectiveBorderRadius,
-              child: CustomPaint(
-                painter: _NoisePainter(
-                  opacity: 0.04, // Very subtle (3-6% range)
-                  seed: 42, // Fixed seed for consistent pattern
-                ),
-              ),
-            ),
-          ),
+          // FE-REFACTOR-7: Noise painter removed (Decision 2: B - minimal visual impact)
           // Content
           Column(
             mainAxisSize: MainAxisSize.min,
@@ -528,40 +410,7 @@ class _GlassCardState extends State<GlassCard> {
   }
 }
 
-/// FE-UI-048: Noise texture painter for subtle film grain on glass
-class _NoisePainter extends CustomPainter {
-  final double opacity;
-  final int seed;
-
-  _NoisePainter({this.opacity = 0.05, this.seed = 0});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final random = math.Random(seed);
-    final paint = Paint();
-
-    // Draw very subtle noise dots
-    // Sparse sampling to avoid performance issues on web
-    final step = 4.0; // Sample every 4 pixels
-    for (double x = 0; x < size.width; x += step) {
-      for (double y = 0; y < size.height; y += step) {
-        if (random.nextDouble() > 0.5) {
-          final brightness = random.nextDouble() * 0.5 + 0.5; // 0.5 to 1.0
-          paint.color = Colors.white.withOpacity(opacity * brightness);
-          canvas.drawCircle(
-            Offset(x + random.nextDouble() * step, y + random.nextDouble() * step),
-            0.5,
-            paint,
-          );
-        }
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_NoisePainter oldDelegate) =>
-      opacity != oldDelegate.opacity || seed != oldDelegate.seed;
-}
+// FE-REFACTOR-7: Noise painter class removed (Decision 2: B - 36 lines saved)
 
 /// FE-042 & FE-044: Breadcrumb-style chip without blur (text-first, neutral)
 class BreadcrumbChip extends StatelessWidget {
@@ -610,30 +459,5 @@ class BreadcrumbChip extends StatelessWidget {
   }
 }
 
-/// Legacy GlassChip - kept for backwards compatibility
-/// FE-042: Not used in new design, glass effect limited to main card
-@Deprecated('Use BreadcrumbChip instead')
-class GlassChip extends StatelessWidget {
-  final Widget child;
-  final bool isSelected;
-  final VoidCallback? onTap;
-  final EdgeInsets? padding;
-
-  const GlassChip({
-    super.key,
-    required this.child,
-    this.isSelected = false,
-    this.onTap,
-    this.padding,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return BreadcrumbChip(
-      isSelected: isSelected,
-      onTap: onTap,
-      padding: padding,
-      child: child,
-    );
-  }
-}
+// FE-REFACTOR-7: Deprecated GlassChip class removed (28 lines saved)
+// All code should use BreadcrumbChip instead

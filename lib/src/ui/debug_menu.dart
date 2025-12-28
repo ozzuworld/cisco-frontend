@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'design_tokens.dart';
 
-/// FE-UI-PROD-1: Consolidated debug menu to replace scattered debug icon buttons
+/// FE-UI-PROD-1 & FE-UI-PROD-3: Consolidated debug menu
 ///
 /// Provides organized access to all debug features in a single modal/dropdown
 /// instead of cluttering the AppBar with multiple icon buttons.
 ///
 /// Features:
 /// - Glass QA tools (fill proof, test pattern, glass stage, blur toggle)
-/// - Background controls (environment plate toggle)
+/// - Background controls (environment plate, debug panel toggle)
 /// - Clean, organized UI
 /// - Only visible in debug mode
 class DebugMenu {
@@ -20,11 +20,13 @@ class DebugMenu {
     required bool showGlassStage,
     required bool disableBlur,
     required bool showEnvironmentPlate,
+    required bool showBackgroundDebugPanel,
     required Function(bool) onToggleFillProof,
     required Function(bool) onToggleTestPattern,
     required Function(bool) onToggleGlassStage,
     required Function(bool) onToggleBlur,
     required Function(bool) onToggleEnvironmentPlate,
+    required Function(bool) onToggleBackgroundDebugPanel,
   }) {
     showModalBottomSheet(
       context: context,
@@ -36,11 +38,13 @@ class DebugMenu {
         showGlassStage: showGlassStage,
         disableBlur: disableBlur,
         showEnvironmentPlate: showEnvironmentPlate,
+        showBackgroundDebugPanel: showBackgroundDebugPanel,
         onToggleFillProof: onToggleFillProof,
         onToggleTestPattern: onToggleTestPattern,
         onToggleGlassStage: onToggleGlassStage,
         onToggleBlur: onToggleBlur,
         onToggleEnvironmentPlate: onToggleEnvironmentPlate,
+        onToggleBackgroundDebugPanel: onToggleBackgroundDebugPanel,
       ),
     );
   }
@@ -52,11 +56,13 @@ class _DebugMenuContent extends StatelessWidget {
   final bool showGlassStage;
   final bool disableBlur;
   final bool showEnvironmentPlate;
+  final bool showBackgroundDebugPanel;
   final Function(bool) onToggleFillProof;
   final Function(bool) onToggleTestPattern;
   final Function(bool) onToggleGlassStage;
   final Function(bool) onToggleBlur;
   final Function(bool) onToggleEnvironmentPlate;
+  final Function(bool) onToggleBackgroundDebugPanel;
 
   const _DebugMenuContent({
     required this.showFillProof,
@@ -64,11 +70,13 @@ class _DebugMenuContent extends StatelessWidget {
     required this.showGlassStage,
     required this.disableBlur,
     required this.showEnvironmentPlate,
+    required this.showBackgroundDebugPanel,
     required this.onToggleFillProof,
     required this.onToggleTestPattern,
     required this.onToggleGlassStage,
     required this.onToggleBlur,
     required this.onToggleEnvironmentPlate,
+    required this.onToggleBackgroundDebugPanel,
   });
 
   @override
@@ -167,6 +175,13 @@ class _DebugMenuContent extends StatelessWidget {
                 value: showEnvironmentPlate,
                 onChanged: onToggleEnvironmentPlate,
                 activeColor: const Color(0xFF00FF00),
+              ),
+              _buildToggle(
+                label: 'Background Debug Panel',
+                subtitle: 'Show advanced background/weather controls',
+                value: showBackgroundDebugPanel,
+                onChanged: onToggleBackgroundDebugPanel,
+                activeColor: DesignTokens.accentPrimary,
               ),
               const SizedBox(height: 16),
 

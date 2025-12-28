@@ -75,6 +75,9 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
   // FE-UI-109: Glass stage layer toggle (hard-edge bands for refraction)
   bool _showGlassStage = true; // Default ON
 
+  // FE-UI-PROD-3: Background debug panel toggle (hidden by default)
+  bool _showBackgroundDebugPanel = false;
+
   // Expansion state for accordion
   int? _expandedStepIndex;
 
@@ -196,11 +199,13 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                       showGlassStage: _showGlassStage,
                       disableBlur: _disableBlur,
                       showEnvironmentPlate: _showEnvironmentPlate,
+                      showBackgroundDebugPanel: _showBackgroundDebugPanel,
                       onToggleFillProof: (value) => setState(() => _showFillProof = value),
                       onToggleTestPattern: (value) => setState(() => _showGlassTestPattern = value),
                       onToggleGlassStage: (value) => setState(() => _showGlassStage = value),
                       onToggleBlur: (value) => setState(() => _disableBlur = value),
                       onToggleEnvironmentPlate: (value) => setState(() => _showEnvironmentPlate = value),
+                      onToggleBackgroundDebugPanel: (value) => setState(() => _showBackgroundDebugPanel = value),
                     );
                   },
                 ),
@@ -397,8 +402,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                   ),
 
-                  // FE-BG-030: Background debug panel (only in debug mode)
-                  if (kDebugMode)
+                  // FE-UI-PROD-3: Background debug panel (hidden by default, toggle in debug menu)
+                  if (kDebugMode && _showBackgroundDebugPanel)
                     const BackgroundDebugPanel(),
               ],
             );

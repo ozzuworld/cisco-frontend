@@ -90,25 +90,27 @@ class GlassCard extends StatelessWidget {
         borderRadius: effectiveBorderRadius,
         child: BackdropFilter(
           filter: ImageFilter.blur(
-            sigmaX: blurStrength,
-            sigmaY: blurStrength,
+            // FE-UI-042: Stronger blur for frosted effect
+            sigmaX: blurStrength * 1.2,
+            sigmaY: blurStrength * 1.2,
           ),
           child: Container(
             decoration: BoxDecoration(
-              // Semi-transparent white background for glass effect
-              color: Colors.white.withOpacity(backgroundOpacity),
+              // FE-UI-042: Frosted iPhone look with very subtle white tint
+              color: Colors.white.withOpacity(0.08),
               borderRadius: effectiveBorderRadius,
+              // Thin border highlight
               border: Border.all(
-                color: Colors.white.withOpacity(borderOpacity),
-                width: 1.5,
+                color: Colors.white.withOpacity(0.15),
+                width: 1,
               ),
-              // Gradient overlay for enhanced glass effect
+              // Subtle gradient for depth
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withOpacity(backgroundOpacity * 1.2),
-                  Colors.white.withOpacity(backgroundOpacity * 0.8),
+                  Colors.white.withOpacity(0.10),
+                  Colors.white.withOpacity(0.05),
                 ],
               ),
             ),
@@ -129,7 +131,7 @@ class GlassCard extends StatelessWidget {
                   Divider(
                     height: 1,
                     thickness: 1,
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.white.withOpacity(0.12),
                   ),
                   SizedBox(height: effectivePadding.bottom),
                 ],
@@ -182,17 +184,17 @@ class BreadcrumbChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: effectivePadding,
         decoration: BoxDecoration(
-          // FE-041 & FE-044: Neutral colors, no accent unless selected
+          // FE-UI-044: Colors for dark background
           color: isSelected
-              ? DesignTokens.accentColor.shade50
-              : Colors.grey.shade100.withOpacity(0.6),
+              ? DesignTokens.accentColor.shade700.withOpacity(0.25)
+              : Colors.white.withOpacity(0.08),
           borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
-          border: isSelected
-              ? Border.all(
-                  color: DesignTokens.accentColor.shade300,
-                  width: 1.5,
-                )
-              : null,
+          border: Border.all(
+            color: isSelected
+                ? DesignTokens.accentColor.shade400.withOpacity(0.5)
+                : Colors.white.withOpacity(0.12),
+            width: 1,
+          ),
         ),
         child: child,
       ),

@@ -153,10 +153,12 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
         });
 
         return Scaffold(
+          backgroundColor: const Color(0xFF0A0A0F),
           appBar: AppBar(
-            title: const Text('Collection Wizard'),
+            title: const Text('Collection Wizard', style: TextStyle(color: Colors.white)),
             backgroundColor: Colors.transparent,
             elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white),
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh),
@@ -165,66 +167,124 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
               ),
             ],
           ),
-          // FE-036: Gradient background for Glass UI
+          // FE-UI-041: Dark background with subtle aurora glow
           body: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+              // Near-black base
+              color: const Color(0xFF0A0A0F),
+              // Layered aurora glow effect
+              gradient: RadialGradient(
+                center: Alignment.topLeft,
+                radius: 1.5,
                 colors: [
-                  Colors.blue.shade50,
-                  Colors.purple.shade50,
-                  Colors.pink.shade50,
+                  Colors.blue.shade900.withOpacity(0.15),
+                  Colors.purple.shade900.withOpacity(0.10),
+                  const Color(0xFF0A0A0F),
                 ],
                 stops: const [0.0, 0.5, 1.0],
               ),
             ),
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 900),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // FE-039: Floating timeline chips
-                      _buildTimelineChips(flowState, currentStepIndex),
-                      const SizedBox(height: 24),
-
-                      // FE-038: Show completed steps as small chips
-                      if (currentStepIndex > 0)
-                        _buildCompletedStepsChips(flowState, currentStepIndex),
-
-                      if (currentStepIndex > 0)
-                        const SizedBox(height: 16),
-
-                      // FE-038: Single focused card - only show current step
-                      // FE-040: Animated transition between steps
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 400),
-                        switchInCurve: Curves.easeInOut,
-                        switchOutCurve: Curves.easeInOut,
-                        transitionBuilder: (child, animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: SlideTransition(
-                              position: Tween<Offset>(
-                                begin: const Offset(0, 0.05),
-                                end: Offset.zero,
-                              ).animate(animation),
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: _buildCurrentStepCard(flowState, currentStepIndex),
+            child: Stack(
+              children: [
+                // Additional glow spots for aurora effect
+                Positioned(
+                  top: -100,
+                  right: -100,
+                  child: Container(
+                    width: 400,
+                    height: 400,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.teal.shade700.withOpacity(0.12),
+                          Colors.transparent,
+                        ],
                       ),
-
-                      const SizedBox(height: 24),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+                Positioned(
+                  bottom: -150,
+                  left: -150,
+                  child: Container(
+                    width: 500,
+                    height: 500,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.purple.shade800.withOpacity(0.10),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Soft vignette on edges
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment.center,
+                      radius: 1.0,
+                      colors: [
+                        Colors.transparent,
+                        const Color(0xFF0A0A0F).withOpacity(0.6),
+                      ],
+                      stops: const [0.6, 1.0],
+                    ),
+                  ),
+                ),
+                // Main content
+                SingleChildScrollView(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+                  child: Center(
+                    child: ConstrainedBox(
+                      // FE-UI-043: Max width for desktop
+                      constraints: const BoxConstraints(maxWidth: 950),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // FE-039: Floating timeline chips
+                          _buildTimelineChips(flowState, currentStepIndex),
+                          const SizedBox(height: 20),
+
+                          // FE-038: Show completed steps as small chips
+                          if (currentStepIndex > 0)
+                            _buildCompletedStepsChips(flowState, currentStepIndex),
+
+                          if (currentStepIndex > 0)
+                            const SizedBox(height: 16),
+
+                          // FE-038: Single focused card - only show current step
+                          // FE-040: Animated transition between steps
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            switchInCurve: Curves.easeInOut,
+                            switchOutCurve: Curves.easeInOut,
+                            transitionBuilder: (child, animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(0, 0.05),
+                                    end: Offset.zero,
+                                  ).animate(animation),
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: _buildCurrentStepCard(flowState, currentStepIndex),
+                          ),
+
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -270,25 +330,25 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // FE-041: Neutral checkmark for completed, no green
+              // FE-UI-044: Checkmark for completed steps
               if (isCompleted)
                 Icon(
                   Icons.check,
                   size: 14,
-                  color: DesignTokens.textMuted,
+                  color: Colors.white.withOpacity(0.5),
                 ),
               if (isCompleted) const SizedBox(width: 6),
-              // FE-044: Text-first design
+              // FE-UI-044: Text-first design with light colors for dark background
               Text(
                 step['title'] as String,
                 style: TextStyle(
                   fontWeight: isCurrent ? FontWeight.w600 : FontWeight.normal,
                   fontSize: 13,
                   color: isCurrent
-                      ? DesignTokens.accentColor.shade900
+                      ? Colors.white
                       : isCompleted
-                          ? DesignTokens.textMuted
-                          : DesignTokens.textSecondary,
+                          ? Colors.white.withOpacity(0.5)
+                          : Colors.white.withOpacity(0.7),
                 ),
               ),
             ],
@@ -338,9 +398,13 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           // FE-043: Compact padding
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            // FE-041: Neutral background, no green
-            color: DesignTokens.neutralColor.shade100.withOpacity(0.6),
+            // FE-UI-044: Subtle background for dark theme
+            color: Colors.white.withOpacity(0.08),
             borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.12),
+              width: 1,
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -348,7 +412,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
               Icon(
                 Icons.check,
                 size: 12,
-                color: DesignTokens.textMuted,
+                color: Colors.white.withOpacity(0.5),
               ),
               const SizedBox(width: 6),
               Text(
@@ -356,7 +420,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: DesignTokens.textSecondary,
+                  color: Colors.white.withOpacity(0.7),
                 ),
               ),
             ],
@@ -376,17 +440,21 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
       padding: const EdgeInsets.all(DesignTokens.paddingLarge),
       header: Row(
         children: [
-          // FE-043: Smaller icon, reduced padding
+          // FE-UI-042: Icon with subtle background
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: DesignTokens.accentColor.shade100.withOpacity(0.5),
+              color: DesignTokens.accentColor.shade700.withOpacity(0.2),
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: DesignTokens.accentColor.shade500.withOpacity(0.3),
+                width: 1,
+              ),
             ),
             child: Icon(
               stepData['icon'] as IconData,
               size: 20,
-              color: DesignTokens.accentColor.shade700,
+              color: DesignTokens.accentColor.shade300,
             ),
           ),
           const SizedBox(width: 12),
@@ -396,10 +464,10 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
               children: [
                 Text(
                   stepData['title'] as String,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: DesignTokens.textPrimary,
+                    color: Colors.white,
                   ),
                 ),
                 if (stepData['subtitle'] != null)
@@ -407,7 +475,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     stepData['subtitle'] as String,
                     style: TextStyle(
                       fontSize: 12,
-                      color: DesignTokens.textSecondary,
+                      color: Colors.white.withOpacity(0.6),
                     ),
                   ),
               ],
@@ -416,15 +484,19 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: DesignTokens.neutralColor.shade100.withOpacity(0.6),
+              color: Colors.white.withOpacity(0.08),
               borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.12),
+                width: 1,
+              ),
             ),
             child: Text(
               'Step ${currentStepIndex + 1}/5',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: DesignTokens.textSecondary,
+                color: Colors.white.withOpacity(0.7),
               ),
             ),
           ),
@@ -500,7 +572,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           'Enter your CUCM Publisher credentials to discover cluster nodes',
           style: TextStyle(
             fontSize: 14,
-            color: Colors.grey.shade700,
+            color: Colors.white.withOpacity(0.7),
           ),
         ),
         const SizedBox(height: 16),

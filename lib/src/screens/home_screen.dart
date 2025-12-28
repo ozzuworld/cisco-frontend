@@ -82,58 +82,57 @@ class _HomeScreenState extends State<HomeScreen> {
                           horizontal: 24,
                           vertical: 30,
                         ),
-                            suffixIcon: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // Show/hide toggle
-                                IconButton(
-                                  icon: Icon(
-                                    _obscureText
-                                        ? Icons.visibility_off_outlined
-                                        : Icons.visibility_outlined,
-                                    size: 20,
-                                    color: DesignTokens.textSecondary.withOpacity(0.5),
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscureText = !_obscureText;
-                                    });
-                                  },
-                                ),
-                                // Submit button
-                                if (_isLoading)
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 12.0),
-                                    child: SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          DesignTokens.accentPrimary.withOpacity(0.7),
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                else
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.arrow_forward,
-                                      size: 20,
-                                      color: DesignTokens.accentPrimary.withOpacity(0.7),
-                                    ),
-                                    onPressed: _handleSubmit,
-                                  ),
-                              ],
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Show/hide toggle
+                            IconButton(
+                              icon: Icon(
+                                _obscureText
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                size: 20,
+                                color: DesignTokens.textSecondary.withOpacity(0.5),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureText = !_obscureText;
+                                });
+                              },
                             ),
-                          ),
-                          onSubmitted: (_) => _handleSubmit(),
+                            // Submit button
+                            if (_isLoading)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 12.0),
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      DesignTokens.accentPrimary.withOpacity(0.7),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else
+                              IconButton(
+                                icon: Icon(
+                                  Icons.arrow_forward,
+                                  size: 20,
+                                  color: DesignTokens.accentPrimary.withOpacity(0.7),
+                                ),
+                                onPressed: _handleSubmit,
+                              ),
+                          ],
                         ),
                       ),
+                      onSubmitted: (_) => _handleSubmit(),
                     ),
                   ),
                 ),
               ),
+            ),
           ],
         ),
       ),

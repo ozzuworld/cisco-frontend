@@ -571,12 +571,51 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
     return Expanded(
       child: Column(
         children: [
-          Icon(
-            icon,
-            color: isComplete ? Colors.green.shade700 : Colors.grey.shade400,
-            size: 20,
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Icon container with background
+              Container(
+                padding: const EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  color: isComplete ? Colors.green.shade100 : Colors.grey.shade200,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isComplete ? Colors.green.shade700 : Colors.grey.shade400,
+                    width: 2,
+                  ),
+                ),
+                child: Icon(
+                  icon,
+                  color: isComplete ? Colors.green.shade700 : Colors.grey.shade500,
+                  size: 20,
+                ),
+              ),
+              // Checkmark badge overlay for completed steps
+              if (isComplete)
+                Positioned(
+                  right: -4,
+                  top: -4,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade700,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 2,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 12,
+                    ),
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             label,
             style: TextStyle(
@@ -586,6 +625,24 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
             ),
             textAlign: TextAlign.center,
           ),
+          // "Completed" badge for completed steps
+          if (isComplete)
+            Container(
+              margin: const EdgeInsets.only(top: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              decoration: BoxDecoration(
+                color: Colors.green.shade700,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Done',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
         ],
       ),
     );

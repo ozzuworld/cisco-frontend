@@ -429,7 +429,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                         gradient: SweepGradient(
                           colors: [
                             Colors.cyan.withOpacity(0.4),
-                            Colors.magenta.withOpacity(0.4),
+                            Colors.pink.withOpacity(0.4),
                             Colors.yellow.withOpacity(0.4),
                             Colors.cyan.withOpacity(0.4),
                           ],
@@ -3030,7 +3030,7 @@ class _RefractionTestPainter extends CustomPainter {
 
       paint.color = angle % 60 == 0
           ? Colors.yellow.withOpacity(0.6)
-          : Colors.magenta.withOpacity(0.4);
+          : Colors.pink.withOpacity(0.4);
 
       canvas.drawLine(
         Offset(size.width / 2, size.height / 2),

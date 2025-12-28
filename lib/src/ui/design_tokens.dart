@@ -46,20 +46,41 @@ class DesignTokens {
 
   // ==================== BORDER RADIUS ====================
 
-  /// Border radius for cards
-  static const double radiusCard = 16.0;
+  /// Border radius for cards (Glass UI)
+  /// FE-036: Increased for softer, more modern look
+  static const double radiusCard = 24.0;
 
   /// Border radius for buttons
-  static const double radiusButton = 12.0;
+  static const double radiusButton = 16.0;
 
   /// Border radius for inputs
-  static const double radiusInput = 8.0;
+  static const double radiusInput = 12.0;
 
   /// Border radius for chips/badges
-  static const double radiusChip = 12.0;
+  static const double radiusChip = 16.0;
 
   /// Border radius for small elements
-  static const double radiusSmall = 6.0;
+  static const double radiusSmall = 8.0;
+
+  // ==================== GLASS UI (FE-036) ====================
+
+  /// Blur strength for glass morphism effect
+  static const double blurStrength = 16.0;
+
+  /// Blur strength for chips/small elements
+  static const double blurStrengthChip = 10.0;
+
+  /// Card fill opacity for glass effect
+  static const double glassFillOpacity = 0.15;
+
+  /// Border opacity for glass effect
+  static const double glassBorderOpacity = 0.2;
+
+  /// Shadow strength for glass cards
+  static const double glassShadowOpacity = 0.1;
+
+  /// Shadow blur radius for glass cards
+  static const double glassShadowBlur = 24.0;
 
   // ==================== CONTENT WIDTH CONSTRAINTS ====================
 

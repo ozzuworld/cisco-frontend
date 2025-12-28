@@ -31,7 +31,7 @@ class GlassCard extends StatelessWidget {
   final double borderOpacity;
 
   /// Custom padding for the card content
-  /// Default: EdgeInsets.all(24)
+  /// FE-043: Default reduced to 16 for compact design
   final EdgeInsets? padding;
 
   /// Custom border radius
@@ -61,7 +61,8 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectivePadding = padding ?? const EdgeInsets.all(24);
+    // FE-043: Reduced default padding from 24 to 16
+    final effectivePadding = padding ?? const EdgeInsets.all(16);
     final effectiveBorderRadius = borderRadius ?? DesignTokens.cardBorderRadius;
     final effectiveMargin = margin ?? EdgeInsets.zero;
 
@@ -151,7 +152,57 @@ class GlassCard extends StatelessWidget {
   }
 }
 
-/// Compact variant of GlassCard for smaller UI elements like chips
+/// FE-042 & FE-044: Breadcrumb-style chip without blur (text-first, neutral)
+class BreadcrumbChip extends StatelessWidget {
+  final Widget child;
+  final bool isSelected;
+  final bool isCompleted;
+  final VoidCallback? onTap;
+  final EdgeInsets? padding;
+
+  const BreadcrumbChip({
+    super.key,
+    required this.child,
+    this.isSelected = false,
+    this.isCompleted = false,
+    this.onTap,
+    this.padding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // FE-043: Compact padding
+    final effectivePadding = padding ??
+        const EdgeInsets.symmetric(horizontal: 12, vertical: 6);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: effectivePadding,
+        decoration: BoxDecoration(
+          // FE-041 & FE-044: Neutral colors, no accent unless selected
+          color: isSelected
+              ? DesignTokens.accentColor.shade50
+              : Colors.grey.shade100.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
+          border: isSelected
+              ? Border.all(
+                  color: DesignTokens.accentColor.shade300,
+                  width: 1.5,
+                )
+              : null,
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+/// Legacy GlassChip - kept for backwards compatibility
+/// FE-042: Not used in new design, glass effect limited to main card
+@Deprecated('Use BreadcrumbChip instead')
 class GlassChip extends StatelessWidget {
   final Widget child;
   final bool isSelected;
@@ -168,42 +219,11 @@ class GlassChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectivePadding = padding ??
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 10);
-
-    return InkWell(
+    return BreadcrumbChip(
+      isSelected: isSelected,
       onTap: onTap,
-      borderRadius: DesignTokens.chipBorderRadius,
-      child: ClipRRect(
-        borderRadius: DesignTokens.chipBorderRadius,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: effectivePadding,
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? Colors.blue.withOpacity(0.25)
-                  : Colors.white.withOpacity(0.12),
-              borderRadius: DesignTokens.chipBorderRadius,
-              border: Border.all(
-                color: isSelected
-                    ? Colors.blue.withOpacity(0.4)
-                    : Colors.white.withOpacity(0.2),
-                width: isSelected ? 2 : 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(isSelected ? 0.12 : 0.06),
-                  blurRadius: isSelected ? 12 : 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: child,
-          ),
-        ),
-      ),
+      padding: padding,
+      child: child,
     );
   }
 }

@@ -232,7 +232,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
     );
   }
 
-  /// FE-039: Floating timeline chips above the card
+  /// FE-044: Breadcrumb-style timeline navigation (text-first, neutral)
   Widget _buildTimelineChips(CollectionFlowState flowState, int currentStepIndex) {
     final steps = [
       {'title': 'Discovery', 'icon': Icons.cloud_done},
@@ -243,7 +243,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
     ];
 
     return Wrap(
-      spacing: DesignTokens.spacingComponent,
+      spacing: DesignTokens.spacingInline,
       runSpacing: DesignTokens.spacingInline,
       alignment: WrapAlignment.center,
       children: List.generate(steps.length, (index) {
@@ -256,8 +256,9 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           return const SizedBox.shrink();
         }
 
-        return GlassChip(
+        return BreadcrumbChip(
           isSelected: isCurrent,
+          isCompleted: isCompleted,
           onTap: isCompleted
               ? () {
                   setState(() {
@@ -269,26 +270,25 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                isCompleted ? Icons.check_circle : step['icon'] as IconData,
-                size: 16,
-                color: isCurrent
-                    ? Colors.blue.shade700
-                    : isCompleted
-                        ? Colors.green.shade700
-                        : Colors.grey.shade600,
-              ),
-              const SizedBox(width: 8),
+              // FE-041: Neutral checkmark for completed, no green
+              if (isCompleted)
+                Icon(
+                  Icons.check,
+                  size: 14,
+                  color: DesignTokens.textMuted,
+                ),
+              if (isCompleted) const SizedBox(width: 6),
+              // FE-044: Text-first design
               Text(
                 step['title'] as String,
                 style: TextStyle(
-                  fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600,
-                  fontSize: 14,
+                  fontWeight: isCurrent ? FontWeight.w600 : FontWeight.normal,
+                  fontSize: 13,
                   color: isCurrent
-                      ? Colors.blue.shade900
+                      ? DesignTokens.accentColor.shade900
                       : isCompleted
-                          ? Colors.green.shade900
-                          : Colors.grey.shade700,
+                          ? DesignTokens.textMuted
+                          : DesignTokens.textSecondary,
                 ),
               ),
             ],
@@ -335,30 +335,28 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
       runSpacing: DesignTokens.spacingInline,
       children: completedSteps.map((step) {
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          // FE-043: Compact padding
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.green.shade50.withOpacity(0.8),
+            // FE-041: Neutral background, no green
+            color: DesignTokens.neutralColor.shade100.withOpacity(0.6),
             borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
-            border: Border.all(
-              color: Colors.green.shade300,
-              width: 1,
-            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                step['icon'] as IconData,
-                size: 14,
-                color: Colors.green.shade700,
+                Icons.check,
+                size: 12,
+                color: DesignTokens.textMuted,
               ),
               const SizedBox(width: 6),
               Text(
                 step['title'] as String,
                 style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.green.shade900,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: DesignTokens.textSecondary,
                 ),
               ),
             ],
@@ -374,21 +372,24 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
 
     return GlassCard(
       key: ValueKey('step_$currentStepIndex'),
+      // FE-043: Reduced header padding
+      padding: const EdgeInsets.all(DesignTokens.paddingLarge),
       header: Row(
         children: [
+          // FE-043: Smaller icon, reduced padding
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.blue.shade100.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(12),
+              color: DesignTokens.accentColor.shade100.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               stepData['icon'] as IconData,
-              size: 24,
-              color: Colors.blue.shade700,
+              size: 20,
+              color: DesignTokens.accentColor.shade700,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -396,34 +397,34 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                 Text(
                   stepData['title'] as String,
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade900,
+                    color: DesignTokens.textPrimary,
                   ),
                 ),
                 if (stepData['subtitle'] != null)
                   Text(
                     stepData['subtitle'] as String,
                     style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade700,
+                      fontSize: 12,
+                      color: DesignTokens.textSecondary,
                     ),
                   ),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.blue.shade100.withOpacity(0.5),
+              color: DesignTokens.neutralColor.shade100.withOpacity(0.6),
               borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
             ),
             child: Text(
               'Step ${currentStepIndex + 1}/5',
               style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue.shade900,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: DesignTokens.textSecondary,
               ),
             ),
           ),
@@ -591,7 +592,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
+              // FE-045: Primary CTA with accent color
               ElevatedButton.icon(
                 onPressed: _isDiscovering ? null : _discoverCluster,
                 icon: _isDiscovering
@@ -606,7 +608,13 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     : const Icon(Icons.search),
                 label: Text(_isDiscovering ? 'Discovering...' : 'Discover Cluster'),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.all(16.0),
+                  backgroundColor: DesignTokens.accentColor.shade600,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusButton),
+                  ),
                 ),
               ),
             ],
@@ -628,36 +636,38 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
 
   Widget _buildSuccessCard(DiscoveryResponse result) {
     return Container(
-      padding: const EdgeInsets.all(12.0),
+      // FE-043: Compact padding
+      padding: const EdgeInsets.all(10.0),
       decoration: BoxDecoration(
-        color: Colors.green.shade50,
-        borderRadius: BorderRadius.circular(8.0),
-        border: Border.all(color: Colors.green.shade300),
+        // FE-041: Neutral colors, no green
+        color: DesignTokens.neutralColor.shade100.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
+        border: Border.all(color: DesignTokens.neutralColor.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.check_circle, color: Colors.green.shade700),
+              Icon(Icons.check_circle, color: DesignTokens.neutralColor.shade600),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Discovery Successful!',
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green.shade900,
+                    fontWeight: FontWeight.w600,
+                    color: DesignTokens.textPrimary,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             'Found ${result.nodes.length} node${result.nodes.length != 1 ? 's' : ''} in the cluster. Continue to Step 2 to select nodes.',
             style: TextStyle(
-              fontSize: 13,
-              color: Colors.green.shade900,
+              fontSize: 12,
+              color: DesignTokens.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -1511,26 +1521,21 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
   // FE-030: Selected profile card with "Change" button
   Widget _buildSelectedProfileCard(Profile profile) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      // FE-043: Compact padding
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.green.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.shade400, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        // FE-041: Accent color instead of green
+        color: DesignTokens.accentColor.shade50.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusButton),
+        border: Border.all(color: DesignTokens.accentColor.shade300, width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.check_circle, color: Colors.green.shade700, size: 24),
-              const SizedBox(width: 12),
+              Icon(Icons.check_circle, color: DesignTokens.accentColor.shade600, size: 20),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1538,23 +1543,24 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     Text(
                       profile.name,
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.green.shade900,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: DesignTokens.textPrimary,
                       ),
                     ),
                     if (profile.description.isNotEmpty)
                       Text(
                         profile.description,
                         style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.green.shade800,
+                          fontSize: 12,
+                          color: DesignTokens.textSecondary,
                         ),
                       ),
                   ],
                 ),
               ),
-              OutlinedButton.icon(
+              // FE-045: Secondary action as text button
+              TextButton.icon(
                 onPressed: () {
                   setState(() {
                     _selectedProfile = null;
@@ -1571,11 +1577,11 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                   flowState.setRelativeTime(null);
                   flowState.setAbsoluteTime(startTime: null, endTime: null);
                 },
-                icon: const Icon(Icons.edit, size: 16),
-                label: const Text('Change'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.green.shade700,
-                  side: BorderSide(color: Colors.green.shade600),
+                icon: const Icon(Icons.edit, size: 14),
+                label: const Text('Change', style: TextStyle(fontSize: 12)),
+                style: TextButton.styleFrom(
+                  foregroundColor: DesignTokens.accentColor.shade700,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 ),
               ),
             ],
@@ -1861,10 +1867,11 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.green.shade100,
-                              borderRadius: BorderRadius.circular(12),
+                              // FE-041: Accent color for selected state
+                              color: DesignTokens.accentColor.shade100,
+                              borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
                               border: Border.all(
-                                color: Colors.green.shade300,
+                                color: DesignTokens.accentColor.shade300,
                               ),
                             ),
                             child: Row(
@@ -1872,16 +1879,16 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                               children: [
                                 Icon(
                                   Icons.check_circle,
-                                  size: 16,
-                                  color: Colors.green.shade700,
+                                  size: 14,
+                                  color: DesignTokens.accentColor.shade700,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   'Selected',
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.green.shade900,
+                                    color: DesignTokens.accentColor.shade900,
                                   ),
                                 ),
                               ],
@@ -2274,7 +2281,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           icon: Icons.devices,
           label: 'Target Nodes',
           value: '${_selectedNodeIps.length} node${_selectedNodeIps.length > 1 ? 's' : ''} selected',
-          iconColor: Colors.blue.shade700,
+          iconColor: DesignTokens.accentColor.shade700,
         ),
         const SizedBox(height: 8),
         // Expandable node list
@@ -2341,59 +2348,65 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           ),
         ),
         const SizedBox(height: 8),
+        // FE-041: All icons use neutral colors, no rainbow effect
         _buildSummaryItem(
           icon: Icons.description,
           label: 'Profile',
           value: _selectedProfile!.name,
-          iconColor: Colors.purple.shade700,
+          iconColor: DesignTokens.neutralColor.shade600,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         _buildSummaryItem(
           icon: _timeMode == 'relative' ? Icons.access_time : Icons.date_range,
           label: 'Time Range',
           value: _getTimeRangeSummary(),
-          iconColor: Colors.orange.shade700,
+          iconColor: DesignTokens.neutralColor.shade600,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         _buildSummaryItem(
           icon: Icons.compress,
           label: 'Compress',
           value: compress ? 'Enabled' : 'Disabled',
-          iconColor: Colors.teal.shade700,
+          iconColor: DesignTokens.neutralColor.shade600,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         _buildSummaryItem(
           icon: Icons.repeat,
           label: 'Recursive',
           value: recurs ? 'Enabled' : 'Disabled',
-          iconColor: Colors.indigo.shade700,
+          iconColor: DesignTokens.neutralColor.shade600,
         ),
         if (match.isNotEmpty) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _buildSummaryItem(
             icon: Icons.filter_alt,
             label: 'Match Pattern',
             value: match,
-            iconColor: Colors.pink.shade700,
+            iconColor: DesignTokens.neutralColor.shade600,
           ),
         ],
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
 
-        // Start button
+        // FE-045: Primary CTA - Start Collection
         ElevatedButton.icon(
           onPressed: _isStartingCollection ? null : _startCollection,
           icon: Icon(
             _isStartingCollection ? Icons.hourglass_empty : Icons.play_arrow,
-            size: 24,
+            size: 20,
           ),
           label: Text(
             _isStartingCollection ? 'Starting Collection...' : 'Start Collection',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            backgroundColor: Colors.green.shade600,
+            // FE-041: Accent color only, no green
+            backgroundColor: DesignTokens.accentColor.shade600,
             foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(DesignTokens.radiusButton),
+            ),
           ),
         ),
       ],

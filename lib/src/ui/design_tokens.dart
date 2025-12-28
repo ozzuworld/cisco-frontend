@@ -27,7 +27,12 @@ class DesignTokens {
   static const double paddingCompact = 12.0;
 
   /// Large padding for card interiors
-  static const double paddingLarge = 24.0;
+  /// FE-043: Reduced from 24 to 16 (33% reduction)
+  static const double paddingLarge = 16.0;
+
+  /// Extra compact padding for dense UI elements
+  /// FE-043: For card headers and tight sections
+  static const double paddingXCompact = 8.0;
 
   /// Spacing between form sections
   static const double spacingSection = 24.0;
@@ -81,6 +86,21 @@ class DesignTokens {
 
   /// Shadow blur radius for glass cards
   static const double glassShadowBlur = 24.0;
+
+  // ==================== COLOR SYSTEM (FE-041) ====================
+
+  /// Primary accent color - blue
+  /// Used for: primary actions, current step, interactive elements
+  static const accentColor = Colors.blue;
+
+  /// Neutral color for completed/success states
+  /// FE-041: No green "success" color - use neutral gray
+  static const neutralColor = Colors.grey;
+
+  /// Text colors
+  static const textPrimary = Colors.black87;
+  static const textSecondary = Colors.black54;
+  static const textMuted = Colors.black38;
 
   // ==================== CONTENT WIDTH CONSTRAINTS ====================
 

@@ -90,14 +90,7 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
         flowState.setSelectedNodes(_selectedNodeIps.toList());
       }
 
-      if (result.isEmpty && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No nodes discovered. Check credentials and try again.'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
+      // No SnackBar needed - inline message is shown in the UI
     } on DioException catch (e) {
       final apiError = e.error as ApiError;
 
@@ -466,12 +459,12 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: _selectedNodeIps.isEmpty
-                                ? Colors.orange.shade50
+                                ? Colors.red.shade50
                                 : Colors.blue.shade50,
                             borderRadius: BorderRadius.circular(8.0),
                             border: Border.all(
                               color: _selectedNodeIps.isEmpty
-                                  ? Colors.orange.shade300
+                                  ? Colors.red.shade300
                                   : Colors.blue.shade300,
                             ),
                           ),
@@ -479,21 +472,25 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                             children: [
                               Icon(
                                 _selectedNodeIps.isEmpty
-                                    ? Icons.info_outline
+                                    ? Icons.error_outline
                                     : Icons.check_circle_outline,
                                 size: 18,
                                 color: _selectedNodeIps.isEmpty
-                                    ? Colors.orange.shade700
+                                    ? Colors.red.shade700
                                     : Colors.blue.shade700,
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                'Selected: ${_selectedNodeIps.length} node(s)',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  color: _selectedNodeIps.isEmpty
-                                      ? Colors.orange.shade900
-                                      : Colors.blue.shade900,
+                              Expanded(
+                                child: Text(
+                                  _selectedNodeIps.isEmpty
+                                      ? 'Select at least one node to proceed'
+                                      : '${_selectedNodeIps.length} node(s) selected',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: _selectedNodeIps.isEmpty
+                                        ? Colors.red.shade900
+                                        : Colors.blue.shade900,
+                                  ),
                                 ),
                               ),
                             ],
@@ -512,15 +509,25 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Row(
+                              Row(
                                 children: [
-                                  Icon(Icons.warning, color: Colors.orange),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'No nodes discovered',
-                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  Icon(Icons.warning, color: Colors.orange.shade700),
+                                  const SizedBox(width: 8),
+                                  const Expanded(
+                                    child: Text(
+                                      'No nodes discovered',
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                    ),
                                   ),
                                 ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Check your credentials and try again.',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.orange.shade900,
+                                ),
                               ),
                               if (_discoveryResult!.rawOutput != null) ...[
                                 const SizedBox(height: 8),
@@ -586,9 +593,7 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                       _selectedNodeIps.isEmpty ? null : _proceedToNextScreen,
                   icon: const Icon(Icons.arrow_forward),
                   label: Text(
-                    _selectedNodeIps.isEmpty
-                        ? 'Select at least one node to proceed'
-                        : 'Next (${_selectedNodeIps.length} selected)',
+                    'Continue with ${_selectedNodeIps.length} node${_selectedNodeIps.length != 1 ? 's' : ''}',
                   ),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16.0),

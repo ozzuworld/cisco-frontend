@@ -241,18 +241,8 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
           pickedTime.minute,
         );
 
-        // Validate not in future
-        if (selectedDateTime.isAfter(now)) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('$label cannot be in the future'),
-              backgroundColor: Colors.red,
-            ),
-          );
-          return;
-        }
-
+        // Validate not in future - just call the callback,
+        // validation will be shown inline in the time range error
         onSelected(selectedDateTime);
       },
       child: InputDecorator(
@@ -456,14 +446,16 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
                   ),
                   child: SafeArea(
                     child: ElevatedButton.icon(
-                      onPressed: _isLoading || !flowState.isReadyToCollect
+                      onPressed: _isLoading || !flowState.isReadyToCollect || _timeRangeError != null
                           ? null
                           : _showConfirmationDialog,
                       icon: const Icon(Icons.play_arrow),
                       label: Text(
-                        flowState.isReadyToCollect
-                            ? 'Start Collection (${widget.selectedNodeIps.length} node${widget.selectedNodeIps.length > 1 ? 's' : ''})'
-                            : 'Complete time selection to continue',
+                        _timeRangeError != null
+                            ? 'Fix time range errors to continue'
+                            : flowState.isReadyToCollect
+                                ? 'Start Collection (${widget.selectedNodeIps.length} node${widget.selectedNodeIps.length > 1 ? 's' : ''})'
+                                : 'Complete time selection to continue',
                       ),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1003,6 +995,11 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
                     startTime: dateTime,
                     endTime: _endTime,
                   );
+
+                  // Validate automatically if both dates are set
+                  if (dateTime != null && _endTime != null) {
+                    _validateTimeRange();
+                  }
                 },
               ),
               const SizedBox(height: 16),
@@ -1020,6 +1017,11 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
                     startTime: _startTime,
                     endTime: dateTime,
                   );
+
+                  // Validate automatically if both dates are set
+                  if (dateTime != null && _startTime != null) {
+                    _validateTimeRange();
+                  }
                 },
               ),
               if (_timeRangeError != null) ...[

@@ -75,6 +75,10 @@ class GlassCard extends StatelessWidget {
   /// Default: EdgeInsets.zero
   final EdgeInsets? margin;
 
+  /// FE-UI-083: Debug mode to prove zero-fill
+  /// Shows hot pink overlay if any non-transparent fill is detected
+  final bool debugShowFillProof;
+
   const GlassCard({
     super.key,
     this.header,
@@ -86,6 +90,7 @@ class GlassCard extends StatelessWidget {
     this.borderRadius,
     this.showShadow = true,
     this.margin,
+    this.debugShowFillProof = false, // FE-UI-083: Debug overlay toggle
   });
 
   @override
@@ -150,17 +155,18 @@ class GlassCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // FE-UI-062: Inner shadow for thickness/depth
+                // FE-UI-086: Inner shadow EXTREMELY subtle (not slab depth cue)
+                // Provides perceived thickness without dark fog band
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: effectiveBorderRadius,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.25),
-                          blurRadius: 8,
-                          spreadRadius: -4,
-                          offset: const Offset(0, 2),
+                          color: Colors.black.withOpacity(0.12), // Reduced from 25%
+                          blurRadius: 6, // Reduced from 8
+                          spreadRadius: -3, // Tighter than -4
+                          offset: const Offset(0, 1), // Reduced from 2
                         ),
                       ],
                     ),
@@ -315,6 +321,44 @@ class GlassCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                // FE-UI-083: Debug overlay - hot pink if fill is NOT transparent
+                if (debugShowFillProof)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: effectiveBorderRadius,
+                          // Hot pink if _glassFillColor is not transparent
+                          // This should NEVER show if zero-fill is correct
+                          color: _glassFillColor.opacity > 0.0
+                              ? const Color(0xFFFF1493).withOpacity(0.8) // Hot pink
+                              : Colors.transparent,
+                          border: Border.all(
+                            color: const Color(0xFF00FF00), // Green border = debug mode active
+                            width: 3,
+                          ),
+                        ),
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            color: Colors.black.withOpacity(0.8),
+                            child: Text(
+                              _glassFillColor.opacity > 0.0
+                                  ? 'FAIL: Fill opacity = ${(_glassFillColor.opacity * 100).toStringAsFixed(1)}%'
+                                  : 'PASS: Fill = 0% (transparent)',
+                              style: TextStyle(
+                                color: _glassFillColor.opacity > 0.0
+                                    ? const Color(0xFFFF1493)
+                                    : const Color(0xFF00FF00),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

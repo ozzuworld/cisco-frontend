@@ -53,6 +53,9 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
   // Step 5: Review & Start
   bool _isStartingCollection = false;
 
+  // FE-UI-066: Debug test pattern mode for glass QA
+  bool _showGlassTestPattern = false;
+
   // Expansion state for accordion
   int? _expandedStepIndex;
 
@@ -161,6 +164,17 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
             elevation: 0,
             iconTheme: IconThemeData(color: DesignTokens.textPrimary),
             actions: [
+              // FE-UI-066: Debug test pattern toggle
+              IconButton(
+                icon: Icon(_showGlassTestPattern ? Icons.grid_on : Icons.grid_off),
+                tooltip: 'Toggle Glass Test Pattern (Debug)',
+                onPressed: () {
+                  setState(() {
+                    _showGlassTestPattern = !_showGlassTestPattern;
+                  });
+                },
+                color: _showGlassTestPattern ? Colors.orange : DesignTokens.textPrimary,
+              ),
               IconButton(
                 icon: const Icon(Icons.refresh),
                 tooltip: 'Reset Wizard',
@@ -227,6 +241,42 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                   ),
                 ),
+                // FE-UI-062: Micro vignette for depth
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: Alignment.center,
+                        radius: 1.2,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.15),
+                        ],
+                        stops: const [0.4, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
+                // FE-UI-066: Debug test pattern for glass QA
+                if (_showGlassTestPattern)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            const Color(0xFF2A4A9A).withOpacity(0.15),
+                            const Color(0xFF7A2A9A).withOpacity(0.12),
+                            const Color(0xFF2A9A7A).withOpacity(0.10),
+                          ],
+                        ),
+                      ),
+                      child: CustomPaint(
+                        painter: _TestPatternPainter(),
+                      ),
+                    ),
+                  ),
                 // FE-UI-060: Micro-contrast blooms (150-300px) for visible refraction
                 Positioned(
                   top: 150,
@@ -2752,4 +2802,42 @@ class _BackgroundNoisePainter extends CustomPainter {
   @override
   bool shouldRepaint(_BackgroundNoisePainter oldDelegate) =>
       opacity != oldDelegate.opacity || seed != oldDelegate.seed;
+}
+
+/// FE-UI-066: Test pattern painter for glass QA
+/// Renders colorful gradient + shapes to validate blur/refraction
+class _TestPatternPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    // Draw diagonal stripes for refraction testing
+    for (double i = 0; i < size.width + size.height; i += 100) {
+      paint.color = Colors.white.withOpacity(0.08);
+      final path = Path()
+        ..moveTo(i, 0)
+        ..lineTo(i + 50, 0)
+        ..lineTo(0, i + 50)
+        ..lineTo(0, i)
+        ..close();
+      canvas.drawPath(path, paint);
+    }
+
+    // Draw circular patterns for refraction testing
+    final positions = [
+      Offset(size.width * 0.3, size.height * 0.3),
+      Offset(size.width * 0.7, size.height * 0.4),
+      Offset(size.width * 0.5, size.height * 0.7),
+    ];
+
+    for (final pos in positions) {
+      paint.color = Colors.white.withOpacity(0.12);
+      canvas.drawCircle(pos, 80, paint);
+      paint.color = Colors.white.withOpacity(0.06);
+      canvas.drawCircle(pos, 120, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_TestPatternPainter oldDelegate) => false;
 }

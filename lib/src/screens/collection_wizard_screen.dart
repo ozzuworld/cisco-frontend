@@ -171,6 +171,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           appBar: AppBar(
             title: Text('Collection Wizard', style: TextStyle(color: DesignTokens.textPrimary)),
             backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            shadowColor: Colors.transparent,
             elevation: 0,
             iconTheme: IconThemeData(color: DesignTokens.textPrimary),
             actions: [
@@ -1526,29 +1528,6 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (_selectedProfile == null)
-          Container(
-            padding: const EdgeInsets.all(12.0),
-            decoration: BoxDecoration(
-              color: Colors.orange.shade50,
-              border: Border.all(color: Colors.orange.shade300),
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.touch_app, color: Colors.orange.shade700, size: 20),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Select a collection profile to continue',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        if (_selectedProfile == null) const SizedBox(height: 16),
-
         // Show selected profile with "Change" button
         if (_selectedProfile != null) ...[
           _buildSelectedProfileCard(_selectedProfile!),

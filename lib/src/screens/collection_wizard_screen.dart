@@ -175,7 +175,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     _buildProgressIndicator(flowState),
                     const SizedBox(height: 24),
 
-                    // Step 1: Cluster Discovery
+                    // FE-028: Progressive reveal - only show unlocked steps
+                    // Step 1: Cluster Discovery (always shown)
                     _buildWizardStep(
                       stepIndex: 0,
                       title: 'Cluster Discovery',
@@ -183,46 +184,55 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                       flowState: flowState,
                       content: _buildClusterDiscoveryContent(flowState),
                     ),
-                    const SizedBox(height: 16), // FE-024: Increased spacing
 
-                    // Step 2: Node Selection
-                    _buildWizardStep(
-                      stepIndex: 1,
-                      title: 'Node Selection',
-                      icon: Icons.devices,
-                      flowState: flowState,
-                      content: _buildNodeSelectionContent(flowState),
-                    ),
-                    const SizedBox(height: 16), // FE-024: Increased spacing
+                    // Step 2: Node Selection (show after discovery)
+                    if (_isStepUnlocked(1, flowState)) ...[
+                      const SizedBox(height: 16),
+                      _buildWizardStep(
+                        stepIndex: 1,
+                        title: 'Node Selection',
+                        icon: Icons.devices,
+                        flowState: flowState,
+                        content: _buildNodeSelectionContent(flowState),
+                      ),
+                    ],
 
-                    // Step 3: Profile Selection
-                    _buildWizardStep(
-                      stepIndex: 2,
-                      title: 'Profile Selection',
-                      icon: Icons.description,
-                      flowState: flowState,
-                      content: _buildProfileSelectionContent(flowState),
-                    ),
-                    const SizedBox(height: 16), // FE-024: Increased spacing
+                    // Step 3: Profile Selection (show after node selection)
+                    if (_isStepUnlocked(2, flowState)) ...[
+                      const SizedBox(height: 16),
+                      _buildWizardStep(
+                        stepIndex: 2,
+                        title: 'Profile Selection',
+                        icon: Icons.description,
+                        flowState: flowState,
+                        content: _buildProfileSelectionContent(flowState),
+                      ),
+                    ],
 
-                    // Step 4: Time Configuration
-                    _buildWizardStep(
-                      stepIndex: 3,
-                      title: 'Time Configuration',
-                      icon: Icons.schedule,
-                      flowState: flowState,
-                      content: _buildTimeConfigurationContent(flowState),
-                    ),
-                    const SizedBox(height: 16), // FE-024: Increased spacing
+                    // Step 4: Time Configuration (show after profile selection)
+                    if (_isStepUnlocked(3, flowState)) ...[
+                      const SizedBox(height: 16),
+                      _buildWizardStep(
+                        stepIndex: 3,
+                        title: 'Time Configuration',
+                        icon: Icons.schedule,
+                        flowState: flowState,
+                        content: _buildTimeConfigurationContent(flowState),
+                      ),
+                    ],
 
-                    // Step 5: Review & Start
-                    _buildWizardStep(
-                      stepIndex: 4,
-                      title: 'Review & Start',
-                      icon: Icons.play_arrow,
-                      flowState: flowState,
-                      content: _buildReviewStartContent(flowState),
-                    ),
+                    // Step 5: Review & Start (show after time config valid)
+                    if (_isStepUnlocked(4, flowState)) ...[
+                      const SizedBox(height: 16),
+                      _buildWizardStep(
+                        stepIndex: 4,
+                        title: 'Review & Start',
+                        icon: Icons.play_arrow,
+                        flowState: flowState,
+                        content: _buildReviewStartContent(flowState),
+                      ),
+                    ],
+
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -1013,18 +1023,137 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
         ),
         const SizedBox(height: 16),
 
-        // Node list
+        // Node grid (FE-027: 3-column responsive grid)
         Text(
           'Discovered ${_discoveryResult!.nodes.length} node(s)',
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
         const SizedBox(height: 12),
-        ..._discoveryResult!.nodes.map((node) => _buildNodeCard(node)),
+        // Responsive grid: 3 columns on desktop, 2 on tablet, 1 on mobile
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final crossAxisCount = width > 900 ? 3 : (width > 600 ? 2 : 1);
+
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                childAspectRatio: 1.8,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount: _discoveryResult!.nodes.length,
+              itemBuilder: (context, index) {
+                return _buildNodeCard(_discoveryResult!.nodes[index]);
+              },
+            );
+          },
+        ),
       ],
     );
   }
 
+  // FE-027: Compact node card for grid layout
   Widget _buildNodeCard(CucmNode node) {
+    final isSelected = _selectedNodeIps.contains(node.ip);
+    final isPublisher = node.role?.toLowerCase() == 'publisher';
+
+    return InkWell(
+      onTap: () => _toggleNodeSelection(node.ip),
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isPublisher ? Colors.blue.shade50 : Colors.grey.shade50)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? (isPublisher ? Colors.blue.shade400 : Colors.grey.shade400)
+                : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isSelected ? 0.08 : 0.04),
+              blurRadius: isSelected ? 8 : 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Header with icon and checkbox
+            Row(
+              children: [
+                Icon(
+                  Icons.computer,
+                  size: 20,
+                  color: isPublisher ? Colors.blue.shade600 : Colors.grey.shade600,
+                ),
+                const Spacer(),
+                if (isSelected)
+                  Icon(
+                    Icons.check_circle,
+                    size: 20,
+                    color: isPublisher ? Colors.blue.shade600 : Colors.grey.shade600,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Node name
+            Text(
+              node.displayName,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            // IP address
+            Text(
+              node.ip,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+            // Role badge
+            if (node.role != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isPublisher ? Colors.blue : Colors.grey,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  node.role!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Old detailed node card method - remove or keep for reference
+  Widget _buildNodeCardDetailed(CucmNode node) {
     final isSelected = _selectedNodeIps.contains(node.ip);
 
     return Card(

@@ -163,64 +163,70 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           ),
           body: SingleChildScrollView(
             controller: _scrollController,
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Progress indicator
-                _buildProgressIndicator(flowState),
-                const SizedBox(height: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+            child: Center(
+              // FE-022: Responsive container with max width for web
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Progress indicator
+                    _buildProgressIndicator(flowState),
+                    const SizedBox(height: 24),
 
-                // Step 1: Cluster Discovery
-                _buildWizardStep(
-                  stepIndex: 0,
-                  title: 'Cluster Discovery',
-                  icon: Icons.cloud_done,
-                  flowState: flowState,
-                  content: _buildClusterDiscoveryContent(flowState),
-                ),
-                const SizedBox(height: 12),
+                    // Step 1: Cluster Discovery
+                    _buildWizardStep(
+                      stepIndex: 0,
+                      title: 'Cluster Discovery',
+                      icon: Icons.cloud_done,
+                      flowState: flowState,
+                      content: _buildClusterDiscoveryContent(flowState),
+                    ),
+                    const SizedBox(height: 16), // FE-024: Increased spacing
 
-                // Step 2: Node Selection
-                _buildWizardStep(
-                  stepIndex: 1,
-                  title: 'Node Selection',
-                  icon: Icons.devices,
-                  flowState: flowState,
-                  content: _buildNodeSelectionContent(flowState),
-                ),
-                const SizedBox(height: 12),
+                    // Step 2: Node Selection
+                    _buildWizardStep(
+                      stepIndex: 1,
+                      title: 'Node Selection',
+                      icon: Icons.devices,
+                      flowState: flowState,
+                      content: _buildNodeSelectionContent(flowState),
+                    ),
+                    const SizedBox(height: 16), // FE-024: Increased spacing
 
-                // Step 3: Profile Selection
-                _buildWizardStep(
-                  stepIndex: 2,
-                  title: 'Profile Selection',
-                  icon: Icons.description,
-                  flowState: flowState,
-                  content: _buildProfileSelectionContent(flowState),
-                ),
-                const SizedBox(height: 12),
+                    // Step 3: Profile Selection
+                    _buildWizardStep(
+                      stepIndex: 2,
+                      title: 'Profile Selection',
+                      icon: Icons.description,
+                      flowState: flowState,
+                      content: _buildProfileSelectionContent(flowState),
+                    ),
+                    const SizedBox(height: 16), // FE-024: Increased spacing
 
-                // Step 4: Time Configuration
-                _buildWizardStep(
-                  stepIndex: 3,
-                  title: 'Time Configuration',
-                  icon: Icons.schedule,
-                  flowState: flowState,
-                  content: _buildTimeConfigurationContent(flowState),
-                ),
-                const SizedBox(height: 12),
+                    // Step 4: Time Configuration
+                    _buildWizardStep(
+                      stepIndex: 3,
+                      title: 'Time Configuration',
+                      icon: Icons.schedule,
+                      flowState: flowState,
+                      content: _buildTimeConfigurationContent(flowState),
+                    ),
+                    const SizedBox(height: 16), // FE-024: Increased spacing
 
-                // Step 5: Review & Start
-                _buildWizardStep(
-                  stepIndex: 4,
-                  title: 'Review & Start',
-                  icon: Icons.play_arrow,
-                  flowState: flowState,
-                  content: _buildReviewStartContent(flowState),
+                    // Step 5: Review & Start
+                    _buildWizardStep(
+                      stepIndex: 4,
+                      title: 'Review & Start',
+                      icon: Icons.play_arrow,
+                      flowState: flowState,
+                      content: _buildReviewStartContent(flowState),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                 ),
-                const SizedBox(height: 24),
-              ],
+              ),
             ),
           ),
         );
@@ -285,33 +291,31 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
     final isCurrent = stepIndex == currentStepIndex;
 
     // Wrap with key for scroll tracking (FE-019.8)
+    // FE-023: Improved card styling with consistent elevation
     return Container(
       key: _stepKeys[stepIndex],
       child: AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
       decoration: BoxDecoration(
-        color: isCompleted
-            ? Colors.green.shade50
-            : isCurrent
-                ? Colors.blue.shade50
-                : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        // FE-024: Reduced "green wash" - use white for completed, subtle accent
+        color: isCurrent ? Colors.blue.shade50 : Colors.white,
+        borderRadius: BorderRadius.circular(16), // FE-023: Larger radius for card feel
         border: Border.all(
           color: isCompleted
               ? Colors.green.shade300
               : isCurrent
-                  ? Colors.blue.shade300
+                  ? Colors.blue.shade400
                   : Colors.grey.shade300,
-          width: 2,
+          width: isCompleted || isCurrent ? 2 : 1,
         ),
+        // FE-023: Card elevation for all steps
         boxShadow: [
-          if (isCurrent)
-            BoxShadow(
-              color: Colors.blue.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
+          BoxShadow(
+            color: Colors.black.withOpacity(isCurrent ? 0.1 : 0.05),
+            blurRadius: isCurrent ? 12 : 6,
+            offset: Offset(0, isCurrent ? 4 : 2),
+          ),
         ],
       ),
       child: Theme(
@@ -337,29 +341,40 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
               Expanded(
                 child: Text(
                   title,
+                  // FE-024: Improved typography hierarchy
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18, // Larger for better hierarchy
+                    letterSpacing: -0.5,
                     color: isUnlocked
-                        ? (isCompleted ? Colors.green.shade700 : Colors.black87)
+                        ? (isCompleted ? Colors.green.shade800 : Colors.black87)
                         : Colors.grey.shade400,
                   ),
                 ),
               ),
               if (isCompleted)
+                // FE-024: Subtle outlined badge instead of solid green
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade700,
+                    color: Colors.green.shade50,
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.green.shade600, width: 1.5),
                   ),
-                  child: const Text(
-                    'Complete',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check_circle, size: 14, color: Colors.green.shade700),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Complete',
+                        style: TextStyle(
+                          color: Colors.green.shade800,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 )
               else if (isCurrent)
@@ -393,13 +408,15 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    Icon(Icons.lock_outline, color: Colors.grey.shade400),
+                    Icon(Icons.lock_outline, color: Colors.grey.shade400, size: 20),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Complete previous steps to unlock',
+                        // FE-024: Smaller, more muted helper text
                         style: TextStyle(
-                          color: Colors.grey.shade600,
+                          color: Colors.grey.shade500,
+                          fontSize: 13,
                           fontStyle: FontStyle.italic,
                         ),
                       ),

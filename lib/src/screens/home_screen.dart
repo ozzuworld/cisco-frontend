@@ -1,224 +1,192 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:lottie/lottie.dart';
 import '../config/config_service.dart';
-import 'settings_screen.dart';
+import '../ui/glass_scaffold.dart';
+import '../ui/design_tokens.dart';
 import 'collection_wizard_screen.dart';
-import 'job_history_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+/// FE-SPRINT-LANDING-001: Minimal landing page with API key input
+/// Super clean secret tool interface - just an input box
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cisco Frontend'),
-        actions: [
-          Consumer<ConfigService>(
-            builder: (context, configService, child) {
-              if (!configService.config.hasApiKey) {
-                return const SizedBox.shrink();
-              }
-              return IconButton(
-                icon: const Icon(Icons.history),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const JobHistoryScreen(),
-                    ),
-                  );
-                },
-                tooltip: 'Job History',
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
-                ),
-              );
-            },
-            tooltip: 'Settings',
-          ),
-        ],
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Consumer<ConfigService>(
-            builder: (context, configService, child) {
-              final config = configService.config;
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    config.hasApiKey
-                        ? Icons.check_circle_outline
-                        : Icons.info_outline,
-                    size: 80,
-                    color: config.hasApiKey ? Colors.green : Colors.orange,
+class _HomeScreenState extends State<HomeScreen> {
+  final _apiKeyController = TextEditingController();
+  bool _obscureText = true;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _apiKeyController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassScaffold(
+      enableBackground: true,
+      scrollable: false,
+      body: SizedBox.expand(
+        child: Stack(
+          children: [
+            // voip.json lottie animation as background - centered and sized
+            Center(
+              child: Opacity(
+                opacity: 0.20,
+                child: SizedBox(
+                  width: 800,
+                  height: 600,
+                  child: Lottie.asset(
+                    'assets/lottie/voip.json',
+                    fit: BoxFit.contain,
+                    repeat: true,
                   ),
-                  const SizedBox(height: 24),
-                  Text(
-                    config.hasApiKey
-                        ? 'API Configured'
-                        : 'API Not Configured',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 16),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildInfoRow(
-                            context,
-                            'Base URL',
-                            config.baseUrl,
-                            Icons.link,
-                          ),
-                          const Divider(),
-                          _buildInfoRow(
-                            context,
-                            'API Key',
-                            config.hasApiKey ? '********' : 'Not set',
-                            Icons.key,
-                          ),
-                          const Divider(),
-                          _buildInfoRow(
-                            context,
-                            'Remember',
-                            config.rememberApiKey ? 'Enabled' : 'Disabled',
-                            Icons.memory,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  if (!config.hasApiKey)
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SettingsScreen(),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.settings),
-                      label: const Text('Configure API'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 16,
-                        ),
-                      ),
-                    ),
-                  if (config.hasApiKey) ...[
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const CollectionWizardScreen(),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.auto_fix_high),
-                      label: const Text('Start Collection Wizard'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 16,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const JobHistoryScreen(),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.history),
-                      label: const Text('View Job History'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 16,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              );
-            },
-          ),
-        ),
-      ),
-      floatingActionButton: Consumer<ConfigService>(
-        builder: (context, configService, child) {
-          if (!configService.config.hasApiKey) {
-            return const SizedBox.shrink();
-          }
-          return FloatingActionButton.extended(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CollectionWizardScreen(),
                 ),
-              );
-            },
-            icon: const Icon(Icons.auto_fix_high),
-            label: const Text('Wizard'),
-            tooltip: 'Start Collection Wizard',
-          );
-        },
+              ),
+            ),
+            // Minimal API key input
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 48.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: Container(
+                    height: 56, // Professional input height
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.15),
+                        width: 1,
+                      ),
+                    ),
+                    child: TextField(
+                      controller: _apiKeyController,
+                      obscureText: _obscureText,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: DesignTokens.textPrimary,
+                        fontSize: 16,
+                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'API KEY',
+                        hintStyle: TextStyle(
+                          color: DesignTokens.textMuted.withOpacity(0.3),
+                          letterSpacing: 2,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Show/hide toggle
+                            IconButton(
+                              icon: Icon(
+                                _obscureText
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                size: 20,
+                                color: DesignTokens.textSecondary.withOpacity(0.5),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureText = !_obscureText;
+                                });
+                              },
+                            ),
+                            // Submit button
+                            if (_isLoading)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 12.0),
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      DesignTokens.accentPrimary.withOpacity(0.7),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else
+                              IconButton(
+                                icon: Icon(
+                                  Icons.arrow_forward,
+                                  size: 20,
+                                  color: DesignTokens.accentPrimary.withOpacity(0.7),
+                                ),
+                                onPressed: _handleSubmit,
+                              ),
+                          ],
+                        ),
+                      ),
+                      onSubmitted: (_) => _handleSubmit(),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildInfoRow(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-  ) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: Theme.of(context).primaryColor),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-              ),
-            ],
+  void _handleSubmit() async {
+    final apiKey = _apiKeyController.text.trim();
+
+    if (apiKey.isEmpty) {
+      _showError('Enter API key');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final configService = context.read<ConfigService>();
+      await configService.updateApiKey(apiKey, true); // Always remember
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const CollectionWizardScreen(),
           ),
-        ),
-      ],
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showError('Failed: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.withOpacity(0.9),
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 }

@@ -6,6 +6,7 @@ import 'src/services/http_client.dart';
 import 'src/services/background_service.dart';
 import 'src/models/collection_flow_state.dart';
 import 'src/screens/home_screen.dart';
+import 'src/screens/collection_wizard_screen.dart';
 import 'src/ui/design_tokens.dart';
 
 void main() async {
@@ -47,10 +48,10 @@ class CiscoApp extends StatelessWidget {
         secondary: DesignTokens.accentPrimary,
       ),
       useMaterial3: true,
-      scaffoldBackgroundColor: isDark ? DesignTokens.backgroundBase : Colors.white,
+      scaffoldBackgroundColor: DesignTokens.backgroundBase,
 
       // FE-UI-076: Lock Material transparency - kill surface/elevation bleed
-      canvasColor: isDark ? DesignTokens.backgroundBase : Colors.white,
+      canvasColor: DesignTokens.backgroundBase,
       cardColor: Colors.transparent, // Force cards to use explicit colors only
       dialogBackgroundColor: Colors.transparent, // Dialogs use glass styling
 
@@ -59,6 +60,10 @@ class CiscoApp extends StatelessWidget {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.transparent, // FE-UI-059: No background, etched appearance
+        // Icon styling to match glass aesthetic
+        iconColor: isDark ? DesignTokens.textSecondary : Colors.black54,
+        prefixIconColor: isDark ? DesignTokens.textSecondary : Colors.black54,
+        suffixIconColor: isDark ? DesignTokens.textSecondary : Colors.black54,
         border: OutlineInputBorder(
           borderRadius: DesignTokens.inputBorderRadius,
           borderSide: BorderSide(
@@ -232,7 +237,17 @@ class CiscoApp extends StatelessWidget {
         theme: _buildLiquidGlassTheme(Brightness.light),
         darkTheme: _buildLiquidGlassTheme(Brightness.dark),
         themeMode: ThemeMode.dark, // Default to dark theme for liquid glass
-        home: const HomeScreen(),
+        // FE-SPRINT-LANDING-001: Conditional routing based on API key configuration
+        home: Consumer<ConfigService>(
+          builder: (context, config, _) {
+            // Show landing page if no API key configured
+            if (!config.isConfigured) {
+              return const HomeScreen();
+            }
+            // Show main app (collection wizard) if already configured
+            return const CollectionWizardScreen();
+          },
+        ),
       ),
     );
   }

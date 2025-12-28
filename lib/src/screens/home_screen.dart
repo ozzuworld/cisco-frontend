@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // voip.json lottie animation as background - centered and sized
             Center(
               child: Opacity(
-                opacity: 0.25,
+                opacity: 0.20,
                 child: SizedBox(
                   width: 800,
                   height: 600,

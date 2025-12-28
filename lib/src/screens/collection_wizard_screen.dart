@@ -167,61 +167,38 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
               ),
             ],
           ),
-          // FE-UI-041: Dark background with subtle aurora glow
+          // FE-UI-046: True near-black background (no visible pastel wash)
           body: Container(
-            decoration: BoxDecoration(
-              // Near-black base
-              color: const Color(0xFF0A0A0F),
-              // Layered aurora glow effect
-              gradient: RadialGradient(
-                center: Alignment.topLeft,
-                radius: 1.5,
-                colors: [
-                  Colors.blue.shade900.withOpacity(0.15),
-                  Colors.purple.shade900.withOpacity(0.10),
-                  const Color(0xFF0A0A0F),
-                ],
-                stops: const [0.0, 0.5, 1.0],
-              ),
+            decoration: const BoxDecoration(
+              // Solid near-black base - no gradient
+              color: Color(0xFF0A0A0F),
             ),
             child: Stack(
               children: [
-                // Additional glow spots for aurora effect
+                // FE-UI-046: VERY subtle glow only behind center card area
+                // Positioned to only affect the card region, not entire viewport
                 Positioned(
-                  top: -100,
-                  right: -100,
-                  child: Container(
-                    width: 400,
-                    height: 400,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          Colors.teal.shade700.withOpacity(0.12),
-                          Colors.transparent,
-                        ],
+                  top: 200,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      width: 600,
+                      height: 600,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            Colors.blue.shade900.withOpacity(0.025),
+                            Colors.transparent,
+                          ],
+                          stops: const [0.0, 0.7],
+                        ),
                       ),
                     ),
                   ),
                 ),
-                Positioned(
-                  bottom: -150,
-                  left: -150,
-                  child: Container(
-                    width: 500,
-                    height: 500,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          Colors.purple.shade800.withOpacity(0.10),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                // Soft vignette on edges
+                // Darker vignette for true black edges
                 Container(
                   decoration: BoxDecoration(
                     gradient: RadialGradient(
@@ -229,9 +206,9 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                       radius: 1.0,
                       colors: [
                         Colors.transparent,
-                        const Color(0xFF0A0A0F).withOpacity(0.6),
+                        const Color(0xFF0A0A0F).withOpacity(0.8),
                       ],
-                      stops: const [0.6, 1.0],
+                      stops: const [0.5, 1.0],
                     ),
                   ),
                 ),

@@ -3,16 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:lottie/lottie.dart';
 import '../config/config_service.dart';
 import '../ui/glass_scaffold.dart';
-import '../ui/glass_card.dart';
 import '../ui/design_tokens.dart';
 import 'collection_wizard_screen.dart';
 
-/// FE-SPRINT-LANDING-001: Simplified landing page with API key input
-/// Features:
-/// - voip.json lottie animation as background
-/// - Clean, minimal UI with single API key input
-/// - Liquid glass design aesthetic
-/// - Direct navigation to main app after configuration
+/// FE-SPRINT-LANDING-001: Minimal landing page with API key input
+/// Super clean secret tool interface - just an input box
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -22,8 +17,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _apiKeyController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  bool _rememberKey = false;
   bool _obscureText = true;
   bool _isLoading = false;
 
@@ -37,14 +30,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return GlassScaffold(
       enableBackground: true,
-      scrollable: false, // Disable scrolling to allow Stack to fill screen
+      scrollable: false,
       body: SizedBox.expand(
         child: Stack(
           children: [
             // voip.json lottie animation as background
             Positioned.fill(
               child: Opacity(
-                opacity: 0.3, // Subtle effect, doesn't distract from UI
+                opacity: 0.25,
                 child: Lottie.asset(
                   'assets/lottie/voip.json',
                   fit: BoxFit.cover,
@@ -52,221 +45,107 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            // Main content - scrollable for overflow protection
-            SingleChildScrollView(
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height,
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 400),
-                      child: GlassCard(
-                  body: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // App branding
-                        Icon(
-                          Icons.cloud_outlined,
-                          size: 64,
-                          color: DesignTokens.accentPrimary,
+            // Minimal API key input
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 48.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Simple text label
+                      Text(
+                        'API',
+                        style: TextStyle(
+                          color: DesignTokens.textSecondary.withOpacity(0.4),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 2,
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Cisco Frontend',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: DesignTokens.textPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Long minimal input box
+                      Container(
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.15),
+                            width: 1,
+                          ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Enter your API key to continue',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: DesignTokens.textSecondary,
-                              ),
-                        ),
-                        const SizedBox(height: 32),
-
-                        // API Key input
-                        TextFormField(
+                        child: TextField(
                           controller: _apiKeyController,
                           obscureText: _obscureText,
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             color: DesignTokens.textPrimary,
+                            fontSize: 16,
+                            letterSpacing: 1.5,
+                            fontWeight: FontWeight.w500,
                           ),
                           decoration: InputDecoration(
-                            labelText: 'API Key',
-                            labelStyle: TextStyle(
-                              color: DesignTokens.textSecondary.withOpacity(
-                                DesignTokens.inputLabelOpacity,
-                              ),
-                            ),
-                            hintText: 'Enter your API key',
+                            hintText: '* * * * * * * * * * * * * * * *',
                             hintStyle: TextStyle(
-                              color: DesignTokens.textMuted,
+                              color: DesignTokens.textMuted.withOpacity(0.3),
+                              letterSpacing: 2,
                             ),
-                            filled: true,
-                            fillColor: Colors.white.withOpacity(
-                              DesignTokens.inputBackgroundOpacity,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 16,
                             ),
-                            border: OutlineInputBorder(
-                              borderRadius: DesignTokens.inputBorderRadius,
-                              borderSide: BorderSide(
-                                color: Colors.white.withOpacity(
-                                  DesignTokens.inputBorderOpacity,
-                                ),
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: DesignTokens.inputBorderRadius,
-                              borderSide: BorderSide(
-                                color: Colors.white.withOpacity(
-                                  DesignTokens.inputBorderOpacity,
-                                ),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: DesignTokens.inputBorderRadius,
-                              borderSide: BorderSide(
-                                color: DesignTokens.accentPrimary.withOpacity(
-                                  DesignTokens.inputFocusBorderOpacity,
-                                ),
-                                width: 1.5,
-                              ),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: DesignTokens.inputBorderRadius,
-                              borderSide: BorderSide(
-                                color: Colors.red.withOpacity(0.7),
-                              ),
-                            ),
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderRadius: DesignTokens.inputBorderRadius,
-                              borderSide: BorderSide(
-                                color: Colors.red.withOpacity(0.9),
-                                width: 1.5,
-                              ),
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscureText
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
-                                color: DesignTokens.textSecondary,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscureText = !_obscureText;
-                                });
-                              },
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Please enter an API key';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Remember checkbox
-                        InkWell(
-                          onTap: () {
-                            setState(() {
-                              _rememberKey = !_rememberKey;
-                            });
-                          },
-                          borderRadius: BorderRadius.circular(
-                            DesignTokens.radiusSmall,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4.0,
-                              vertical: 8.0,
-                            ),
-                            child: Row(
+                            suffixIcon: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Checkbox(
-                                  value: _rememberKey,
-                                  onChanged: (value) {
+                                // Show/hide toggle
+                                IconButton(
+                                  icon: Icon(
+                                    _obscureText
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                    size: 20,
+                                    color: DesignTokens.textSecondary.withOpacity(0.5),
+                                  ),
+                                  onPressed: () {
                                     setState(() {
-                                      _rememberKey = value ?? false;
+                                      _obscureText = !_obscureText;
                                     });
                                   },
-                                  fillColor: MaterialStateProperty.resolveWith(
-                                    (states) {
-                                      if (states.contains(MaterialState.selected)) {
-                                        return DesignTokens.accentPrimary;
-                                      }
-                                      return Colors.white.withOpacity(0.2);
-                                    },
-                                  ),
                                 ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Remember API Key',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                          color: DesignTokens.textPrimary,
+                                // Submit button
+                                if (_isLoading)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 12.0),
+                                    child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          DesignTokens.accentPrimary.withOpacity(0.7),
                                         ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Continue button
-                        SizedBox(
-                          height: DesignTokens.inputHeight,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _handleContinue,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: DesignTokens.accentPrimary,
-                              foregroundColor: Colors.white,
-                              disabledBackgroundColor:
-                                  DesignTokens.accentPrimary.withOpacity(0.5),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: DesignTokens.buttonBorderRadius,
-                              ),
-                              elevation: 0,
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
                                       ),
                                     ),
                                   )
-                                : const Text(
-                                    'Continue',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
+                                else
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.arrow_forward,
+                                      size: 20,
+                                      color: DesignTokens.accentPrimary.withOpacity(0.7),
                                     ),
+                                    onPressed: _handleSubmit,
                                   ),
+                              ],
+                            ),
                           ),
+                          onSubmitted: (_) => _handleSubmit(),
                         ),
-                      ],
-                    ),
-                  ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ),
@@ -277,24 +156,22 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _handleContinue() async {
-    // Validate form
-    if (!_formKey.currentState!.validate()) {
+  void _handleSubmit() async {
+    final apiKey = _apiKeyController.text.trim();
+
+    if (apiKey.isEmpty) {
+      _showError('Enter API key');
       return;
     }
-
-    final apiKey = _apiKeyController.text.trim();
 
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // Save to ConfigService
       final configService = context.read<ConfigService>();
-      await configService.updateApiKey(apiKey, _rememberKey);
+      await configService.updateApiKey(apiKey, true); // Always remember
 
-      // Navigate to main app
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -305,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (e) {
       if (mounted) {
-        _showError('Failed to configure API key: $e');
+        _showError('Failed: $e');
       }
     } finally {
       if (mounted) {
@@ -321,6 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red.withOpacity(0.9),
+        duration: const Duration(seconds: 2),
       ),
     );
   }

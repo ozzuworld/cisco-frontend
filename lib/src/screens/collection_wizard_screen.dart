@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
-import 'package:lottie/lottie.dart';
 import '../models/collection_flow_state.dart';
 import '../models/cucm_node.dart';
 import '../models/profile.dart';
@@ -220,22 +219,6 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                     enabled: backgroundService.weatherEffectsEnabled,
                     enablePerformanceMode: backgroundService.weatherPerformanceMode,
-                  ),
-
-                  // voip.json lottie animation for consistency with landing page
-                  Center(
-                    child: Opacity(
-                      opacity: 0.20,
-                      child: SizedBox(
-                        width: 800,
-                        height: 600,
-                        child: Lottie.asset(
-                          'assets/lottie/voip.json',
-                          fit: BoxFit.contain,
-                          repeat: true,
-                        ),
-                      ),
-                    ),
                   ),
 
                   // Main content

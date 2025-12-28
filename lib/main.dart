@@ -60,6 +60,10 @@ class CiscoApp extends StatelessWidget {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.transparent, // FE-UI-059: No background, etched appearance
+        // Icon styling to match glass aesthetic
+        iconColor: isDark ? DesignTokens.textSecondary : Colors.black54,
+        prefixIconColor: isDark ? DesignTokens.textSecondary : Colors.black54,
+        suffixIconColor: isDark ? DesignTokens.textSecondary : Colors.black54,
         border: OutlineInputBorder(
           borderRadius: DesignTokens.inputBorderRadius,
           borderSide: BorderSide(

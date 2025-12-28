@@ -11,9 +11,11 @@ import '../services/http_client.dart';
 import '../services/background_service.dart';
 import '../ui/design_tokens.dart';
 import '../ui/glass_card.dart';
+import '../ui/debug_glass_card.dart'; // FE-REFACTOR-8: Debug wrapper
 import '../ui/background_renderer.dart';
 import '../ui/weather_effect.dart';
 import '../ui/background_debug_panel.dart';
+import '../ui/debug_menu.dart';
 import 'job_status_screen.dart';
 import 'settings_screen.dart';
 
@@ -58,20 +60,11 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
   // Step 5: Review & Start
   bool _isStartingCollection = false;
 
-  // FE-UI-066: Debug test pattern mode for glass QA
-  bool _showGlassTestPattern = false;
-
-  // FE-UI-083: Debug mode to prove zero-fill is real
-  bool _showFillProof = false;
-
-  // FE-UI-085: Environment plate toggle for A/B proof
+  // FE-UI-085: Environment plate toggle (background on/off for testing)
   bool _showEnvironmentPlate = true; // Default ON
 
-  // FE-UI-096: Blur toggle for environment intersection test
-  bool _disableBlur = false;
-
-  // FE-UI-109: Glass stage layer toggle (hard-edge bands for refraction)
-  bool _showGlassStage = true; // Default ON
+  // FE-UI-PROD-3: Background debug panel toggle (hidden by default)
+  bool _showBackgroundDebugPanel = false;
 
   // Expansion state for accordion
   int? _expandedStepIndex;
@@ -181,65 +174,22 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
             elevation: 0,
             iconTheme: IconThemeData(color: DesignTokens.textPrimary),
             actions: [
-              // FE-UI-116: Debug toggles hidden in production builds
-              if (kDebugMode) ...[
-                // FE-UI-083: Fill proof debug toggle
+              // FE-UI-PROD-1: Simplified debug menu (background/weather controls only)
+              if (kDebugMode)
                 IconButton(
-                  icon: Icon(_showFillProof ? Icons.bug_report : Icons.bug_report_outlined),
-                  tooltip: 'Toggle Fill Proof (FE-UI-083)',
+                  icon: const Icon(Icons.developer_mode),
+                  tooltip: 'Debug Tools',
                   onPressed: () {
-                    setState(() {
-                      _showFillProof = !_showFillProof;
-                    });
+                    DebugMenu.show(
+                      context,
+                      showEnvironmentPlate: _showEnvironmentPlate,
+                      showBackgroundDebugPanel: _showBackgroundDebugPanel,
+                      onToggleEnvironmentPlate: (value) => setState(() => _showEnvironmentPlate = value),
+                      onToggleBackgroundDebugPanel: (value) => setState(() => _showBackgroundDebugPanel = value),
+                    );
                   },
-                  color: _showFillProof ? const Color(0xFFFF1493) : DesignTokens.textPrimary,
                 ),
-                // FE-UI-085: Environment plate A/B toggle
-                IconButton(
-                  icon: Icon(_showEnvironmentPlate ? Icons.landscape : Icons.landscape_outlined),
-                  tooltip: 'Toggle Environment Plate (FE-UI-085 A/B Test)',
-                  onPressed: () {
-                    setState(() {
-                      _showEnvironmentPlate = !_showEnvironmentPlate;
-                    });
-                  },
-                  color: _showEnvironmentPlate ? const Color(0xFF00FF00) : Colors.red,
-                ),
-                // FE-UI-096: Blur toggle for intersection testing
-                IconButton(
-                  icon: Icon(_disableBlur ? Icons.blur_off : Icons.blur_on),
-                  tooltip: 'Toggle Blur (FE-UI-096 Intersection Test)',
-                  onPressed: () {
-                    setState(() {
-                      _disableBlur = !_disableBlur;
-                    });
-                  },
-                  color: _disableBlur ? Colors.amber : const Color(0xFF00BFFF),
-                ),
-                // FE-UI-066: Debug test pattern toggle
-                IconButton(
-                  icon: Icon(_showGlassTestPattern ? Icons.grid_on : Icons.grid_off),
-                  tooltip: 'Toggle Glass Test Pattern (Debug)',
-                  onPressed: () {
-                    setState(() {
-                      _showGlassTestPattern = !_showGlassTestPattern;
-                    });
-                  },
-                  color: _showGlassTestPattern ? Colors.orange : DesignTokens.textPrimary,
-                ),
-                // FE-UI-109: Glass stage toggle (hard-edge bands)
-                IconButton(
-                  icon: Icon(_showGlassStage ? Icons.layers : Icons.layers_outlined),
-                  tooltip: 'Toggle Glass Stage (FE-UI-109 Hard-Edge Bands)',
-                  onPressed: () {
-                    setState(() {
-                      _showGlassStage = !_showGlassStage;
-                    });
-                  },
-                  color: _showGlassStage ? const Color(0xFF9D7FFF) : DesignTokens.textSecondary,
-                ),
-              ],
-              // FE-UI-116: Reset button available in both debug and production
+              // Reset button available in both debug and production
               IconButton(
                 icon: const Icon(Icons.refresh),
                 tooltip: 'Reset Wizard',
@@ -271,79 +221,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     enablePerformanceMode: backgroundService.weatherPerformanceMode,
                   ),
 
-                  // FE-UI-066: Legacy test pattern for glass QA (preserved for backward compatibility)
-                  // Note: Old hardcoded background layers have been replaced with BackgroundRenderer (FE-BG-001)
-                  // FE-UI-092: Refraction content visibility test
-                // Recognizable shapes that will visibly distort under glass blur
-                if (_showGlassTestPattern) ...[
-                  // Striped circle - will show refraction/distortion through glass
-                  Positioned(
-                    top: 250,
-                    left: 100,
-                    child: Container(
-                      width: 300,
-                      height: 300,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: SweepGradient(
-                          colors: [
-                            Colors.cyan.withOpacity(0.4),
-                            Colors.pink.withOpacity(0.4),
-                            Colors.yellow.withOpacity(0.4),
-                            Colors.cyan.withOpacity(0.4),
-                          ],
-                        ),
-                      ),
-                      child: CustomPaint(
-                        painter: _RefractionTestPainter(),
-                      ),
-                    ),
-                  ),
-                  // Sharp-edged rectangle - edge will bend under blur
-                  Positioned(
-                    bottom: 200,
-                    right: 150,
-                    child: Container(
-                      width: 200,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Colors.orange.withOpacity(0.6),
-                          width: 3,
-                        ),
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.orange.withOpacity(0.3),
-                            Colors.red.withOpacity(0.3),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-                // FE-UI-066: Debug test pattern for glass QA
-                if (_showGlassTestPattern)
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            const Color(0xFF2A4A9A).withOpacity(0.15),
-                            const Color(0xFF7A2A9A).withOpacity(0.12),
-                            const Color(0xFF2A9A7A).withOpacity(0.10),
-                          ],
-                        ),
-                      ),
-                      child: CustomPaint(
-                        painter: _TestPatternPainter(),
-                      ),
-                    ),
-                  ),
-
-                // Main content
+                  // Main content
                 SingleChildScrollView(
                   controller: _scrollController,
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
@@ -393,47 +271,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                   ),
                 ),
 
-                // FE-UI-115: Renderer badge (dev-only, bottom-left)
-                // Shows which web renderer is active (HTML vs CanvasKit)
-                if (kDebugMode && kIsWeb)
-                  Positioned(
-                    bottom: 16,
-                    left: 16,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.75),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.web,
-                            size: 14,
-                            color: Colors.white.withOpacity(0.7),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Renderer: CanvasKit', // FE-UI-115: Production baseline
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 11,
-                              fontFamily: 'monospace',
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // FE-BG-030: Background debug panel (only in debug mode)
-                  if (kDebugMode)
+                  // FE-UI-PROD-3: Background debug panel (hidden by default, toggle in debug menu)
+                  if (kDebugMode && _showBackgroundDebugPanel)
                     const BackgroundDebugPanel(),
               ],
             );
@@ -586,14 +425,10 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
   Widget _buildCurrentStepCard(CollectionFlowState flowState, int currentStepIndex) {
     final stepData = _getStepData(currentStepIndex);
 
-    return GlassCard(
+    return DebugGlassCard( // FE-REFACTOR-8: Use debug wrapper (QA tools removed)
       key: ValueKey('step_$currentStepIndex'),
       // FE-043: Reduced header padding
       padding: const EdgeInsets.all(DesignTokens.paddingLarge),
-      // FE-UI-083: Pass debug fill proof toggle
-      debugShowFillProof: _showFillProof,
-      // FE-UI-096: Pass blur toggle for intersection testing
-      debugDisableBlur: _disableBlur,
       header: Row(
         children: [
           // FE-UI-042: Icon with subtle background
@@ -2867,87 +2702,6 @@ class _BackgroundNoisePainter extends CustomPainter {
 
 /// FE-UI-066: Test pattern painter for glass QA
 /// Renders colorful gradient + shapes to validate blur/refraction
-class _TestPatternPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-
-    // Draw diagonal stripes for refraction testing
-    for (double i = 0; i < size.width + size.height; i += 100) {
-      paint.color = Colors.white.withOpacity(0.08);
-      final path = Path()
-        ..moveTo(i, 0)
-        ..lineTo(i + 50, 0)
-        ..lineTo(0, i + 50)
-        ..lineTo(0, i)
-        ..close();
-      canvas.drawPath(path, paint);
-    }
-
-    // Draw circular patterns for refraction testing
-    final positions = [
-      Offset(size.width * 0.3, size.height * 0.3),
-      Offset(size.width * 0.7, size.height * 0.4),
-      Offset(size.width * 0.5, size.height * 0.7),
-    ];
-
-    for (final pos in positions) {
-      paint.color = Colors.white.withOpacity(0.12);
-      canvas.drawCircle(pos, 80, paint);
-      paint.color = Colors.white.withOpacity(0.06);
-      canvas.drawCircle(pos, 120, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_TestPatternPainter oldDelegate) => false;
-}
-
-/// FE-UI-092: Refraction test painter - stripes that bend under blur
-/// Proves glass blur actually distorts background content
-class _RefractionTestPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-
-    // Draw concentric circles with alternating colors
-    // These will visibly bend/soften when glass card covers them
-    for (double radius = 20; radius < size.width / 2; radius += 20) {
-      paint.color = radius % 40 == 0
-          ? Colors.white.withOpacity(0.5)
-          : Colors.cyan.withOpacity(0.5);
-      canvas.drawCircle(
-        Offset(size.width / 2, size.height / 2),
-        radius,
-        paint,
-      );
-    }
-
-    // Draw radial lines (like clock spokes)
-    // These will show refraction distortion clearly
-    paint.strokeWidth = 3;
-    for (double angle = 0; angle < 360; angle += 30) {
-      final radians = angle * (3.14159 / 180);
-      final x = size.width / 2 + (size.width / 2) * math.cos(radians);
-      final y = size.height / 2 + (size.height / 2) * math.sin(radians);
-
-      paint.color = angle % 60 == 0
-          ? Colors.yellow.withOpacity(0.6)
-          : Colors.pink.withOpacity(0.4);
-
-      canvas.drawLine(
-        Offset(size.width / 2, size.height / 2),
-        Offset(x, y),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_RefractionTestPainter oldDelegate) => false;
-}
 
 /// FE-UI-109: Glass Stage Microtexture Painter
 /// Fine-grained noise texture (higher frequency than background noise)

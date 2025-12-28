@@ -8,9 +8,9 @@ import '../models/background_preset.dart';
 class WeatherEffect extends StatefulWidget {
   final Season? season;
   final double intensity; // 0.0 = Off, 0.33 = Low, 0.66 = Medium, 1.0 = High
-  final double timeOfDayOpacity; // FE-BG-103: Day=1.0, Night=0.7-0.8
-  final bool enabled; // FE-BG-106: Debug toggle
-  final bool enablePerformanceMode; // FE-BG-105: Performance enforcement
+  final double timeOfDayOpacity; // Day=1.0, Night=0.7-0.8
+  final bool enabled; // Debug toggle
+  final bool enablePerformanceMode; // Performance mode reduces quality slightly
 
   const WeatherEffect({
     super.key,
@@ -35,7 +35,6 @@ class _WeatherEffectState extends State<WeatherEffect>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // FE-BG-105: Create animation controller for Lottie
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
@@ -50,7 +49,6 @@ class _WeatherEffectState extends State<WeatherEffect>
   void didUpdateWidget(WeatherEffect oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // FE-BG-102: React to season changes
     if (widget.season != oldWidget.season ||
         widget.enabled != oldWidget.enabled ||
         widget.intensity != oldWidget.intensity) {
@@ -68,7 +66,6 @@ class _WeatherEffectState extends State<WeatherEffect>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
-    // FE-BG-105: Pause animation when tab inactive
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
       _isTabActive = false;
@@ -81,10 +78,14 @@ class _WeatherEffectState extends State<WeatherEffect>
     }
   }
 
-  /// FE-BG-102: Determine if weather should be shown based on season
+  /// Determine if weather should be shown based on season
+  /// Enabled for winter (snow), spring (petals), and fall (leaves)
   bool _shouldShowWeather() {
     if (widget.intensity == 0.0) return false;
-    return widget.season == Season.winter; // Snow only in winter for now
+    // Enable weather effects for winter (snow), spring (petals), and fall (leaves)
+    return widget.season == Season.winter ||
+           widget.season == Season.spring ||
+           widget.season == Season.fall;
   }
 
   /// Get the appropriate Lottie asset path based on season
@@ -114,30 +115,23 @@ class _WeatherEffectState extends State<WeatherEffect>
       return const SizedBox.shrink();
     }
 
-    // FE-BG-103: Calculate final opacity based on time of day and intensity
     final baseOpacity = widget.intensity.clamp(0.0, 1.0);
     final finalOpacity = baseOpacity * widget.timeOfDayOpacity;
 
-    // FE-BG-101: Positioned.fill renders behind glass, above gradient
-    // FE-BG-104: Rendered OUTSIDE BackdropFilter to avoid blur/grey fog
+    // Rendered OUTSIDE BackdropFilter to avoid blur
     return Positioned.fill(
       child: IgnorePointer(
-        // FE-BG-101: Must not affect input interaction
         child: Opacity(
           opacity: finalOpacity,
           child: Lottie.asset(
             assetPath,
             controller: _controller,
             fit: BoxFit.cover,
-            // FE-BG-105: Performance mode reduces quality slightly
             frameRate: widget.enablePerformanceMode
                 ? FrameRate.composition
                 : FrameRate.max,
-            // FE-BG-104: Sharp rendering, no blur
             filterQuality: FilterQuality.high,
-            // FE-BG-101: No clipping
             repeat: true,
-            // FE-BG-105: Error handling
             errorBuilder: (context, error, stackTrace) {
               debugPrint('Weather effect error: $error');
               return const SizedBox.shrink();

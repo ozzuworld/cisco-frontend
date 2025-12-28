@@ -510,7 +510,7 @@ class _BackgroundDebugPanelState extends State<BackgroundDebugPanel> {
   }
 }
 
-/// Extension to import into snow_effect.dart
+/// Extension for weather intensity labels
 extension on double {
   String get snowIntensityLabel {
     if (this == 0.0) return 'Off';

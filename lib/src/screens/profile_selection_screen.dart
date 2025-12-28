@@ -566,8 +566,10 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              // Icon container with background
-              Container(
+              // Animated icon container with background
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
                 padding: const EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
                   color: isComplete ? Colors.green.shade100 : Colors.grey.shade200,
@@ -577,64 +579,84 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
                     width: 2,
                   ),
                 ),
-                child: Icon(
-                  icon,
-                  color: isComplete ? Colors.green.shade700 : Colors.grey.shade500,
-                  size: 20,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    icon,
+                    key: ValueKey('$icon-$isComplete'),
+                    color: isComplete ? Colors.green.shade700 : Colors.grey.shade500,
+                    size: 20,
+                  ),
                 ),
               ),
-              // Checkmark badge overlay for completed steps
-              if (isComplete)
-                Positioned(
-                  right: -4,
-                  top: -4,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade700,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 2,
+              // Animated checkmark badge overlay for completed steps
+              AnimatedOpacity(
+                duration: const Duration(milliseconds: 300),
+                opacity: isComplete ? 1.0 : 0.0,
+                child: AnimatedScale(
+                  duration: const Duration(milliseconds: 300),
+                  scale: isComplete ? 1.0 : 0.0,
+                  curve: Curves.easeOutBack,
+                  child: Positioned(
+                    right: -4,
+                    top: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade700,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 2,
+                        ),
                       ),
-                    ),
-                    child: const Icon(
-                      Icons.check,
-                      color: Colors.white,
-                      size: 12,
+                      child: const Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 12,
+                      ),
                     ),
                   ),
                 ),
+              ),
             ],
           ),
           const SizedBox(height: 6),
-          Text(
-            label,
+          AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 250),
             style: TextStyle(
               fontSize: 11,
               color: isComplete ? Colors.green.shade700 : Colors.grey.shade600,
               fontWeight: isComplete ? FontWeight.bold : FontWeight.normal,
             ),
-            textAlign: TextAlign.center,
-          ),
-          // "Completed" badge for completed steps
-          if (isComplete)
-            Container(
-              margin: const EdgeInsets.only(top: 2),
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-              decoration: BoxDecoration(
-                color: Colors.green.shade700,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                'Done',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 8,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
             ),
+          ),
+          // Animated "Completed" badge for completed steps
+          AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            child: isComplete
+                ? Container(
+                    margin: const EdgeInsets.only(top: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade700,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'Done',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
         ],
       ),
     );
@@ -692,16 +714,40 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
         ..._profiles!.map((profile) => _buildProfileCard(profile)),
 
         // Time selection section (always visible when profile is selected)
-        if (_selectedProfile != null) ...[
-          const SizedBox(height: 16),
-          _buildTimeSelectionCard(),
-        ],
+        AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          child: _selectedProfile != null
+              ? Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    AnimatedOpacity(
+                      duration: const Duration(milliseconds: 300),
+                      opacity: _selectedProfile != null ? 1.0 : 0.0,
+                      child: _buildTimeSelectionCard(),
+                    ),
+                  ],
+                )
+              : const SizedBox.shrink(),
+        ),
 
         // Other overrides section (collapsible, only shown when profile is selected)
-        if (_selectedProfile != null) ...[
-          const SizedBox(height: 16),
-          _buildOverridesSection(),
-        ],
+        AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          child: _selectedProfile != null
+              ? Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    AnimatedOpacity(
+                      duration: const Duration(milliseconds: 300),
+                      opacity: _selectedProfile != null ? 1.0 : 0.0,
+                      child: _buildOverridesSection(),
+                    ),
+                  ],
+                )
+              : const SizedBox.shrink(),
+        ),
       ],
     );
   }
@@ -709,11 +755,25 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
   Widget _buildProfileCard(Profile profile) {
     final isSelected = _selectedProfile == profile;
 
-    return Card(
-      elevation: isSelected ? 4 : 2,
-      color: isSelected ? Colors.blue.shade50 : null,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOut,
       margin: const EdgeInsets.only(bottom: 12.0),
-      child: InkWell(
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.blue.shade50 : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isSelected ? 0.15 : 0.08),
+            blurRadius: isSelected ? 8 : 4,
+            offset: Offset(0, isSelected ? 3 : 1),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
         onTap: () {
           setState(() {
             _selectedProfile = profile;
@@ -821,6 +881,7 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
             ],
           ),
         ),
+        ),
       ),
     );
   }
@@ -853,9 +914,20 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
     final flowState = context.watch<CollectionFlowState>();
     final isTimeValid = flowState.hasValidTimeConfig;
 
-    return Card(
-      elevation: 2,
-      color: isTimeValid ? Colors.green.shade50 : null,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      decoration: BoxDecoration(
+        color: isTimeValid ? Colors.green.shade50 : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -863,36 +935,55 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  isTimeValid ? Icons.check_circle : Icons.schedule,
-                  color: isTimeValid ? Colors.green.shade700 : Colors.blue.shade700,
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 250),
+                  transitionBuilder: (child, animation) {
+                    return ScaleTransition(
+                      scale: animation,
+                      child: child,
+                    );
+                  },
+                  child: Icon(
+                    isTimeValid ? Icons.check_circle : Icons.schedule,
+                    key: ValueKey(isTimeValid),
+                    color: isTimeValid ? Colors.green.shade700 : Colors.blue.shade700,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    'Collection Time Range',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 250),
+                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
                           fontWeight: FontWeight.bold,
                           color: isTimeValid ? Colors.green.shade700 : Colors.blue.shade700,
                         ),
+                    child: const Text('Collection Time Range'),
                   ),
                 ),
-                if (isTimeValid)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade700,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      'Ready',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                AnimatedScale(
+                  duration: const Duration(milliseconds: 250),
+                  scale: isTimeValid ? 1.0 : 0.0,
+                  curve: Curves.easeOutBack,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: isTimeValid ? 1.0 : 0.0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade700,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        'Ready',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
+                ),
               ],
             ),
             const SizedBox(height: 16),

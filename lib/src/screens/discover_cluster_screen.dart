@@ -452,7 +452,9 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                       ),
                       if (_discoveryResult!.hasNodes) ...[
                         const SizedBox(height: 8),
-                        Container(
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12.0,
                             vertical: 8.0,
@@ -470,26 +472,40 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                           ),
                           child: Row(
                             children: [
-                              Icon(
-                                _selectedNodeIps.isEmpty
-                                    ? Icons.error_outline
-                                    : Icons.check_circle_outline,
-                                size: 18,
-                                color: _selectedNodeIps.isEmpty
-                                    ? Colors.red.shade700
-                                    : Colors.blue.shade700,
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 250),
+                                transitionBuilder: (child, animation) {
+                                  return ScaleTransition(
+                                    scale: animation,
+                                    child: child,
+                                  );
+                                },
+                                child: Icon(
+                                  _selectedNodeIps.isEmpty
+                                      ? Icons.error_outline
+                                      : Icons.check_circle_outline,
+                                  key: ValueKey(_selectedNodeIps.isEmpty),
+                                  size: 18,
+                                  color: _selectedNodeIps.isEmpty
+                                      ? Colors.red.shade700
+                                      : Colors.blue.shade700,
+                                ),
                               ),
                               const SizedBox(width: 8),
                               Expanded(
-                                child: Text(
-                                  _selectedNodeIps.isEmpty
-                                      ? 'Select at least one node to proceed'
-                                      : '${_selectedNodeIps.length} node(s) selected',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    color: _selectedNodeIps.isEmpty
-                                        ? Colors.red.shade900
-                                        : Colors.blue.shade900,
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 250),
+                                  child: Text(
+                                    _selectedNodeIps.isEmpty
+                                        ? 'Select at least one node to proceed'
+                                        : '${_selectedNodeIps.length} node(s) selected',
+                                    key: ValueKey('${_selectedNodeIps.length}-${_selectedNodeIps.isEmpty}'),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      color: _selectedNodeIps.isEmpty
+                                          ? Colors.red.shade900
+                                          : Colors.blue.shade900,
+                                    ),
                                   ),
                                 ),
                               ),

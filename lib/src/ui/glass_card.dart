@@ -102,44 +102,68 @@ class GlassCard extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: effectiveBorderRadius,
-              // FE-UI-048: Outer border - white 14-18%
+              // BRIGHT visible border for glass effect
               border: Border.all(
-                color: Colors.white.withOpacity(DesignTokens.glassBorderOpacity),
-                width: 1,
+                color: Colors.white.withOpacity(0.25),
+                width: 1.5,
               ),
-              // FE-UI-048: Glass fill with vertical gradient (top brighter)
+              // Translucent glass fill - lighter for visibility
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.white.withOpacity(DesignTokens.glassFillOpacityFocus),
-                  Colors.white.withOpacity(DesignTokens.glassFillOpacity),
+                  Colors.white.withOpacity(0.15),
+                  Colors.white.withOpacity(0.12),
                 ],
               ),
             ),
             child: Stack(
               children: [
-                // FE-UI-048: Inner highlight rim (top edge stronger)
+                // BRIGHT top edge highlight - this is what makes it look like glass
                 Positioned(
                   top: 0,
                   left: 0,
                   right: 0,
                   child: Container(
-                    height: 1,
+                    height: 2,
                     decoration: BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(effectiveBorderRadius.topLeft.x),
+                        topRight: Radius.circular(effectiveBorderRadius.topRight.x),
+                      ),
                       gradient: LinearGradient(
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
                         colors: [
-                          Colors.white.withOpacity(DesignTokens.glassHighlightOpacity),
-                          Colors.white.withOpacity(DesignTokens.glassHighlightOpacity * 0.5),
-                          Colors.white.withOpacity(DesignTokens.glassHighlightOpacity),
+                          Colors.white.withOpacity(0.4),
+                          Colors.white.withOpacity(0.6),
+                          Colors.white.withOpacity(0.4),
                         ],
                       ),
                     ),
                   ),
                 ),
-                // FE-UI-048: Optional subtle specular sheen (diagonal)
+                // Left edge highlight
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 1,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withOpacity(0.3),
+                          Colors.white.withOpacity(0.1),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Diagonal sheen
                 Positioned.fill(
                   child: ClipRRect(
                     borderRadius: effectiveBorderRadius,
@@ -149,11 +173,11 @@ class GlassCard extends StatelessWidget {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Colors.white.withOpacity(0.04),
+                            Colors.white.withOpacity(0.15),
                             Colors.transparent,
                             Colors.transparent,
                           ],
-                          stops: const [0.0, 0.3, 1.0],
+                          stops: const [0.0, 0.4, 1.0],
                         ),
                       ),
                     ),

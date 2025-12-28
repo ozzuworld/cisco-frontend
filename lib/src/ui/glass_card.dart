@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'design_tokens.dart';
 
@@ -107,13 +108,13 @@ class GlassCard extends StatelessWidget {
                 color: Colors.white.withOpacity(0.40),
                 width: 2,
               ),
-              // Much brighter translucent fill
+              // FE-UI-046: Very low tint (8-10%) so background shows through (true glass)
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.white.withOpacity(0.22),
-                  Colors.white.withOpacity(0.18),
+                  Colors.white.withOpacity(0.10),
+                  Colors.white.withOpacity(0.08),
                 ],
               ),
             ),
@@ -203,6 +204,18 @@ class GlassCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                // FE-UI-048: Subtle noise/grain overlay
+                Positioned.fill(
+                  child: ClipRRect(
+                    borderRadius: effectiveBorderRadius,
+                    child: CustomPaint(
+                      painter: _NoisePainter(
+                        opacity: 0.04, // Very subtle (3-6% range)
+                        seed: 42, // Fixed seed for consistent pattern
+                      ),
+                    ),
+                  ),
+                ),
                 // Content
                 Column(
                   mainAxisSize: MainAxisSize.min,
@@ -244,6 +257,41 @@ class GlassCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// FE-UI-048: Noise texture painter for subtle film grain on glass
+class _NoisePainter extends CustomPainter {
+  final double opacity;
+  final int seed;
+
+  _NoisePainter({this.opacity = 0.05, this.seed = 0});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final random = math.Random(seed);
+    final paint = Paint();
+
+    // Draw very subtle noise dots
+    // Sparse sampling to avoid performance issues on web
+    final step = 4.0; // Sample every 4 pixels
+    for (double x = 0; x < size.width; x += step) {
+      for (double y = 0; y < size.height; y += step) {
+        if (random.nextDouble() > 0.5) {
+          final brightness = random.nextDouble() * 0.5 + 0.5; // 0.5 to 1.0
+          paint.color = Colors.white.withOpacity(opacity * brightness);
+          canvas.drawCircle(
+            Offset(x + random.nextDouble() * step, y + random.nextDouble() * step),
+            0.5,
+            paint,
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_NoisePainter oldDelegate) =>
+      opacity != oldDelegate.opacity || seed != oldDelegate.seed;
 }
 
 /// FE-042 & FE-044: Breadcrumb-style chip without blur (text-first, neutral)

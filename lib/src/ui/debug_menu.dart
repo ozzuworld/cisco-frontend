@@ -1,30 +1,21 @@
 import 'package:flutter/material.dart';
 import 'design_tokens.dart';
 
-/// FE-UI-PROD-1 & FE-UI-PROD-3: Consolidated debug menu
+/// FE-UI-PROD-1 & FE-UI-PROD-3: Consolidated debug menu (Simplified)
 ///
-/// Provides organized access to all debug features in a single modal/dropdown
-/// instead of cluttering the AppBar with multiple icon buttons.
+/// Provides organized access to background/weather debug features.
+/// Glass QA tools removed - glass effects are production-ready.
 ///
 /// Features:
-/// - Glass QA tools (fill proof, test pattern, glass stage, blur toggle)
 /// - Background controls (environment plate, debug panel toggle)
-/// - Clean, organized UI
+/// - Clean, minimal UI
 /// - Only visible in debug mode
 class DebugMenu {
   /// Show the debug menu as a modal bottom sheet
   static void show(
     BuildContext context, {
-    required bool showFillProof,
-    required bool showTestPattern,
-    required bool showGlassStage,
-    required bool disableBlur,
     required bool showEnvironmentPlate,
     required bool showBackgroundDebugPanel,
-    required Function(bool) onToggleFillProof,
-    required Function(bool) onToggleTestPattern,
-    required Function(bool) onToggleGlassStage,
-    required Function(bool) onToggleBlur,
     required Function(bool) onToggleEnvironmentPlate,
     required Function(bool) onToggleBackgroundDebugPanel,
   }) {
@@ -33,16 +24,8 @@ class DebugMenu {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => _DebugMenuContent(
-        showFillProof: showFillProof,
-        showTestPattern: showTestPattern,
-        showGlassStage: showGlassStage,
-        disableBlur: disableBlur,
         showEnvironmentPlate: showEnvironmentPlate,
         showBackgroundDebugPanel: showBackgroundDebugPanel,
-        onToggleFillProof: onToggleFillProof,
-        onToggleTestPattern: onToggleTestPattern,
-        onToggleGlassStage: onToggleGlassStage,
-        onToggleBlur: onToggleBlur,
         onToggleEnvironmentPlate: onToggleEnvironmentPlate,
         onToggleBackgroundDebugPanel: onToggleBackgroundDebugPanel,
       ),
@@ -51,30 +34,14 @@ class DebugMenu {
 }
 
 class _DebugMenuContent extends StatelessWidget {
-  final bool showFillProof;
-  final bool showTestPattern;
-  final bool showGlassStage;
-  final bool disableBlur;
   final bool showEnvironmentPlate;
   final bool showBackgroundDebugPanel;
-  final Function(bool) onToggleFillProof;
-  final Function(bool) onToggleTestPattern;
-  final Function(bool) onToggleGlassStage;
-  final Function(bool) onToggleBlur;
   final Function(bool) onToggleEnvironmentPlate;
   final Function(bool) onToggleBackgroundDebugPanel;
 
   const _DebugMenuContent({
-    required this.showFillProof,
-    required this.showTestPattern,
-    required this.showGlassStage,
-    required this.disableBlur,
     required this.showEnvironmentPlate,
     required this.showBackgroundDebugPanel,
-    required this.onToggleFillProof,
-    required this.onToggleTestPattern,
-    required this.onToggleGlassStage,
-    required this.onToggleBlur,
     required this.onToggleEnvironmentPlate,
     required this.onToggleBackgroundDebugPanel,
   });
@@ -133,41 +100,8 @@ class _DebugMenuContent extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // Glass QA Section
-              _buildSectionHeader('Glass QA Tools', Icons.blur_on),
-              const SizedBox(height: 12),
-              _buildToggle(
-                label: 'Fill Proof',
-                subtitle: 'Show hot pink if fill is not transparent',
-                value: showFillProof,
-                onChanged: onToggleFillProof,
-                activeColor: const Color(0xFFFF1493),
-              ),
-              _buildToggle(
-                label: 'Test Pattern',
-                subtitle: 'Show grid pattern for glass refraction testing',
-                value: showTestPattern,
-                onChanged: onToggleTestPattern,
-                activeColor: Colors.orange,
-              ),
-              _buildToggle(
-                label: 'Glass Stage',
-                subtitle: 'Hard-edge bands for refraction visibility',
-                value: showGlassStage,
-                onChanged: onToggleGlassStage,
-                activeColor: const Color(0xFF9D7FFF),
-              ),
-              _buildToggle(
-                label: 'Disable Blur',
-                subtitle: 'Test glass without backdrop blur',
-                value: disableBlur,
-                onChanged: onToggleBlur,
-                activeColor: Colors.amber,
-              ),
-              const SizedBox(height: 24),
-
-              // Background Section
-              _buildSectionHeader('Background Tools', Icons.landscape),
+              // Background & Weather Controls
+              _buildSectionHeader('Background & Weather', Icons.landscape),
               const SizedBox(height: 12),
               _buildToggle(
                 label: 'Environment Plate',

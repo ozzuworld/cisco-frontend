@@ -257,6 +257,58 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                   ),
                 ),
+                // FE-UI-060: Charcoal gradient bands for glass environment
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          const Color(0xFF0A0C12).withOpacity(0.03),
+                          Colors.transparent,
+                          const Color(0xFF08090E).withOpacity(0.04),
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
+                // FE-UI-060: Faint shape blobs for refraction detail
+                Positioned(
+                  top: 200,
+                  right: 200,
+                  child: Container(
+                    width: 400,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(150),
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.white.withOpacity(0.04),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 150,
+                  left: 180,
+                  child: Container(
+                    width: 350,
+                    height: 350,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          const Color(0xFF12141A).withOpacity(0.05),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
                 // FE-UI-066: Debug test pattern for glass QA
                 if (_showGlassTestPattern)
                   Positioned.fill(

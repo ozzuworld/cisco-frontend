@@ -27,8 +27,10 @@ class BackgroundService extends ChangeNotifier {
   Timer? _transitionTimer;
   Timer? _autoUpdateTimer;
 
-  // Snow settings (Epic 2)
-  double _snowIntensity = 0.0; // 0.0 = Off, 0.33 = Low, 0.66 = Medium, 1.0 = High
+  // Weather effects settings (FE-BG-100-106: Lottie-based)
+  double _weatherIntensity = 0.33; // 0.0 = Off, 0.33 = Low, 0.66 = Medium, 1.0 = High
+  bool _weatherEffectsEnabled = true; // FE-BG-106: Debug toggle
+  bool _weatherPerformanceMode = false; // FE-BG-105: Performance mode
 
   // Debug overrides
   BackgroundTimeOfDay? _debugTimeOfDay;
@@ -45,8 +47,12 @@ class BackgroundService extends ChangeNotifier {
   Hemisphere get hemisphere => _hemisphere;
   BackgroundTimeOfDay? get debugTimeOfDay => _debugTimeOfDay;
   Season? get debugSeason => _debugSeason;
-  double get snowIntensity => _snowIntensity;
   double get transitionProgress => _transitionProgress;
+
+  // FE-BG-100-106: Weather effects getters
+  double get weatherIntensity => _weatherIntensity;
+  bool get weatherEffectsEnabled => _weatherEffectsEnabled;
+  bool get weatherPerformanceMode => _weatherPerformanceMode;
 
   /// Get the currently active preset (with transition if applicable)
   BackgroundPreset get activePreset {
@@ -93,9 +99,20 @@ class BackgroundService extends ChangeNotifier {
         _hemisphere = Hemisphere.southern;
       }
 
-      final snowStr = await _storageService.read('background_snow_intensity');
-      if (snowStr != null) {
-        _snowIntensity = double.tryParse(snowStr) ?? 0.0;
+      // FE-BG-100-106: Load weather settings
+      final weatherStr = await _storageService.read('background_weather_intensity');
+      if (weatherStr != null) {
+        _weatherIntensity = double.tryParse(weatherStr) ?? 0.33;
+      }
+
+      final weatherEnabledStr = await _storageService.read('background_weather_enabled');
+      if (weatherEnabledStr != null) {
+        _weatherEffectsEnabled = weatherEnabledStr == 'true';
+      }
+
+      final weatherPerfStr = await _storageService.read('background_weather_performance');
+      if (weatherPerfStr != null) {
+        _weatherPerformanceMode = weatherPerfStr == 'true';
       }
     } catch (e) {
       debugPrint('Error loading background preferences: $e');
@@ -123,7 +140,10 @@ class BackgroundService extends ChangeNotifier {
         _hemisphere == Hemisphere.northern ? 'northern' : 'southern',
       );
 
-      await _storageService.write('background_snow_intensity', _snowIntensity.toString());
+      // FE-BG-100-106: Save weather settings
+      await _storageService.write('background_weather_intensity', _weatherIntensity.toString());
+      await _storageService.write('background_weather_enabled', _weatherEffectsEnabled.toString());
+      await _storageService.write('background_weather_performance', _weatherPerformanceMode.toString());
     } catch (e) {
       debugPrint('Error saving background preferences: $e');
     }
@@ -304,9 +324,25 @@ class BackgroundService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Set snow intensity (0.0 = Off, 0.33 = Low, 0.66 = Medium, 1.0 = High)
-  Future<void> setSnowIntensity(double intensity) async {
-    _snowIntensity = intensity.clamp(0.0, 1.0);
+  // FE-BG-100-106: Weather effects control methods
+
+  /// Set weather intensity (0.0 = Off, 0.33 = Low, 0.66 = Medium, 1.0 = High)
+  Future<void> setWeatherIntensity(double intensity) async {
+    _weatherIntensity = intensity.clamp(0.0, 1.0);
+    await _savePreferences();
+    notifyListeners();
+  }
+
+  /// Toggle weather effects on/off (FE-BG-106: Debug toggle)
+  Future<void> setWeatherEffectsEnabled(bool enabled) async {
+    _weatherEffectsEnabled = enabled;
+    await _savePreferences();
+    notifyListeners();
+  }
+
+  /// Toggle performance mode (FE-BG-105)
+  Future<void> setWeatherPerformanceMode(bool enabled) async {
+    _weatherPerformanceMode = enabled;
     await _savePreferences();
     notifyListeners();
   }

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
@@ -217,8 +218,15 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                   ),
                 ),
-                // FE-UI-047: Noise texture overlay
-                // TODO: Implement monochrome noise at 3-6% opacity (requires CustomPainter or image asset)
+                // FE-UI-054: Background noise/grain layer for refraction detail
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _BackgroundNoisePainter(
+                      opacity: 0.04, // 3-6% range - subtle but helps blur refraction
+                      seed: 123,
+                    ),
+                  ),
+                ),
 
                 // Main content
                 SingleChildScrollView(
@@ -2652,4 +2660,44 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
       ),
     );
   }
+}
+
+/// FE-UI-054: Background noise painter for refraction detail
+/// Adds subtle texture to background so glass blur has real detail to refract
+class _BackgroundNoisePainter extends CustomPainter {
+  final double opacity;
+  final int seed;
+
+  _BackgroundNoisePainter({this.opacity = 0.04, this.seed = 0});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final random = math.Random(seed);
+    final paint = Paint();
+
+    // Very sparse sampling for background (less than card)
+    // This provides texture for blur to work with
+    final step = 6.0; // Sample every 6 pixels
+    for (double x = 0; x < size.width; x += step) {
+      for (double y = 0; y < size.height; y += step) {
+        if (random.nextDouble() > 0.6) {
+          // Less dense than card noise
+          final brightness = random.nextDouble() * 0.4 + 0.6; // 0.6 to 1.0
+          paint.color = Colors.white.withOpacity(opacity * brightness);
+          canvas.drawCircle(
+            Offset(
+              x + random.nextDouble() * step,
+              y + random.nextDouble() * step,
+            ),
+            0.4,
+            paint,
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_BackgroundNoisePainter oldDelegate) =>
+      opacity != oldDelegate.opacity || seed != oldDelegate.seed;
 }

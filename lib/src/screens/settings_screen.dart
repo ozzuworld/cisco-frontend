@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../config/app_config.dart';
 import '../config/config_service.dart';
 import '../services/http_client.dart';
-import '../models/api_error.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});

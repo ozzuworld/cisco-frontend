@@ -1,41 +1,42 @@
-import 'package:flutter/foundation.dart';
 import '../services/storage_service.dart';
+import '../services/persisted_service.dart';
 import 'app_config.dart';
 
-/// Service to manage application configuration
-class ConfigService extends ChangeNotifier {
-  final StorageService _storageService;
+/// FE-REFACTOR-12: Service to manage application configuration
+///
+/// Extends PersistedService to handle loading/saving config with consistent pattern.
+class ConfigService extends PersistedService {
   AppConfig _config;
 
-  ConfigService(this._storageService) : _config = AppConfig.defaults();
+  ConfigService(super.storage) : _config = AppConfig.defaults();
 
   AppConfig get config => _config;
 
   bool get isConfigured => _config.hasApiKey;
 
-  /// Initialize and load saved configuration
-  Future<void> initialize() async {
-    final savedConfig = await _storageService.loadConfig();
-
+  @override
+  Future<void> loadPreferences() async {
+    final savedConfig = await storage.loadConfig();
     if (savedConfig != null) {
       _config = AppConfig.fromJson(savedConfig);
-      notifyListeners();
+    }
+  }
+
+  @override
+  Future<void> savePreferences() async {
+    // Only persist if "Remember API key" is enabled
+    if (_config.rememberApiKey && _config.hasApiKey) {
+      await storage.saveConfig(_config.toJson());
+    } else {
+      // Clear stored config if remember is disabled
+      await storage.clearConfig();
     }
   }
 
   /// Update configuration
   Future<void> updateConfig(AppConfig newConfig) async {
     _config = newConfig;
-
-    // Only persist if "Remember API key" is enabled
-    if (newConfig.rememberApiKey && newConfig.hasApiKey) {
-      await _storageService.saveConfig(newConfig.toJson());
-    } else {
-      // Clear stored config if remember is disabled
-      await _storageService.clearConfig();
-    }
-
-    notifyListeners();
+    await saveAndNotify();
   }
 
   /// Update base URL only
@@ -51,10 +52,15 @@ class ConfigService extends ChangeNotifier {
     ));
   }
 
+  @override
+  Future<void> clearPersistedData() async {
+    await storage.clearConfig();
+  }
+
   /// Clear configuration
   Future<void> clearConfig() async {
     _config = AppConfig.defaults();
-    await _storageService.clearConfig();
+    await clearPersistedData();
     notifyListeners();
   }
 

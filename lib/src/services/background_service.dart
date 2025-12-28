@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/background_preset.dart';
 import '../models/background_preset_registry.dart';
 import 'storage_service.dart';
+import 'persisted_service.dart';
 
 /// Hemisphere for season calculation
 enum Hemisphere { northern, southern }
@@ -10,9 +11,10 @@ enum Hemisphere { northern, southern }
 /// Background mode - auto or manual
 enum BackgroundMode { auto, manual }
 
-/// Service that manages background presets with automatic time-of-day and season resolution
-class BackgroundService extends ChangeNotifier {
-  final StorageService _storageService;
+/// FE-REFACTOR-12: Service that manages background presets with automatic time-of-day and season resolution
+///
+/// Extends PersistedService to handle loading/saving preferences with consistent pattern.
+class BackgroundService extends PersistedService {
 
   // State
   BackgroundMode _mode = BackgroundMode.auto;
@@ -36,8 +38,21 @@ class BackgroundService extends ChangeNotifier {
   BackgroundTimeOfDay? _debugTimeOfDay;
   Season? _debugSeason;
 
-  BackgroundService(this._storageService) {
-    _initialize();
+  BackgroundService(super.storage) {
+    _postInitialize();
+  }
+
+  /// Post-initialization setup (after base class initialize)
+  Future<void> _postInitialize() async {
+    await initialize();
+    _updateCurrentPreset();
+
+    // Start auto-update timer (check every minute for time-of-day changes)
+    _autoUpdateTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (_mode == BackgroundMode.auto) {
+        _updateCurrentPreset();
+      }
+    });
   }
 
   // Getters
@@ -63,90 +78,69 @@ class BackgroundService extends ChangeNotifier {
     return _currentPreset ?? BackgroundPresetRegistry.day;
   }
 
-  /// Initialize the service
-  Future<void> _initialize() async {
-    await _loadPreferences();
-    _updateCurrentPreset();
+  @override
+  Future<void> loadPreferences() async {
+    final modeStr = await storage.read('background_mode');
+    if (modeStr == 'manual') {
+      _mode = BackgroundMode.manual;
+    }
 
-    // Start auto-update timer (check every minute for time-of-day changes)
-    _autoUpdateTimer = Timer.periodic(const Duration(minutes: 1), (_) {
-      if (_mode == BackgroundMode.auto) {
-        _updateCurrentPreset();
-      }
-    });
-  }
+    final presetId = await storage.read('background_manual_preset');
+    if (presetId != null) {
+      _manualPreset = BackgroundPresetRegistry.getById(presetId);
+    }
 
-  /// Load preferences from storage
-  Future<void> _loadPreferences() async {
-    try {
-      final modeStr = await _storageService.read('background_mode');
-      if (modeStr == 'manual') {
-        _mode = BackgroundMode.manual;
-      }
+    final sessionOverrideId = await storage.read('background_session_override');
+    if (sessionOverrideId != null) {
+      _sessionOverride = sessionOverrideId;
+    }
 
-      final presetId = await _storageService.read('background_manual_preset');
-      if (presetId != null) {
-        _manualPreset = BackgroundPresetRegistry.getById(presetId);
-      }
+    final hemisphereStr = await storage.read('background_hemisphere');
+    if (hemisphereStr == 'southern') {
+      _hemisphere = Hemisphere.southern;
+    }
 
-      final sessionOverrideId = await _storageService.read('background_session_override');
-      if (sessionOverrideId != null) {
-        _sessionOverride = sessionOverrideId;
-      }
+    // FE-BG-100-106: Load weather settings
+    final weatherStr = await storage.read('background_weather_intensity');
+    if (weatherStr != null) {
+      _weatherIntensity = double.tryParse(weatherStr) ?? 0.33;
+    }
 
-      final hemisphereStr = await _storageService.read('background_hemisphere');
-      if (hemisphereStr == 'southern') {
-        _hemisphere = Hemisphere.southern;
-      }
+    final weatherEnabledStr = await storage.read('background_weather_enabled');
+    if (weatherEnabledStr != null) {
+      _weatherEffectsEnabled = weatherEnabledStr == 'true';
+    }
 
-      // FE-BG-100-106: Load weather settings
-      final weatherStr = await _storageService.read('background_weather_intensity');
-      if (weatherStr != null) {
-        _weatherIntensity = double.tryParse(weatherStr) ?? 0.33;
-      }
-
-      final weatherEnabledStr = await _storageService.read('background_weather_enabled');
-      if (weatherEnabledStr != null) {
-        _weatherEffectsEnabled = weatherEnabledStr == 'true';
-      }
-
-      final weatherPerfStr = await _storageService.read('background_weather_performance');
-      if (weatherPerfStr != null) {
-        _weatherPerformanceMode = weatherPerfStr == 'true';
-      }
-    } catch (e) {
-      debugPrint('Error loading background preferences: $e');
+    final weatherPerfStr = await storage.read('background_weather_performance');
+    if (weatherPerfStr != null) {
+      _weatherPerformanceMode = weatherPerfStr == 'true';
     }
   }
 
-  /// Save preferences to storage
-  Future<void> _savePreferences() async {
-    try {
-      await _storageService.write(
-        'background_mode',
-        _mode == BackgroundMode.auto ? 'auto' : 'manual',
-      );
+  @override
+  Future<void> savePreferences() async {
+    await storage.write(
+      'background_mode',
+      _mode == BackgroundMode.auto ? 'auto' : 'manual',
+    );
 
-      if (_manualPreset != null) {
-        await _storageService.write('background_manual_preset', _manualPreset!.id);
-      }
-
-      if (_sessionOverride != null) {
-        await _storageService.write('background_session_override', _sessionOverride!);
-      }
-
-      await _storageService.write(
-        'background_hemisphere',
-        _hemisphere == Hemisphere.northern ? 'northern' : 'southern',
-      );
-
-      // FE-BG-100-106: Save weather settings
-      await _storageService.write('background_weather_intensity', _weatherIntensity.toString());
-      await _storageService.write('background_weather_enabled', _weatherEffectsEnabled.toString());
-      await _storageService.write('background_weather_performance', _weatherPerformanceMode.toString());
-    } catch (e) {
-      debugPrint('Error saving background preferences: $e');
+    if (_manualPreset != null) {
+      await storage.write('background_manual_preset', _manualPreset!.id);
     }
+
+    if (_sessionOverride != null) {
+      await storage.write('background_session_override', _sessionOverride!);
+    }
+
+    await storage.write(
+      'background_hemisphere',
+      _hemisphere == Hemisphere.northern ? 'northern' : 'southern',
+    );
+
+    // FE-BG-100-106: Save weather settings
+    await storage.write('background_weather_intensity', _weatherIntensity.toString());
+    await storage.write('background_weather_enabled', _weatherEffectsEnabled.toString());
+    await storage.write('background_weather_performance', _weatherPerformanceMode.toString());
   }
 
   /// Update the current preset based on mode and context
@@ -281,18 +275,16 @@ class BackgroundService extends ChangeNotifier {
   Future<void> setMode(BackgroundMode mode) async {
     if (_mode == mode) return;
     _mode = mode;
-    await _savePreferences();
     _updateCurrentPreset();
-    notifyListeners();
+    await saveAndNotify();
   }
 
   /// Set manual preset (switches to manual mode)
   Future<void> setManualPreset(BackgroundPreset preset) async {
     _manualPreset = preset;
     _mode = BackgroundMode.manual;
-    await _savePreferences();
     _updateCurrentPreset();
-    notifyListeners();
+    await saveAndNotify();
   }
 
   /// Set manual preset by ID
@@ -306,20 +298,18 @@ class BackgroundService extends ChangeNotifier {
   /// Set session override (e.g., "holiday mode")
   Future<void> setSessionOverride(String? presetId) async {
     _sessionOverride = presetId;
-    await _savePreferences();
     _updateCurrentPreset();
-    notifyListeners();
+    await saveAndNotify();
   }
 
   /// Set hemisphere for season calculation
   Future<void> setHemisphere(Hemisphere hemisphere) async {
     if (_hemisphere == hemisphere) return;
     _hemisphere = hemisphere;
-    await _savePreferences();
     if (_mode == BackgroundMode.auto) {
       _updateCurrentPreset();
     }
-    notifyListeners();
+    await saveAndNotify();
   }
 
   // FE-BG-100-106: Weather effects control methods
@@ -327,22 +317,19 @@ class BackgroundService extends ChangeNotifier {
   /// Set weather intensity (0.0 = Off, 0.33 = Low, 0.66 = Medium, 1.0 = High)
   Future<void> setWeatherIntensity(double intensity) async {
     _weatherIntensity = intensity.clamp(0.0, 1.0);
-    await _savePreferences();
-    notifyListeners();
+    await saveAndNotify();
   }
 
   /// Toggle weather effects on/off (FE-BG-106: Debug toggle)
   Future<void> setWeatherEffectsEnabled(bool enabled) async {
     _weatherEffectsEnabled = enabled;
-    await _savePreferences();
-    notifyListeners();
+    await saveAndNotify();
   }
 
   /// Toggle performance mode (FE-BG-105)
   Future<void> setWeatherPerformanceMode(bool enabled) async {
     _weatherPerformanceMode = enabled;
-    await _savePreferences();
-    notifyListeners();
+    await saveAndNotify();
   }
 
   /// Reset to auto mode
@@ -350,9 +337,8 @@ class BackgroundService extends ChangeNotifier {
     _mode = BackgroundMode.auto;
     _manualPreset = null;
     _sessionOverride = null;
-    await _savePreferences();
     _updateCurrentPreset();
-    notifyListeners();
+    await saveAndNotify();
   }
 
   // Debug methods

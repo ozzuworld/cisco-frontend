@@ -65,6 +65,9 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
   // FE-UI-096: Blur toggle for environment intersection test
   bool _disableBlur = false;
 
+  // FE-UI-109: Glass stage layer toggle (hard-edge bands for refraction)
+  bool _showGlassStage = true; // Default ON
+
   // Expansion state for accordion
   int? _expandedStepIndex;
 
@@ -216,6 +219,17 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                   });
                 },
                 color: _showGlassTestPattern ? Colors.orange : DesignTokens.textPrimary,
+              ),
+              // FE-UI-109: Glass stage toggle (hard-edge bands)
+              IconButton(
+                icon: Icon(_showGlassStage ? Icons.layers : Icons.layers_outlined),
+                tooltip: 'Toggle Glass Stage (FE-UI-109 Hard-Edge Bands)',
+                onPressed: () {
+                  setState(() {
+                    _showGlassStage = !_showGlassStage;
+                  });
+                },
+                color: _showGlassStage ? const Color(0xFF9D7FFF) : DesignTokens.textSecondary,
               ),
               IconButton(
                 icon: const Icon(Icons.refresh),
@@ -492,6 +506,119 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                   ),
                 ], // End environment plate elements
+
+                // FE-UI-109: GLASS STAGE - Mandatory high-contrast intersection layer
+                // CRITICAL: Hard-edge bands that MUST intersect card area
+                // This layer ensures blur always has sharp structure to refract
+                if (_showGlassStage) ...[
+                  // Hard-edge diagonal band #1 (45° angle, sharp transitions)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.transparent,
+                            Colors.white.withOpacity(0.12),
+                            Colors.transparent,
+                          ],
+                          stops: const [0.42, 0.50, 0.58], // 8% wide band, very sharp
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Hard-edge diagonal band #2 (-45° angle, intersects center)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topRight,
+                          end: Alignment.bottomLeft,
+                          colors: [
+                            Colors.transparent,
+                            DesignTokens.bloomTertiary.withOpacity(0.10),
+                            Colors.transparent,
+                          ],
+                          stops: const [0.55, 0.62, 0.69], // Offset from first band
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Hard-edge horizontal band (provides vertical structure)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            DesignTokens.bloomSecondary.withOpacity(0.08),
+                            Colors.transparent,
+                          ],
+                          stops: const [0.35, 0.40, 0.45], // Upper third
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Medium-frequency shape #1 (positioned to intersect card)
+                  Positioned(
+                    top: 280, // Card vertical center area
+                    left: MediaQuery.of(context).size.width * 0.3,
+                    child: Container(
+                      width: 180,
+                      height: 180,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.15),
+                          width: 2,
+                        ),
+                        gradient: RadialGradient(
+                          colors: [
+                            Colors.transparent,
+                            Colors.white.withOpacity(0.06),
+                            Colors.transparent,
+                          ],
+                          stops: const [0.0, 0.5, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Medium-frequency shape #2 (offset, different size)
+                  Positioned(
+                    top: 320,
+                    right: MediaQuery.of(context).size.width * 0.25,
+                    child: Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(70),
+                        border: Border.all(
+                          color: DesignTokens.bloomSecondary.withOpacity(0.12),
+                          width: 1.5,
+                        ),
+                        gradient: RadialGradient(
+                          colors: [
+                            DesignTokens.bloomSecondary.withOpacity(0.04),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Microtexture layer (fine grain, not blurred blobs)
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: _GlassStageMicrotexturePainter(
+                        opacity: 0.06,
+                        seed: 456,
+                      ),
+                    ),
+                  ),
+                ], // End glass stage elements
+
                 // FE-UI-092: Refraction content visibility test
                 // Recognizable shapes that will visibly distort under glass blur
                 if (_showGlassTestPattern) ...[
@@ -3122,4 +3249,44 @@ class _RefractionTestPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_RefractionTestPainter oldDelegate) => false;
+}
+
+/// FE-UI-109: Glass Stage Microtexture Painter
+/// Fine-grained noise texture (higher frequency than background noise)
+/// Provides sharp detail for blur refraction without looking like soft blooms
+class _GlassStageMicrotexturePainter extends CustomPainter {
+  final double opacity;
+  final int seed;
+
+  _GlassStageMicrotexturePainter({
+    required this.opacity,
+    required this.seed,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill;
+
+    final random = math.Random(seed);
+
+    // Fine-grain sampling (3-pixel spacing for high frequency)
+    for (var x = 0.0; x < size.width; x += 3) {
+      for (var y = 0.0; y < size.height; y += 3) {
+        final brightness = 0.3 + random.nextDouble() * 0.7; // 30-100% range
+        final color = Colors.white.withOpacity(opacity * brightness);
+
+        paint.color = color;
+        canvas.drawCircle(
+          Offset(x, y),
+          0.5, // Tiny dots (sharp detail)
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_GlassStageMicrotexturePainter oldDelegate) =>
+      oldDelegate.opacity != opacity || oldDelegate.seed != seed;
 }

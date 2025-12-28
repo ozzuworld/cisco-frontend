@@ -11,6 +11,7 @@ import '../services/http_client.dart';
 import '../services/background_service.dart';
 import '../ui/design_tokens.dart';
 import '../ui/glass_card.dart';
+import '../ui/debug_glass_card.dart'; // FE-REFACTOR-8: Debug wrapper
 import '../ui/background_renderer.dart';
 import '../ui/weather_effect.dart';
 import '../ui/background_debug_panel.dart';
@@ -586,7 +587,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
   Widget _buildCurrentStepCard(CollectionFlowState flowState, int currentStepIndex) {
     final stepData = _getStepData(currentStepIndex);
 
-    return GlassCard(
+    return DebugGlassCard( // FE-REFACTOR-8: Use debug wrapper
       key: ValueKey('step_$currentStepIndex'),
       // FE-043: Reduced header padding
       padding: const EdgeInsets.all(DesignTokens.paddingLarge),

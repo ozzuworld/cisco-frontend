@@ -385,12 +385,18 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
     required IconData icon,
     required String label,
     required String value,
+    Color? iconColor,
+    bool isCompact = false,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: Colors.grey.shade600),
-        const SizedBox(width: 12),
+        Icon(
+          icon,
+          size: isCompact ? 18 : 20,
+          color: iconColor ?? Colors.grey.shade600,
+        ),
+        SizedBox(width: isCompact ? 8 : 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,16 +404,16 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: isCompact ? 11 : 12,
                   color: Colors.grey.shade600,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: isCompact ? 2 : 4),
               Text(
                 value,
-                style: const TextStyle(
-                  fontSize: 14,
+                style: TextStyle(
+                  fontSize: isCompact ? 13 : 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -431,40 +437,6 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
           : _errorMessage != null
               ? _buildErrorView()
               : _buildProfileList(),
-          bottomNavigationBar: _selectedProfile != null
-              ? Container(
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, -2),
-                      ),
-                    ],
-                  ),
-                  child: SafeArea(
-                    child: ElevatedButton.icon(
-                      onPressed: _isLoading || !flowState.isReadyToCollect || _timeRangeError != null
-                          ? null
-                          : _showConfirmationDialog,
-                      icon: const Icon(Icons.play_arrow),
-                      label: Text(
-                        _timeRangeError != null
-                            ? 'Fix time range errors to continue'
-                            : flowState.isReadyToCollect
-                                ? 'Start Collection (${widget.selectedNodeIps.length} node${widget.selectedNodeIps.length > 1 ? 's' : ''})'
-                                : 'Complete time selection to continue',
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        textStyle: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ),
-                )
-              : null,
         );
       },
     );
@@ -748,7 +720,225 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
                 )
               : const SizedBox.shrink(),
         ),
+
+        // Review & Confirm section (shown when profile is selected)
+        AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          child: _selectedProfile != null
+              ? Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    AnimatedOpacity(
+                      duration: const Duration(milliseconds: 300),
+                      opacity: _selectedProfile != null ? 1.0 : 0.0,
+                      child: _buildReviewConfirmSection(context.watch<CollectionFlowState>()),
+                    ),
+                    const SizedBox(height: 16), // Bottom padding
+                  ],
+                )
+              : const SizedBox.shrink(),
+        ),
       ],
+    );
+  }
+
+  Widget _buildReviewConfirmSection(CollectionFlowState flowState) {
+    final compress = _overrideCompress ?? _selectedProfile!.compress;
+    final recurs = _overrideRecurs ?? _selectedProfile!.recurs;
+    final match = _overrideMatch ?? _selectedProfile!.match;
+    final isReadyToCollect = flowState.isReadyToCollect && _timeRangeError == null;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      decoration: BoxDecoration(
+        color: isReadyToCollect ? Colors.green.shade50 : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 250),
+                  transitionBuilder: (child, animation) {
+                    return ScaleTransition(
+                      scale: animation,
+                      child: child,
+                    );
+                  },
+                  child: Icon(
+                    isReadyToCollect ? Icons.check_circle : Icons.summarize,
+                    key: ValueKey(isReadyToCollect),
+                    color: isReadyToCollect ? Colors.green.shade700 : Colors.blue.shade700,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 250),
+                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isReadyToCollect ? Colors.green.shade700 : Colors.blue.shade700,
+                        ),
+                    child: const Text('Review & Confirm'),
+                  ),
+                ),
+                AnimatedScale(
+                  duration: const Duration(milliseconds: 250),
+                  scale: isReadyToCollect ? 1.0 : 0.0,
+                  curve: Curves.easeOutBack,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: isReadyToCollect ? 1.0 : 0.0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade700,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Text(
+                        'Ready',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 12),
+
+            // Summary content
+            Text(
+              'Collection Summary',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 12),
+
+            // Selected Nodes
+            _buildSummaryItem(
+              icon: Icons.devices,
+              label: 'Target Nodes',
+              value: '${widget.selectedNodeIps.length} node${widget.selectedNodeIps.length > 1 ? 's' : ''} selected',
+              iconColor: Colors.blue.shade700,
+            ),
+            const SizedBox(height: 12),
+
+            // Profile
+            _buildSummaryItem(
+              icon: Icons.description,
+              label: 'Collection Profile',
+              value: _selectedProfile!.name,
+              iconColor: Colors.purple.shade700,
+            ),
+            const SizedBox(height: 12),
+
+            // Time Range
+            _buildSummaryItem(
+              icon: _timeMode == 'relative' ? Icons.access_time : Icons.date_range,
+              label: 'Time Range',
+              value: _getTimeRangeSummary(),
+              iconColor: Colors.orange.shade700,
+            ),
+            const SizedBox(height: 12),
+
+            // Estimated Scope (optional details)
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: const EdgeInsets.only(left: 12, bottom: 12),
+              title: Text(
+                'Additional Options',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+              children: [
+                _buildSummaryItem(
+                  icon: Icons.compress,
+                  label: 'Compress',
+                  value: compress ? 'Enabled' : 'Disabled',
+                  iconColor: Colors.teal.shade700,
+                  isCompact: true,
+                ),
+                const SizedBox(height: 8),
+                _buildSummaryItem(
+                  icon: Icons.repeat,
+                  label: 'Recursive',
+                  value: recurs ? 'Enabled' : 'Disabled',
+                  iconColor: Colors.indigo.shade700,
+                  isCompact: true,
+                ),
+                if (match.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  _buildSummaryItem(
+                    icon: Icons.filter_alt,
+                    label: 'Match Pattern',
+                    value: match,
+                    iconColor: Colors.pink.shade700,
+                    isCompact: true,
+                  ),
+                ],
+              ],
+            ),
+
+            const SizedBox(height: 20),
+            const Divider(),
+            const SizedBox(height: 16),
+
+            // Start Collection Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isLoading || !isReadyToCollect
+                    ? null
+                    : _showConfirmationDialog,
+                icon: Icon(
+                  _isLoading ? Icons.hourglass_empty : Icons.play_arrow,
+                  size: 24,
+                ),
+                label: Text(
+                  _isLoading
+                      ? 'Starting Collection...'
+                      : _timeRangeError != null
+                          ? 'Fix time range errors to continue'
+                          : isReadyToCollect
+                              ? 'Start Collection'
+                              : 'Complete time selection to continue',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: isReadyToCollect ? Colors.green.shade600 : null,
+                  foregroundColor: isReadyToCollect ? Colors.white : null,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

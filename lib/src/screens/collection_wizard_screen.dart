@@ -236,9 +236,9 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                 // ≥ 3 large gradients (800-1200px), ≥ 2 mid blobs (300-500px)
                 // Visible luminance contrast (12-18% delta minimum)
                 if (_showEnvironmentPlate) ...[
-                  // FE-UI-096: Large bloom #1 repositioned to INTERSECT glass card
-                  // Was: top: -200 (mostly off-screen)
-                  // Now: top: 150 (visibly passes through center where card lives)
+                  // FE-UI-101: Large bloom #1 repositioned + BOOSTED opacity
+                  // Position: top: 150 (intersects card center)
+                  // Opacity: 25% peak (was 15%) - needs to be VISIBLE for refraction
                   Positioned(
                     top: 150, // FE-UI-096: Moved down to intersect card area
                     left: 0,
@@ -247,15 +247,16 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                       child: Container(
                         width: 1000, // Increased from 800
                         height: 1000,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            DesignTokens.bloomSecondary.withOpacity(0.15), // Was 7%
-                            DesignTokens.bloomPrimary.withOpacity(0.08), // Was 4%
-                            Colors.transparent,
-                          ],
-                          stops: const [0.0, 0.4, 0.8],
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              DesignTokens.bloomSecondary.withOpacity(0.25), // Was 15% → now 25%
+                              DesignTokens.bloomPrimary.withOpacity(0.15), // Was 8% → now 15%
+                              Colors.transparent,
+                            ],
+                            stops: const [0.0, 0.4, 0.8],
+                          ),
                         ),
                       ),
                     ),
@@ -300,8 +301,9 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                   ),
                 ),
-                // FE-UI-096: Diagonal gradient band that crosses glass card
-                // This provides clear linear structure for blur distortion
+                // FE-UI-101: HIGH-CONTRAST diagonal band (HARD REQUIREMENT)
+                // Must be visible enough that blur distortion is OBVIOUS
+                // 10% opacity = invisible grey fog | 25% opacity = clear refraction
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
@@ -310,12 +312,54 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                         end: Alignment.bottomRight,
                         colors: [
                           Colors.transparent,
-                          DesignTokens.bloomPrimary.withOpacity(0.10),
+                          DesignTokens.bloomPrimary.withOpacity(0.25), // Was 10% - now 25%
                           Colors.transparent,
-                          DesignTokens.bloomSecondary.withOpacity(0.08),
+                          DesignTokens.bloomSecondary.withOpacity(0.20), // Was 8% - now 20%
                           Colors.transparent,
                         ],
-                        stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
+                        stops: const [0.0, 0.35, 0.5, 0.65, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
+                // FE-UI-101: Horizontal band crossing center (card intersection zone)
+                Positioned(
+                  top: 0,
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.white.withOpacity(0.18), // Visible white band at center
+                          Colors.transparent,
+                        ],
+                        stops: const [0.3, 0.5, 0.7],
+                      ),
+                    ),
+                  ),
+                ),
+                // FE-UI-101: Vertical accent band (provides X-axis structure)
+                Positioned(
+                  top: 0,
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [
+                          Colors.transparent,
+                          DesignTokens.bloomTertiary.withOpacity(0.15),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.2, 0.6, 0.9],
                       ),
                     ),
                   ),

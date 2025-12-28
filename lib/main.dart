@@ -44,10 +44,10 @@ class CiscoApp extends StatelessWidget {
       useMaterial3: true,
       scaffoldBackgroundColor: isDark ? DesignTokens.backgroundBase : Colors.white,
 
-      // FE-UI-055: Disable Material surface/canvas color inheritance
+      // FE-UI-076: Lock Material transparency - kill surface/elevation bleed
       canvasColor: isDark ? DesignTokens.backgroundBase : Colors.white,
       cardColor: Colors.transparent, // Force cards to use explicit colors only
-      dialogBackgroundColor: isDark ? DesignTokens.backgroundBase : Colors.white,
+      dialogBackgroundColor: Colors.transparent, // Dialogs use glass styling
 
       // FE-UI-059: Flat content mode - inputs etched directly on glass
       // No pill containers, transparent background, border-only
@@ -155,7 +155,7 @@ class CiscoApp extends StatelessWidget {
         ),
       ),
 
-      // FE-UI-055: Card theme - transparent to prevent grey slab
+      // FE-UI-076: Card theme - transparent to prevent grey slab
       cardTheme: CardThemeData(
         elevation: 0,
         shadowColor: Colors.transparent,
@@ -166,6 +166,36 @@ class CiscoApp extends StatelessWidget {
         // Transparent - use GlassCard for actual glass styling
         color: Colors.transparent,
         margin: EdgeInsets.zero,
+      ),
+
+      // FE-UI-076: Dialog theme - transparent for glass styling
+      dialogTheme: DialogTheme(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: DesignTokens.cardBorderRadius,
+        ),
+      ),
+
+      // FE-UI-076: SnackBar theme - stroke-first, no solid backgrounds
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: isDark
+            ? DesignTokens.backgroundBase.withOpacity(0.95)
+            : Colors.white.withOpacity(0.95),
+        contentTextStyle: TextStyle(
+          color: isDark ? DesignTokens.textPrimary : Colors.black87,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
+          side: BorderSide(
+            color: Colors.white.withOpacity(isDark ? 0.15 : 0.3),
+            width: 1,
+          ),
+        ),
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
       ),
 
       // Text theme

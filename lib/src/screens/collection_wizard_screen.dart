@@ -1015,7 +1015,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Unexpected error: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            // FE-UI-076: Use theme styling (no explicit backgroundColor)
           ),
         );
       }
@@ -1863,7 +1863,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to load profiles: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            // FE-UI-076: Use theme styling (no explicit backgroundColor)
             action: SnackBarAction(
               label: 'Retry',
               textColor: Colors.white,
@@ -2747,7 +2747,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to start collection: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            // FE-UI-076: Use theme styling (no explicit backgroundColor)
           ),
         );
       }

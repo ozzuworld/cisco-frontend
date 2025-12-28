@@ -5,7 +5,7 @@ import 'design_tokens.dart';
 
 /// FE-037: Reusable GlassCard component with liquid glass effect
 ///
-/// ⚠️ FE-UI-068: ZERO-FILL GLASS MODE (HARD REQUIREMENT) ⚠️
+/// ⚠️ FE-UI-068 & FE-UI-077: ZERO-FILL GLASS MODE (HARD REQUIREMENT) ⚠️
 /// GlassCard MUST have transparent fill (alpha = 0.0)
 /// Glass definition comes from: reflections + environment + edges
 /// Any fill on black = grey slab (blur over flat black = grey fog)
@@ -14,13 +14,26 @@ import 'design_tokens.dart';
 /// Key Principle:
 /// "Reference look requires reflections + background texture, NOT fill tint"
 ///
+/// FE-UI-077: Stroke-First Liquid Glass Rules:
+/// 1. Main container: color = Colors.transparent (0.0 alpha) - STRICT
+/// 2. Glass visibility ONLY from: rim strokes + specular highlights + inner shadow
+/// 3. Card center should look nearly identical to background (test with environment layer)
+/// 4. NO frost layer, NO tint layer, NO fill gradient
+///
 /// Features:
 /// - Backdrop blur (refracts environment layer)
 /// - ZERO fill - reflections define the glass
 /// - Dual-stroke rim (outer 40% + inner 15%)
 /// - Specular sheen + edge catchlights
+/// - Inner shadow for perceived thickness
 /// - Minimal contact shadow (thin glass sheet)
 /// - Rich environment layer behind (prevents grey fog)
+///
+/// FE-UI-081: Reference Match QA (4-Test Checklist):
+/// ✓ Test 1: Center Transparency - card center ~identical to background
+/// ✓ Test 2: Rim Readability - borders visible at 35-45% on black
+/// ✓ Test 3: Refraction Test - blur refracts environment detail (not grey fog)
+/// ✓ Test 4: Child Surface Audit - all children have transparent fill
 class GlassCard extends StatelessWidget {
   // FE-UI-061: Enforce transparent fill rule
   static const Color _glassFillColor = Colors.transparent;
@@ -375,10 +388,10 @@ class BreadcrumbChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: effectivePadding,
         decoration: BoxDecoration(
-          // FE-UI-066: Use liquid glass tokens for consistent look
+          // FE-UI-077: Stroke-first liquid glass - zero fill, border-only
           color: isSelected
               ? DesignTokens.accentPrimary.withOpacity(0.20)
-              : Colors.white.withOpacity(DesignTokens.glassFrostOpacity),
+              : Colors.transparent,  // Was 5% fill - now 0%
           borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
           border: Border.all(
             color: isSelected

@@ -148,8 +148,12 @@ class DesignTokens {
   /// Accent color for focus states
   static const Color accentFocus = Color(0xFF4A7CD9);
 
+  /// Legacy: MaterialColor for backward compatibility with shade access
+  /// Use accentPrimary for new code
+  static const MaterialColor accentColor = Colors.blue;
+
   /// Neutral color for completed/success states
-  static const Color neutralColor = Colors.grey;
+  static const MaterialColor neutralColor = Colors.grey;
 
   // ==================== CONTENT WIDTH CONSTRAINTS ====================
 

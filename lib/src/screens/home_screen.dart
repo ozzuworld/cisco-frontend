@@ -34,14 +34,18 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SizedBox.expand(
         child: Stack(
           children: [
-            // voip.json lottie animation as background
-            Positioned.fill(
+            // voip.json lottie animation as background - centered and sized
+            Center(
               child: Opacity(
                 opacity: 0.25,
-                child: Lottie.asset(
-                  'assets/lottie/voip.json',
-                  fit: BoxFit.cover,
-                  repeat: true,
+                child: SizedBox(
+                  width: 800,
+                  height: 600,
+                  child: Lottie.asset(
+                    'assets/lottie/voip.json',
+                    fit: BoxFit.contain,
+                    repeat: true,
+                  ),
                 ),
               ),
             ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
+import 'package:lottie/lottie.dart';
 import '../models/collection_flow_state.dart';
 import '../models/cucm_node.dart';
 import '../models/profile.dart';
@@ -219,6 +220,22 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                     enabled: backgroundService.weatherEffectsEnabled,
                     enablePerformanceMode: backgroundService.weatherPerformanceMode,
+                  ),
+
+                  // voip.json lottie animation for consistency with landing page
+                  Center(
+                    child: Opacity(
+                      opacity: 0.20,
+                      child: SizedBox(
+                        width: 800,
+                        height: 600,
+                        child: Lottie.asset(
+                          'assets/lottie/voip.json',
+                          fit: BoxFit.contain,
+                          repeat: true,
+                        ),
+                      ),
+                    ),
                   ),
 
                   // Main content
@@ -1748,16 +1765,13 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          // Glass aesthetic - transparent background
+          color: Colors.black.withOpacity(0.25),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          border: Border.all(
+            color: Colors.white.withOpacity(0.15),
+            width: 1,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1766,7 +1780,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
             // Header with icon
             Row(
               children: [
-                Icon(Icons.description, size: 20, color: Colors.purple.shade600),
+                Icon(Icons.description, size: 20, color: DesignTokens.accentPrimary),
                 const Spacer(),
               ],
             ),
@@ -1774,9 +1788,10 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
             // Profile name
             Text(
               profile.name,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
+                color: DesignTokens.textPrimary,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -1787,7 +1802,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                 profile.description,
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.grey.shade600,
+                  color: DesignTokens.textSecondary,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -1797,19 +1812,19 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
             // Icons row
             Row(
               children: [
-                Icon(Icons.schedule, size: 14, color: Colors.grey.shade600),
+                Icon(Icons.schedule, size: 14, color: DesignTokens.textSecondary),
                 const SizedBox(width: 4),
                 Text(
                   '${profile.reltimeMinutes}m',
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+                  style: TextStyle(fontSize: 11, color: DesignTokens.textSecondary),
                 ),
                 const SizedBox(width: 12),
                 if (profile.compress)
-                  Icon(Icons.compress, size: 14, color: Colors.blue.shade600),
+                  Icon(Icons.compress, size: 14, color: DesignTokens.accentPrimary),
                 if (profile.recurs)
                   Padding(
                     padding: const EdgeInsets.only(left: 6),
-                    child: Icon(Icons.repeat, size: 14, color: Colors.orange.shade600),
+                    child: Icon(Icons.repeat, size: 14, color: Colors.orange.shade400),
                   ),
               ],
             ),

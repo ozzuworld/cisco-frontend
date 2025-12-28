@@ -48,10 +48,10 @@ class CiscoApp extends StatelessWidget {
         secondary: DesignTokens.accentPrimary,
       ),
       useMaterial3: true,
-      scaffoldBackgroundColor: isDark ? DesignTokens.backgroundBase : Colors.white,
+      scaffoldBackgroundColor: DesignTokens.backgroundBase,
 
       // FE-UI-076: Lock Material transparency - kill surface/elevation bleed
-      canvasColor: isDark ? DesignTokens.backgroundBase : Colors.white,
+      canvasColor: DesignTokens.backgroundBase,
       cardColor: Colors.transparent, // Force cards to use explicit colors only
       dialogBackgroundColor: Colors.transparent, // Dialogs use glass styling
 

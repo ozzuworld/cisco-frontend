@@ -1370,6 +1370,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
       return const Text('No profiles available');
     }
 
+    // FE-030: Show selected profile with "Change" button, or grid of profiles
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1395,8 +1396,125 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
             ),
           ),
         if (_selectedProfile == null) const SizedBox(height: 16),
-        ..._profiles!.map((profile) => _buildProfileCard(profile)),
+
+        // Show selected profile with "Change" button
+        if (_selectedProfile != null) ...[
+          _buildSelectedProfileCard(_selectedProfile!),
+          const SizedBox(height: 12),
+        ] else ...[
+          // Show grid of profiles for selection
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final crossAxisCount = width > 800 ? 3 : (width > 500 ? 2 : 1);
+
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  childAspectRatio: 1.4,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemCount: _profiles!.length,
+                itemBuilder: (context, index) {
+                  return _buildProfileCard(_profiles![index]);
+                },
+              );
+            },
+          ),
+        ],
       ],
+    );
+  }
+
+  // FE-030: Selected profile card with "Change" button
+  Widget _buildSelectedProfileCard(Profile profile) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.green.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.green.shade400, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green.shade700, size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      profile.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.green.shade900,
+                      ),
+                    ),
+                    if (profile.description.isNotEmpty)
+                      Text(
+                        profile.description,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.green.shade800,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _selectedProfile = null;
+                    // Clear time config when changing profile
+                    _timeMode = 'relative';
+                    _overrideReltimeMinutes = null;
+                    _startTime = null;
+                    _endTime = null;
+                    _timeRangeError = null;
+                  });
+                  final flowState = context.read<CollectionFlowState>();
+                  flowState.setSelectedProfile(null);
+                  flowState.setTimeMode(isRelative: true);
+                  flowState.setRelativeTime(null);
+                  flowState.setAbsoluteTime(startTime: null, endTime: null);
+                },
+                icon: const Icon(Icons.edit, size: 16),
+                label: const Text('Change'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.green.shade700,
+                  side: BorderSide(color: Colors.green.shade600),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            children: [
+              _buildProfileDetail(Icons.schedule, 'Time', '${profile.reltimeMinutes} min'),
+              _buildProfileDetail(Icons.compress, 'Compress', profile.compress ? 'Yes' : 'No'),
+              _buildProfileDetail(Icons.repeat, 'Recurs', profile.recurs ? 'Yes' : 'No'),
+              if (profile.match.isNotEmpty)
+                _buildProfileDetail(Icons.filter_alt, 'Match', profile.match),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -1453,7 +1571,108 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
     }
   }
 
+  // FE-030: Compact profile card for grid layout
   Widget _buildProfileCard(Profile profile) {
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _selectedProfile = profile;
+          // Reset time config when selecting a new profile
+          _timeMode = 'relative';
+          _overrideReltimeMinutes = null;
+          _startTime = null;
+          _endTime = null;
+          _timeRangeError = null;
+          _overrideCompress = null;
+          _overrideRecurs = null;
+          _overrideMatch = null;
+          _showOverrides = false;
+        });
+
+        // Update flow state
+        final flowState = context.read<CollectionFlowState>();
+        flowState.setSelectedProfile(profile);
+        flowState.setTimeMode(isRelative: true);
+        flowState.setRelativeTime(null);
+        flowState.setAbsoluteTime(startTime: null, endTime: null);
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Header with icon
+            Row(
+              children: [
+                Icon(Icons.description, size: 20, color: Colors.purple.shade600),
+                const Spacer(),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Profile name
+            Text(
+              profile.name,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (profile.description.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                profile.description,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade600,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            const SizedBox(height: 8),
+            // Icons row
+            Row(
+              children: [
+                Icon(Icons.schedule, size: 14, color: Colors.grey.shade600),
+                const SizedBox(width: 4),
+                Text(
+                  '${profile.reltimeMinutes}m',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+                ),
+                const SizedBox(width: 12),
+                if (profile.compress)
+                  Icon(Icons.compress, size: 14, color: Colors.blue.shade600),
+                if (profile.recurs)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: Icon(Icons.repeat, size: 14, color: Colors.orange.shade600),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Old full profile card - keeping for reference
+  Widget _buildProfileCardOld(Profile profile) {
     final isSelected = _selectedProfile == profile;
 
     return AnimatedContainer(

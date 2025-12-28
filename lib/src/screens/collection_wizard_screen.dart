@@ -53,6 +53,12 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
   // Expansion state for accordion
   int? _expandedStepIndex;
 
+  // Scroll controller for auto-scroll (FE-019.8)
+  final ScrollController _scrollController = ScrollController();
+
+  // Global keys for each step to track positions
+  final List<GlobalKey> _stepKeys = List.generate(5, (_) => GlobalKey());
+
   @override
   void initState() {
     super.initState();
@@ -66,6 +72,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
     _portController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -99,18 +106,47 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
     return stepIndex < currentStepIndex;
   }
 
+  /// Auto-scroll to a specific step (FE-019.8)
+  void _scrollToStep(int stepIndex) {
+    // Delay to ensure the expansion animation has started
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (!mounted) return;
+
+      final key = _stepKeys[stepIndex];
+      final context = key.currentContext;
+      if (context == null) return;
+
+      // Get the RenderBox and its position
+      final renderBox = context.findRenderObject() as RenderBox?;
+      if (renderBox == null) return;
+
+      final position = renderBox.localToGlobal(Offset.zero);
+      final scrollOffset = position.dy + _scrollController.offset - 100; // 100px padding from top
+
+      // Animate to the step position
+      _scrollController.animateTo(
+        scrollOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<CollectionFlowState>(
       builder: (context, flowState, child) {
         final currentStepIndex = _getCurrentStepIndex(flowState);
 
-        // Auto-expand the current step when it changes
+        // Auto-expand and scroll to the current step when it changes (FE-019.8)
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_expandedStepIndex != currentStepIndex) {
             setState(() {
               _expandedStepIndex = currentStepIndex;
             });
+
+            // Auto-scroll to the newly unlocked step
+            _scrollToStep(currentStepIndex);
           }
         });
 
@@ -126,6 +162,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
             ],
           ),
           body: SingleChildScrollView(
+            controller: _scrollController,
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -247,7 +284,10 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
     final currentStepIndex = _getCurrentStepIndex(flowState);
     final isCurrent = stepIndex == currentStepIndex;
 
-    return AnimatedContainer(
+    // Wrap with key for scroll tracking (FE-019.8)
+    return Container(
+      key: _stepKeys[stepIndex],
+      child: AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
       decoration: BoxDecoration(
@@ -370,6 +410,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -611,11 +652,35 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
       return;
     }
 
+    // Reset all downstream state when credentials change (FE-019.7)
     setState(() {
       _isDiscovering = true;
       _discoveryResult = null;
       _discoveryError = null;
+
+      // Clear all downstream selections
+      _selectedNodeIps.clear();
+      _selectedProfile = null;
+      _profiles = null;
+
+      // Clear time configuration
+      _timeMode = 'relative';
+      _overrideReltimeMinutes = null;
+      _startTime = null;
+      _endTime = null;
+      _timeRangeError = null;
+
+      // Clear overrides
+      _overrideCompress = null;
+      _overrideRecurs = null;
+      _overrideMatch = null;
+      _showOverrides = false;
     });
+
+    // Reset flow state to initial
+    if (mounted) {
+      context.read<CollectionFlowState>().reset();
+    }
 
     final httpClient = context.read<HttpClientService>();
 

@@ -51,52 +51,37 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 48.0),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 600),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Simple text label
-                      Text(
-                        'API',
-                        style: TextStyle(
-                          color: DesignTokens.textSecondary.withOpacity(0.4),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                  child: Container(
+                    height: 84, // 50% bigger (56 * 1.5)
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.15),
+                        width: 1,
+                      ),
+                    ),
+                    child: TextField(
+                      controller: _apiKeyController,
+                      obscureText: _obscureText,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: DesignTokens.textPrimary,
+                        fontSize: 16,
+                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'API KEY',
+                        hintStyle: TextStyle(
+                          color: DesignTokens.textMuted.withOpacity(0.3),
                           letterSpacing: 2,
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Long minimal input box
-                      Container(
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.15),
-                            width: 1,
-                          ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 30,
                         ),
-                        child: TextField(
-                          controller: _apiKeyController,
-                          obscureText: _obscureText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: DesignTokens.textPrimary,
-                            fontSize: 16,
-                            letterSpacing: 1.5,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: '* * * * * * * * * * * * * * * *',
-                            hintStyle: TextStyle(
-                              color: DesignTokens.textMuted.withOpacity(0.3),
-                              letterSpacing: 2,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 16,
-                            ),
                             suffixIcon: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -145,11 +130,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           onSubmitted: (_) => _handleSubmit(),
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),

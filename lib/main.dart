@@ -169,7 +169,7 @@ class CiscoApp extends StatelessWidget {
       ),
 
       // FE-UI-076: Dialog theme - transparent for glass styling
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,

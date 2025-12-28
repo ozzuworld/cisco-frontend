@@ -236,23 +236,23 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                 // ≥ 3 large gradients (800-1200px), ≥ 2 mid blobs (300-500px)
                 // Visible luminance contrast (12-18% delta minimum)
                 if (_showEnvironmentPlate) ...[
-                  // FE-UI-096: Large bloom #1 repositioned to INTERSECT glass card
-                  // Was: top: -200 (mostly off-screen)
-                  // Now: top: 150 (visibly passes through center where card lives)
+                  // FE-UI-101: Large bloom #1 MUST intersect card with visible contrast
+                  // High-contrast requirement: 20-25% center → blur has structure to refract
+                  // Was: 15%/8% (too subtle → grey fog)
                   Positioned(
-                    top: 150, // FE-UI-096: Moved down to intersect card area
+                    top: 150, // FE-UI-096: Intersects card area
                     left: 0,
                     right: 0,
                     child: Center(
                       child: Container(
-                        width: 1000, // Increased from 800
+                        width: 1000,
                         height: 1000,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            DesignTokens.bloomSecondary.withOpacity(0.15), // Was 7%
-                            DesignTokens.bloomPrimary.withOpacity(0.08), // Was 4%
+                            DesignTokens.bloomSecondary.withOpacity(0.22), // FE-UI-101: 15% → 22%
+                            DesignTokens.bloomPrimary.withOpacity(0.14), // FE-UI-101: 8% → 14%
                             Colors.transparent,
                           ],
                           stops: const [0.0, 0.4, 0.8],
@@ -261,18 +261,18 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                   ),
                 ),
-                // Large bloom #2: Bottom left (purple @ 12-14%)
+                // FE-UI-101: Large bloom #2 increased contrast (purple)
                 Positioned(
                   bottom: -250,
                   left: -250,
                   child: Container(
-                    width: 900, // Increased from 700
+                    width: 900,
                     height: 900,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          DesignTokens.bloomTertiary.withOpacity(0.12), // Was 5%
+                          DesignTokens.bloomTertiary.withOpacity(0.18), // FE-UI-101: 12% → 18%
                           Colors.transparent,
                         ],
                         stops: const [0.0, 0.7],
@@ -280,7 +280,7 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                   ),
                 ),
-                // FE-UI-090: Large bloom #3 (requirement: ≥ 3 large gradients)
+                // FE-UI-101: Large bloom #3 increased contrast (white/blue)
                 Positioned(
                   top: 100,
                   right: -300,
@@ -291,8 +291,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          Colors.white.withOpacity(0.14),
-                          DesignTokens.bloomSecondary.withOpacity(0.06),
+                          Colors.white.withOpacity(0.20), // FE-UI-101: 14% → 20%
+                          DesignTokens.bloomSecondary.withOpacity(0.10), // FE-UI-101: 6% → 10%
                           Colors.transparent,
                         ],
                         stops: const [0.0, 0.5, 0.9],
@@ -300,8 +300,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                   ),
                 ),
-                // FE-UI-096: Diagonal gradient band that crosses glass card
-                // This provides clear linear structure for blur distortion
+                // FE-UI-101: Diagonal gradient band with INCREASED contrast
+                // Sharp transitions create visible refraction lines
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
@@ -310,12 +310,48 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                         end: Alignment.bottomRight,
                         colors: [
                           Colors.transparent,
-                          DesignTokens.bloomPrimary.withOpacity(0.10),
+                          DesignTokens.bloomPrimary.withOpacity(0.16), // FE-UI-101: 10% → 16%
                           Colors.transparent,
-                          DesignTokens.bloomSecondary.withOpacity(0.08),
+                          DesignTokens.bloomSecondary.withOpacity(0.14), // FE-UI-101: 8% → 14%
                           Colors.transparent,
                         ],
-                        stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
+                        stops: const [0.0, 0.25, 0.5, 0.75, 1.0], // Sharper transitions
+                      ),
+                    ),
+                  ),
+                ),
+                // FE-UI-107: Structured diagonal band #1 (top-right to bottom-left)
+                // High-contrast band with sharp edge for clear refraction
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topRight,
+                        end: Alignment.bottomLeft,
+                        colors: [
+                          Colors.transparent,
+                          DesignTokens.bloomTertiary.withOpacity(0.12),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.35, 0.5, 0.65], // Sharp, narrow band
+                      ),
+                    ),
+                  ),
+                ),
+                // FE-UI-107: Structured diagonal band #2 (crossing card center)
+                // Positioned to clearly intersect the glass card
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment(-0.8, -1.0), // Custom angle
+                        end: Alignment(0.8, 1.0),
+                        colors: [
+                          Colors.transparent,
+                          Colors.white.withOpacity(0.10),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.4, 0.5, 0.6], // Very sharp band
                       ),
                     ),
                   ),
@@ -329,7 +365,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                   ),
                 ),
-                // FE-UI-062: Micro vignette for depth
+                // FE-UI-107: Micro vignette - reduced to preserve card contrast
+                // Was 15% → now 10% to ensure environment stays visible behind glass
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
@@ -338,9 +375,9 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                         radius: 1.2,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.15),
+                          Colors.black.withOpacity(0.10), // FE-UI-107: 15% → 10%
                         ],
-                        stops: const [0.4, 1.0],
+                        stops: const [0.5, 1.0], // Start fade later (was 0.4)
                       ),
                     ),
                   ),
@@ -362,7 +399,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                   ),
                 ),
-                // FE-UI-060: Faint shape blobs for refraction detail
+                // FE-UI-101: Mid-range blob #1 (increased contrast for refraction)
+                // Positioned to intersect card area on right side
                 Positioned(
                   top: 200,
                   right: 200,
@@ -373,13 +411,14 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                       borderRadius: BorderRadius.circular(150),
                       gradient: RadialGradient(
                         colors: [
-                          Colors.white.withOpacity(0.04),
+                          Colors.white.withOpacity(0.08), // FE-UI-101: 4% → 8%
                           Colors.transparent,
                         ],
                       ),
                     ),
                   ),
                 ),
+                // FE-UI-101: Mid-range blob #2 (increased contrast)
                 Positioned(
                   bottom: 150,
                   left: 180,
@@ -390,27 +429,30 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          const Color(0xFF12141A).withOpacity(0.05),
+                          const Color(0xFF12141A).withOpacity(0.10), // FE-UI-101: 5% → 10%
                           Colors.transparent,
                         ],
                       ),
                     ),
                   ),
                 ),
-                  // FE-UI-060: Micro-contrast blooms (150-300px) for visible refraction
+                  // FE-UI-101: High-contrast blob crossing card (left side)
+                  // Critical: positioned to clearly intersect glass card area
                   Positioned(
-                    top: 150,
-                    left: 100,
+                    top: 250, // Centered vertically where card lives
+                    left: 150,
                     child: Container(
-                      width: 250,
-                      height: 250,
+                      width: 300,
+                      height: 300,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            DesignTokens.bloomSecondary.withOpacity(0.05),
+                            DesignTokens.bloomSecondary.withOpacity(0.14), // FE-UI-101: 5% → 14%
+                            DesignTokens.bloomSecondary.withOpacity(0.06),
                             Colors.transparent,
                           ],
+                          stops: const [0.0, 0.5, 1.0],
                         ),
                       ),
                     ),

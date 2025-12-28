@@ -15,6 +15,7 @@ import '../ui/debug_glass_card.dart'; // FE-REFACTOR-8: Debug wrapper
 import '../ui/background_renderer.dart';
 import '../ui/weather_effect.dart';
 import '../ui/background_debug_panel.dart';
+import '../ui/debug_menu.dart';
 import 'job_status_screen.dart';
 import 'settings_screen.dart';
 
@@ -182,65 +183,28 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
             elevation: 0,
             iconTheme: IconThemeData(color: DesignTokens.textPrimary),
             actions: [
-              // FE-UI-116: Debug toggles hidden in production builds
-              if (kDebugMode) ...[
-                // FE-UI-083: Fill proof debug toggle
+              // FE-UI-PROD-1: Consolidated debug menu (replaced 5 icon buttons)
+              if (kDebugMode)
                 IconButton(
-                  icon: Icon(_showFillProof ? Icons.bug_report : Icons.bug_report_outlined),
-                  tooltip: 'Toggle Fill Proof (FE-UI-083)',
+                  icon: const Icon(Icons.developer_mode),
+                  tooltip: 'Debug Tools',
                   onPressed: () {
-                    setState(() {
-                      _showFillProof = !_showFillProof;
-                    });
+                    DebugMenu.show(
+                      context,
+                      showFillProof: _showFillProof,
+                      showTestPattern: _showGlassTestPattern,
+                      showGlassStage: _showGlassStage,
+                      disableBlur: _disableBlur,
+                      showEnvironmentPlate: _showEnvironmentPlate,
+                      onToggleFillProof: (value) => setState(() => _showFillProof = value),
+                      onToggleTestPattern: (value) => setState(() => _showGlassTestPattern = value),
+                      onToggleGlassStage: (value) => setState(() => _showGlassStage = value),
+                      onToggleBlur: (value) => setState(() => _disableBlur = value),
+                      onToggleEnvironmentPlate: (value) => setState(() => _showEnvironmentPlate = value),
+                    );
                   },
-                  color: _showFillProof ? const Color(0xFFFF1493) : DesignTokens.textPrimary,
                 ),
-                // FE-UI-085: Environment plate A/B toggle
-                IconButton(
-                  icon: Icon(_showEnvironmentPlate ? Icons.landscape : Icons.landscape_outlined),
-                  tooltip: 'Toggle Environment Plate (FE-UI-085 A/B Test)',
-                  onPressed: () {
-                    setState(() {
-                      _showEnvironmentPlate = !_showEnvironmentPlate;
-                    });
-                  },
-                  color: _showEnvironmentPlate ? const Color(0xFF00FF00) : Colors.red,
-                ),
-                // FE-UI-096: Blur toggle for intersection testing
-                IconButton(
-                  icon: Icon(_disableBlur ? Icons.blur_off : Icons.blur_on),
-                  tooltip: 'Toggle Blur (FE-UI-096 Intersection Test)',
-                  onPressed: () {
-                    setState(() {
-                      _disableBlur = !_disableBlur;
-                    });
-                  },
-                  color: _disableBlur ? Colors.amber : const Color(0xFF00BFFF),
-                ),
-                // FE-UI-066: Debug test pattern toggle
-                IconButton(
-                  icon: Icon(_showGlassTestPattern ? Icons.grid_on : Icons.grid_off),
-                  tooltip: 'Toggle Glass Test Pattern (Debug)',
-                  onPressed: () {
-                    setState(() {
-                      _showGlassTestPattern = !_showGlassTestPattern;
-                    });
-                  },
-                  color: _showGlassTestPattern ? Colors.orange : DesignTokens.textPrimary,
-                ),
-                // FE-UI-109: Glass stage toggle (hard-edge bands)
-                IconButton(
-                  icon: Icon(_showGlassStage ? Icons.layers : Icons.layers_outlined),
-                  tooltip: 'Toggle Glass Stage (FE-UI-109 Hard-Edge Bands)',
-                  onPressed: () {
-                    setState(() {
-                      _showGlassStage = !_showGlassStage;
-                    });
-                  },
-                  color: _showGlassStage ? const Color(0xFF9D7FFF) : DesignTokens.textSecondary,
-                ),
-              ],
-              // FE-UI-116: Reset button available in both debug and production
+              // Reset button available in both debug and production
               IconButton(
                 icon: const Icon(Icons.refresh),
                 tooltip: 'Reset Wizard',

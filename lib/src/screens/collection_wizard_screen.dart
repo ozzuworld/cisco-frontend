@@ -433,7 +433,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
             );
           },
         ),
-      ),
+        );
+      },
     );
   }
 

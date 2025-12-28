@@ -91,8 +91,8 @@ class BackgroundNoiseConfig {
   }
 }
 
-/// Enum for time of day
-enum TimeOfDay {
+/// Enum for time of day (renamed to avoid conflict with Flutter's TimeOfDay)
+enum BackgroundTimeOfDay {
   dawn,
   day,
   dusk,
@@ -116,7 +116,7 @@ class BackgroundPreset {
   final List<BackgroundBand> bands;
   final BackgroundNoiseConfig noiseConfig;
   final double vignetteOpacity;
-  final TimeOfDay? timeOfDay;
+  final BackgroundTimeOfDay? timeOfDay;
   final Season? season;
 
   const BackgroundPreset({
@@ -139,7 +139,7 @@ class BackgroundPreset {
     List<BackgroundBand>? bands,
     BackgroundNoiseConfig? noiseConfig,
     double? vignetteOpacity,
-    TimeOfDay? timeOfDay,
+    BackgroundTimeOfDay? timeOfDay,
     Season? season,
   }) {
     return BackgroundPreset(

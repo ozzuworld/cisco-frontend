@@ -8,8 +8,12 @@ import '../models/cucm_node.dart';
 import '../models/profile.dart';
 import '../models/api_error.dart';
 import '../services/http_client.dart';
+import '../services/background_service.dart';
 import '../ui/design_tokens.dart';
 import '../ui/glass_card.dart';
+import '../ui/background_renderer.dart';
+import '../ui/snow_effect.dart';
+import '../ui/background_debug_panel.dart';
 import 'job_status_screen.dart';
 import 'settings_screen.dart';
 
@@ -243,332 +247,27 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
               ),
             ],
           ),
-          // FE-UI-047: True dark background with Apple-style bloom
-          body: Container(
-            decoration: BoxDecoration(
-              // Base layer: solid #05060A (avoids banding)
-              color: DesignTokens.backgroundBase,
-            ),
-            child: Stack(
-              children: [
-                // FE-UI-090: Environment plate HARD REQUIREMENT
-                // ≥ 3 large gradients (800-1200px), ≥ 2 mid blobs (300-500px)
-                // Visible luminance contrast (12-18% delta minimum)
-                if (_showEnvironmentPlate) ...[
-                  // FE-UI-101: Large bloom #1 MUST intersect card with visible contrast
-                  // High-contrast requirement: 20-25% center → blur has structure to refract
-                  // Was: 15%/8% (too subtle → grey fog)
-                  Positioned(
-                    top: 150, // FE-UI-096: Intersects card area
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: Container(
-                        width: 1000,
-                        height: 1000,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            DesignTokens.bloomSecondary.withOpacity(0.22), // FE-UI-101: 15% → 22%
-                            DesignTokens.bloomPrimary.withOpacity(0.14), // FE-UI-101: 8% → 14%
-                            Colors.transparent,
-                          ],
-                          stops: const [0.0, 0.4, 0.8],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // FE-UI-101: Large bloom #2 increased contrast (purple)
-                Positioned(
-                  bottom: -250,
-                  left: -250,
-                  child: Container(
-                    width: 900,
-                    height: 900,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          DesignTokens.bloomTertiary.withOpacity(0.18), // FE-UI-101: 12% → 18%
-                          Colors.transparent,
-                        ],
-                        stops: const [0.0, 0.7],
-                      ),
-                    ),
-                  ),
-                ),
-                // FE-UI-101: Large bloom #3 increased contrast (white/blue)
-                Positioned(
-                  top: 100,
-                  right: -300,
-                  child: Container(
-                    width: 1200,
-                    height: 1200,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          Colors.white.withOpacity(0.20), // FE-UI-101: 14% → 20%
-                          DesignTokens.bloomSecondary.withOpacity(0.10), // FE-UI-101: 6% → 10%
-                          Colors.transparent,
-                        ],
-                        stops: const [0.0, 0.5, 0.9],
-                      ),
-                    ),
-                  ),
-                ),
-                // FE-UI-101: Diagonal gradient band with INCREASED contrast
-                // Sharp transitions create visible refraction lines
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.transparent,
-                          DesignTokens.bloomPrimary.withOpacity(0.16), // FE-UI-101: 10% → 16%
-                          Colors.transparent,
-                          DesignTokens.bloomSecondary.withOpacity(0.14), // FE-UI-101: 8% → 14%
-                          Colors.transparent,
-                        ],
-                        stops: const [0.0, 0.25, 0.5, 0.75, 1.0], // Sharper transitions
-                      ),
-                    ),
-                  ),
-                ),
-                // FE-UI-107: Structured diagonal band #1 (top-right to bottom-left)
-                // High-contrast band with sharp edge for clear refraction
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topRight,
-                        end: Alignment.bottomLeft,
-                        colors: [
-                          Colors.transparent,
-                          DesignTokens.bloomTertiary.withOpacity(0.12),
-                          Colors.transparent,
-                        ],
-                        stops: const [0.35, 0.5, 0.65], // Sharp, narrow band
-                      ),
-                    ),
-                  ),
-                ),
-                // FE-UI-107: Structured diagonal band #2 (crossing card center)
-                // Positioned to clearly intersect the glass card
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment(-0.8, -1.0), // Custom angle
-                        end: Alignment(0.8, 1.0),
-                        colors: [
-                          Colors.transparent,
-                          Colors.white.withOpacity(0.10),
-                          Colors.transparent,
-                        ],
-                        stops: const [0.4, 0.5, 0.6], // Very sharp band
-                      ),
-                    ),
-                  ),
-                ),
-                // FE-UI-054: Background noise/grain layer for refraction detail
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: _BackgroundNoisePainter(
-                      opacity: 0.04, // 3-6% range - subtle but helps blur refraction
-                      seed: 123,
-                    ),
-                  ),
-                ),
-                // FE-UI-107: Micro vignette - reduced to preserve card contrast
-                // Was 15% → now 10% to ensure environment stays visible behind glass
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: RadialGradient(
-                        center: Alignment.center,
-                        radius: 1.2,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.10), // FE-UI-107: 15% → 10%
-                        ],
-                        stops: const [0.5, 1.0], // Start fade later (was 0.4)
-                      ),
-                    ),
-                  ),
-                ),
-                // FE-UI-060: Charcoal gradient bands for glass environment
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          const Color(0xFF0A0C12).withOpacity(0.03),
-                          Colors.transparent,
-                          const Color(0xFF08090E).withOpacity(0.04),
-                        ],
-                        stops: const [0.0, 0.5, 1.0],
-                      ),
-                    ),
-                  ),
-                ),
-                // FE-UI-101: Mid-range blob #1 (increased contrast for refraction)
-                // Positioned to intersect card area on right side
-                Positioned(
-                  top: 200,
-                  right: 200,
-                  child: Container(
-                    width: 400,
-                    height: 300,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(150),
-                      gradient: RadialGradient(
-                        colors: [
-                          Colors.white.withOpacity(0.08), // FE-UI-101: 4% → 8%
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                // FE-UI-101: Mid-range blob #2 (increased contrast)
-                Positioned(
-                  bottom: 150,
-                  left: 180,
-                  child: Container(
-                    width: 350,
-                    height: 350,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          const Color(0xFF12141A).withOpacity(0.10), // FE-UI-101: 5% → 10%
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                  // FE-UI-101: High-contrast blob crossing card (left side)
-                  // Critical: positioned to clearly intersect glass card area
-                  Positioned(
-                    top: 250, // Centered vertically where card lives
-                    left: 150,
-                    child: Container(
-                      width: 300,
-                      height: 300,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            DesignTokens.bloomSecondary.withOpacity(0.14), // FE-UI-101: 5% → 14%
-                            DesignTokens.bloomSecondary.withOpacity(0.06),
-                            Colors.transparent,
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 300,
-                    right: 150,
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            DesignTokens.bloomTertiary.withOpacity(0.04),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 200,
-                    left: 250,
-                    child: Container(
-                      width: 180,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            DesignTokens.bloomPrimary.withOpacity(0.03),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ], // End environment plate elements
-
-                // FE-UI-118: GLASS STAGE V2 - Thin, sharp, high-frequency structures
-                // CRITICAL: 1-2px line bands with hard edges (not soft gradients)
-                // Creates "liquid refraction" look instead of grey fog
-                if (_showGlassStage) ...[
-                  // FE-UI-118: Sharp diagonal line bands (CustomPaint for pixel-perfect edges)
+          // FE-BG-001: Dynamic background system with preset architecture
+          body: Consumer<BackgroundService>(
+            builder: (context, backgroundService, child) {
+              return Stack(
+                children: [
+                  // FE-BG-001: Background renderer with data-driven presets
                   Positioned.fill(
-                    child: CustomPaint(
-                      painter: _SharpLineBandsPainter(),
+                    child: BackgroundRenderer(
+                      preset: backgroundService.activePreset,
+                      enabled: _showEnvironmentPlate,
                     ),
                   ),
-                  // Subtle micro-contrast accents (very localized, not big blooms)
-                  Positioned(
-                    top: 260,
-                    left: 200,
-                    child: Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            Colors.white.withOpacity(0.06),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 350,
-                    right: 180,
-                    child: Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            DesignTokens.bloomSecondary.withOpacity(0.05),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Microtexture layer (fine grain for additional refraction detail)
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _GlassStageMicrotexturePainter(
-                        opacity: 0.05, // FE-UI-118: Reduced from 0.06 (more subtle)
-                        seed: 456,
-                      ),
-                    ),
-                  ),
-                ], // End glass stage elements
 
-                // FE-UI-092: Refraction content visibility test
+                  // FE-BG-010: Snow particle system (performance-safe)
+                  SnowEffect(
+                    intensity: backgroundService.snowIntensity,
+                  ),
+
+                  // FE-UI-066: Legacy test pattern for glass QA (preserved for backward compatibility)
+                  // Note: Old hardcoded background layers have been replaced with BackgroundRenderer (FE-BG-001)
+                  // FE-UI-092: Refraction content visibility test
                 // Recognizable shapes that will visibly distort under glass blur
                 if (_showGlassTestPattern) ...[
                   // Striped circle - will show refraction/distortion through glass
@@ -726,11 +425,15 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                       ),
                     ),
                   ),
+
+                  // FE-BG-030: Background debug panel (only in debug mode)
+                  if (kDebugMode)
+                    const BackgroundDebugPanel(),
               ],
-            ),
-          ),
-        );
-      },
+            );
+          },
+        ),
+      ),
     );
   }
 

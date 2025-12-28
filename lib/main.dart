@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'src/config/config_service.dart';
 import 'src/services/storage_service.dart';
 import 'src/services/http_client.dart';
+import 'src/services/background_service.dart';
 import 'src/models/collection_flow_state.dart';
 import 'src/screens/home_screen.dart';
 import 'src/ui/design_tokens.dart';
@@ -13,21 +14,25 @@ void main() async {
   // Initialize services
   final storageService = StorageService();
   final configService = ConfigService(storageService);
+  final backgroundService = BackgroundService(storageService);
 
   // Load saved configuration
   await configService.initialize();
 
   runApp(CiscoApp(
     configService: configService,
+    backgroundService: backgroundService,
   ));
 }
 
 class CiscoApp extends StatelessWidget {
   final ConfigService configService;
+  final BackgroundService backgroundService;
 
   const CiscoApp({
     super.key,
     required this.configService,
+    required this.backgroundService,
   });
 
   /// FE-UI-049: Build liquid glass theme with custom input and button styles
@@ -212,6 +217,7 @@ class CiscoApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: configService),
+        ChangeNotifierProvider.value(value: backgroundService),
         Provider(
           create: (context) => HttpClientService(configService),
         ),

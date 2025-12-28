@@ -34,7 +34,12 @@ import 'design_tokens.dart';
 /// ✓ Test 2: Rim Readability - borders visible at 35-45% on black
 /// ✓ Test 3: Refraction Test - blur refracts environment detail (not grey fog)
 /// ✓ Test 4: Child Surface Audit - all children have transparent fill
-class GlassCard extends StatelessWidget {
+///
+/// FE-036: Interactive Lighting Rig
+/// - Mouse/touch position drives specular highlights
+/// - Creates depth and premium feel
+/// - Smooth transitions, subtle effect (no disco)
+class GlassCard extends StatefulWidget {
   // FE-UI-061: Enforce transparent fill rule
   static const Color _glassFillColor = Colors.transparent;
   static const String _noFillRuleWarning =
@@ -86,7 +91,7 @@ class GlassCard extends StatelessWidget {
 
   /// FE-UI-110: Debug mode to exaggerate reflections 3× for tuning
   /// Helps visualize and tune reflection system, then return to normal
-  final bool debugExaggerateReflections;
+  final boolwidget.debugExaggerateReflections;
 
   const GlassCard({
     super.key,
@@ -105,46 +110,71 @@ class GlassCard extends StatelessWidget {
   });
 
   @override
+  State<GlassCard> createState() => _GlassCardState();
+}
+
+class _GlassCardState extends State<GlassCard> {
+  // FE-036: Light position tracking (normalized 0.0-1.0)
+  Offset _lightPosition = const Offset(0.5, 0.3); // Default: top-left
+
+  @override
   Widget build(BuildContext context) {
     // FE-UI-050: Use card-specific padding tokens
-    final effectivePadding = padding ??
+    final effectivePadding = widget.padding ??
         const EdgeInsets.symmetric(
           horizontal: DesignTokens.paddingCardHorizontal,
           vertical: DesignTokens.paddingCardVertical,
         );
-    final effectiveBorderRadius = borderRadius ?? DesignTokens.cardBorderRadius;
-    final effectiveMargin = margin ?? EdgeInsets.zero;
+    final effectiveBorderRadius = widget.borderRadius ?? DesignTokens.cardBorderRadius;
+    final effectiveMargin = widget.margin ?? EdgeInsets.zero;
 
-    return Container(
-      margin: effectiveMargin,
-      decoration: BoxDecoration(
-        borderRadius: effectiveBorderRadius,
-        // FE-UI-111: THIN SHEET contact shadow (not panel depth)
-        // Minimal contact shadow only - thin glass sheet on surface
-        boxShadow: showShadow
-            ? [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.07),  // FE-UI-111: 10% → 7%
-                  blurRadius: 6,  // FE-UI-111: 8 → 6 (tighter)
-                  offset: const Offset(0, 0.5),  // FE-UI-111: (0,1) → (0,0.5)
-                  spreadRadius: 0,  // No spread (strict requirement)
+    // FE-036: Wrap with MouseRegion for interactive lighting
+    return MouseRegion(
+      onHover: (event) {
+        // Convert mouse position to normalized coordinates (0.0-1.0)
+        final RenderBox? box = context.findRenderObject() as RenderBox?;
+        if (box != null) {
+          final localPosition = box.globalToLocal(event.position);
+          final size = box.size;
+          setState(() {
+            _lightPosition = Offset(
+              (localPosition.dx / size.width).clamp(0.0, 1.0),
+              (localPosition.dy / size.height).clamp(0.0, 1.0),
+            );
+          });
+        }
+      },
+      child: Container(
+        margin: effectiveMargin,
+        decoration: BoxDecoration(
+          borderRadius: effectiveBorderRadius,
+          // FE-UI-111: THIN SHEET contact shadow (not panel depth)
+          // Minimal contact shadow only - thin glass sheet on surface
+          boxShadow: widget.showShadow
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.07),  // FE-UI-111: 10% → 7%
+                    blurRadius: 6,  // FE-UI-111: 8 → 6 (tighter)
+                    offset: const Offset(0, 0.5),  // FE-UI-111: (0,1) → (0,0.5)
+                    spreadRadius: 0,  // No spread (strict requirement)
+                  ),
+                ]
+              : null,
+        ),
+        child: ClipRRect(
+          borderRadius: effectiveBorderRadius,
+          // FE-UI-096: Conditionally apply blur for intersection testing
+          child: widget.debugDisableBlur
+              ? _buildGlassContent(effectiveBorderRadius, effectivePadding)
+              : BackdropFilter(
+                  filter: ImageFilter.blur(
+                    // FE-UI-048: Real blur sigma 16 (web-optimized)
+                    sigmaX: widget.blurStrength,
+                    sigmaY: widget.blurStrength,
+                  ),
+                  child: _buildGlassContent(effectiveBorderRadius, effectivePadding),
                 ),
-              ]
-            : null,
-      ),
-      child: ClipRRect(
-        borderRadius: effectiveBorderRadius,
-        // FE-UI-096: Conditionally apply blur for intersection testing
-        child: debugDisableBlur
-            ? _buildGlassContent(effectiveBorderRadius, effectivePadding)
-            : BackdropFilter(
-                filter: ImageFilter.blur(
-                  // FE-UI-048: Real blur sigma 16 (web-optimized)
-                  sigmaX: blurStrength,
-                  sigmaY: blurStrength,
-                ),
-                child: _buildGlassContent(effectiveBorderRadius, effectivePadding),
-              ),
+        ),
       ),
     );
   }
@@ -261,27 +291,31 @@ class GlassCard extends StatelessWidget {
             ),
           ),
           // FE-UI-110: SPECULAR REFLECTION SYSTEM V2
-          // Replaces FE-UI-091 (old diagonal sweep) and FE-UI-063 (old corner glow)
+          // FE-036: Now driven by interactive light position
           // Makes glass look "wet" and liquid, not just transparent
 
           // Primary sheen sweep (broad diagonal highlight)
+          // FE-036: Responds to light position for depth
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: effectiveBorderRadius,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.center,
+                gradient: RadialGradient(
+                  center: Alignment(
+                    (_lightPosition.dx - 0.5) * 2, // Convert 0-1 to -1 to 1
+                    (_lightPosition.dy - 0.5) * 2,
+                  ),
+                  radius: 1.5,
                   colors: [
                     Colors.white.withOpacity(
-                      debugExaggerateReflections ? 0.35 : 0.12
+                      widget.debugExaggerateReflections ? 0.35 : 0.12
                     ),
                     Colors.white.withOpacity(
-                      debugExaggerateReflections ? 0.15 : 0.05
+                      widget.debugExaggerateReflections ? 0.15 : 0.05
                     ),
                     Colors.transparent,
                   ],
-                  stops: const [0.0, 0.15, 0.35],
+                  stops: const [0.0, 0.3, 0.7],
                 ),
               ),
             ),
@@ -302,13 +336,13 @@ class GlassCard extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: [
                     Colors.white.withOpacity(
-                      debugExaggerateReflections ? 0.90 : 0.30
+                     widget.debugExaggerateReflections ? 0.90 : 0.30
                     ),
                     Colors.white.withOpacity(
-                      debugExaggerateReflections ? 0.70 : 0.23
+                     widget.debugExaggerateReflections ? 0.70 : 0.23
                     ),
                     Colors.white.withOpacity(
-                      debugExaggerateReflections ? 0.50 : 0.17
+                     widget.debugExaggerateReflections ? 0.50 : 0.17
                     ),
                   ],
                 ),
@@ -332,10 +366,10 @@ class GlassCard extends StatelessWidget {
                   radius: 0.8,
                   colors: [
                     Colors.white.withOpacity(
-                      debugExaggerateReflections ? 0.80 : 0.28
+                     widget.debugExaggerateReflections ? 0.80 : 0.28
                     ),
                     Colors.white.withOpacity(
-                      debugExaggerateReflections ? 0.40 : 0.14
+                     widget.debugExaggerateReflections ? 0.40 : 0.14
                     ),
                     Colors.transparent,
                   ],
@@ -361,10 +395,10 @@ class GlassCard extends StatelessWidget {
                   radius: 0.7,
                   colors: [
                     Colors.white.withOpacity(
-                      debugExaggerateReflections ? 0.60 : 0.20
+                     widget.debugExaggerateReflections ? 0.60 : 0.20
                     ),
                     Colors.white.withOpacity(
-                      debugExaggerateReflections ? 0.30 : 0.10
+                     widget.debugExaggerateReflections ? 0.30 : 0.10
                     ),
                     Colors.transparent,
                   ],
@@ -388,10 +422,10 @@ class GlassCard extends StatelessWidget {
                   radius: 0.9,
                   colors: [
                     Colors.white.withOpacity(
-                      debugExaggerateReflections ? 0.50 : 0.17
+                     widget.debugExaggerateReflections ? 0.50 : 0.17
                     ),
                     Colors.white.withOpacity(
-                      debugExaggerateReflections ? 0.20 : 0.07
+                     widget.debugExaggerateReflections ? 0.20 : 0.07
                     ),
                     Colors.transparent,
                   ],
@@ -418,7 +452,7 @@ class GlassCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (header != null) ...[
+              if (widget.widget.header != null) ...[
                 Padding(
                   padding: EdgeInsets.only(
                     left: effectivePadding.left,
@@ -426,7 +460,7 @@ class GlassCard extends StatelessWidget {
                     top: effectivePadding.top,
                     bottom: DesignTokens.spacingComponent,
                   ),
-                  child: header!,
+                  child: widget.header!,
                 ),
                 Divider(
                   height: 1,
@@ -436,14 +470,14 @@ class GlassCard extends StatelessWidget {
                 SizedBox(height: effectivePadding.bottom),
               ],
               Padding(
-                padding: header != null
+                padding: widget.header != null
                     ? EdgeInsets.only(
                         left: effectivePadding.left,
                         right: effectivePadding.right,
                         bottom: effectivePadding.bottom,
                       )
                     : effectivePadding,
-                child: body,
+                child: widget.body,
               ),
             ],
           ),

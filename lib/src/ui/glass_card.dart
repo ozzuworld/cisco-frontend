@@ -108,14 +108,15 @@ class GlassCard extends StatelessWidget {
       margin: effectiveMargin,
       decoration: BoxDecoration(
         borderRadius: effectiveBorderRadius,
-        // FE-UI-070: Minimal contact shadow only (thin glass sheet, not thick panel)
+        // FE-UI-093: NO DARK ENERGY under card (shadow opacity ≤ 12%)
+        // Minimal contact shadow only - no dark mass/halo
         boxShadow: showShadow
             ? [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.15),  // Reduced from 45%
-                  blurRadius: 12,  // Reduced from 38
-                  offset: const Offset(0, 2),  // Reduced from 8
-                  spreadRadius: 0,  // No spread
+                  color: Colors.black.withOpacity(0.10),  // Reduced to 10% (was 15%)
+                  blurRadius: 8,  // Reduced from 12 (tighter shadow)
+                  offset: const Offset(0, 1),  // Reduced from 2 (closer to card)
+                  spreadRadius: 0,  // No spread (strict requirement)
                 ),
               ]
             : null,
@@ -172,7 +173,8 @@ class GlassCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // FE-UI-058: Top highlight band (reduced 30% for crisp look)
+                // FE-UI-091: LIGHT DIRECTION SYSTEM (top-left → bottom-right)
+                // Top highlight band - stronger on left (light source side)
                 Positioned(
                   top: 0,
                   left: 0,
@@ -188,35 +190,35 @@ class GlassCard extends StatelessWidget {
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
                         colors: [
-                          Colors.white.withOpacity(0.10),
+                          Colors.white.withOpacity(0.22), // Brighter left (light source)
                           Colors.white.withOpacity(0.17),
-                          Colors.white.withOpacity(0.10),
+                          Colors.white.withOpacity(0.08), // Dimmer right (away from light)
                         ],
                       ),
                     ),
                   ),
                 ),
-                // FE-UI-058: Left edge highlight (reduced 30%)
+                // FE-UI-091: Left edge highlight - STRONG (receiving light)
                 Positioned(
                   top: 0,
                   left: 0,
                   bottom: 0,
                   child: Container(
-                    width: 1.5,
+                    width: 2, // Increased from 1.5
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.white.withOpacity(0.14),
-                          Colors.white.withOpacity(0.07),
-                          Colors.transparent,
+                          Colors.white.withOpacity(0.20), // Brighter top (light)
+                          Colors.white.withOpacity(0.10),
+                          Colors.white.withOpacity(0.03), // Dimmer bottom
                         ],
                       ),
                     ),
                   ),
                 ),
-                // FE-UI-058: Right edge highlight (reduced 30%)
+                // FE-UI-091: Right edge highlight - WEAK (shadow side)
                 Positioned(
                   top: 0,
                   right: 0,
@@ -228,10 +230,32 @@ class GlassCard extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.white.withOpacity(0.10),
-                          Colors.white.withOpacity(0.03),
+                          Colors.white.withOpacity(0.06), // Much dimmer (shadow side)
+                          Colors.white.withOpacity(0.02),
                           Colors.transparent,
                         ],
+                      ),
+                    ),
+                  ),
+                ),
+                // FE-UI-091: Diagonal specular sweep (top-left → bottom-right)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: effectiveBorderRadius,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withOpacity(0.08), // Light source
+                          Colors.transparent,
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.3, 1.0],
                       ),
                     ),
                   ),

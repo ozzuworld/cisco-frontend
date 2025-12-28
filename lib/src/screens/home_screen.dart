@@ -37,27 +37,31 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return GlassScaffold(
       enableBackground: true,
-      scrollable: true,
-      body: Stack(
-        children: [
-          // voip.json lottie animation as background
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.3, // Subtle effect, doesn't distract from UI
-              child: Lottie.asset(
-                'assets/lottie/voip.json',
-                fit: BoxFit.cover,
-                repeat: true,
+      scrollable: false, // Disable scrolling to allow Stack to fill screen
+      body: SizedBox.expand(
+        child: Stack(
+          children: [
+            // voip.json lottie animation as background
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.3, // Subtle effect, doesn't distract from UI
+                child: Lottie.asset(
+                  'assets/lottie/voip.json',
+                  fit: BoxFit.cover,
+                  repeat: true,
+                ),
               ),
             ),
-          ),
-          // Main content
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: GlassCard(
+            // Main content - scrollable for overflow protection
+            SingleChildScrollView(
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 400),
+                      child: GlassCard(
                   body: Form(
                     key: _formKey,
                     child: Column(
@@ -261,11 +265,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

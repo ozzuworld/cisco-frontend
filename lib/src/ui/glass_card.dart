@@ -96,21 +96,21 @@ class GlassCard extends StatelessWidget {
           ),
           child: Container(
             decoration: BoxDecoration(
-              // FE-UI-042: Frosted iPhone look with very subtle white tint
-              color: Colors.white.withOpacity(0.08),
+              // FE-UI-047: Black glass - dark tint for "dark glass on black" look
+              color: Colors.black.withOpacity(0.28),
               borderRadius: effectiveBorderRadius,
               // Thin border highlight
               border: Border.all(
                 color: Colors.white.withOpacity(0.15),
                 width: 1,
               ),
-              // Subtle gradient for depth
+              // Subtle dark gradient for depth
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withOpacity(0.10),
-                  Colors.white.withOpacity(0.05),
+                  Colors.black.withOpacity(0.25),
+                  Colors.black.withOpacity(0.35),
                 ],
               ),
             ),

@@ -56,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 600),
                   child: Container(
-                    height: 84, // 50% bigger (56 * 1.5)
+                    height: 56, // Professional input height
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.3),
                       borderRadius: BorderRadius.circular(8),
@@ -84,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 24,
-                          vertical: 30,
+                          vertical: 16,
                         ),
                         suffixIcon: Row(
                           mainAxisSize: MainAxisSize.min,

@@ -55,8 +55,8 @@ class DesignTokens {
 
   // ==================== BORDER RADIUS (FE-UI-046) ====================
 
-  /// Border radius for cards (22-28 range)
-  static const double radiusCard = 26.0;
+  /// FE-UI-058: Border radius for cards (reduced 15% for crisp edges: 26 → 22)
+  static const double radiusCard = 22.0;
 
   /// Border radius for buttons
   static const double radiusButton = 16.0;

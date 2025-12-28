@@ -56,6 +56,12 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
   // FE-UI-066: Debug test pattern mode for glass QA
   bool _showGlassTestPattern = false;
 
+  // FE-UI-083: Debug mode to prove zero-fill is real
+  bool _showFillProof = false;
+
+  // FE-UI-085: Environment plate toggle for A/B proof
+  bool _showEnvironmentPlate = true; // Default ON
+
   // Expansion state for accordion
   int? _expandedStepIndex;
 
@@ -164,6 +170,28 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
             elevation: 0,
             iconTheme: IconThemeData(color: DesignTokens.textPrimary),
             actions: [
+              // FE-UI-083: Fill proof debug toggle
+              IconButton(
+                icon: Icon(_showFillProof ? Icons.bug_report : Icons.bug_report_outlined),
+                tooltip: 'Toggle Fill Proof (FE-UI-083)',
+                onPressed: () {
+                  setState(() {
+                    _showFillProof = !_showFillProof;
+                  });
+                },
+                color: _showFillProof ? const Color(0xFFFF1493) : DesignTokens.textPrimary,
+              ),
+              // FE-UI-085: Environment plate A/B toggle
+              IconButton(
+                icon: Icon(_showEnvironmentPlate ? Icons.landscape : Icons.landscape_outlined),
+                tooltip: 'Toggle Environment Plate (FE-UI-085 A/B Test)',
+                onPressed: () {
+                  setState(() {
+                    _showEnvironmentPlate = !_showEnvironmentPlate;
+                  });
+                },
+                color: _showEnvironmentPlate ? const Color(0xFF00FF00) : Colors.red,
+              ),
               // FE-UI-066: Debug test pattern toggle
               IconButton(
                 icon: Icon(_showGlassTestPattern ? Icons.grid_on : Icons.grid_off),
@@ -190,8 +218,10 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
             ),
             child: Stack(
               children: [
-                // FE-UI-047: Subtle bloom - top center (white/blue @ 6-8%)
-                Positioned(
+                // FE-UI-085: Environment plate (toggle for A/B proof)
+                if (_showEnvironmentPlate) ...[
+                  // FE-UI-047: Subtle bloom - top center (white/blue @ 6-8%)
+                  Positioned(
                   top: -200,
                   left: 0,
                   right: 0,
@@ -309,6 +339,59 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                   ),
                 ),
+                  // FE-UI-060: Micro-contrast blooms (150-300px) for visible refraction
+                  Positioned(
+                    top: 150,
+                    left: 100,
+                    child: Container(
+                      width: 250,
+                      height: 250,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            DesignTokens.bloomSecondary.withOpacity(0.05),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 300,
+                    right: 150,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            DesignTokens.bloomTertiary.withOpacity(0.04),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 200,
+                    left: 250,
+                    child: Container(
+                      width: 180,
+                      height: 180,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            DesignTokens.bloomPrimary.withOpacity(0.03),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ], // End environment plate elements
                 // FE-UI-066: Debug test pattern for glass QA
                 if (_showGlassTestPattern)
                   Positioned.fill(
@@ -329,58 +412,6 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                       ),
                     ),
                   ),
-                // FE-UI-060: Micro-contrast blooms (150-300px) for visible refraction
-                Positioned(
-                  top: 150,
-                  left: 100,
-                  child: Container(
-                    width: 250,
-                    height: 250,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          DesignTokens.bloomSecondary.withOpacity(0.05),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 300,
-                  right: 150,
-                  child: Container(
-                    width: 200,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          DesignTokens.bloomTertiary.withOpacity(0.04),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 200,
-                  left: 250,
-                  child: Container(
-                    width: 180,
-                    height: 180,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          DesignTokens.bloomPrimary.withOpacity(0.03),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
 
                 // Main content
                 SingleChildScrollView(
@@ -585,6 +616,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
       key: ValueKey('step_$currentStepIndex'),
       // FE-043: Reduced header padding
       padding: const EdgeInsets.all(DesignTokens.paddingLarge),
+      // FE-UI-083: Pass debug fill proof toggle
+      debugShowFillProof: _showFillProof,
       header: Row(
         children: [
           // FE-UI-042: Icon with subtle background

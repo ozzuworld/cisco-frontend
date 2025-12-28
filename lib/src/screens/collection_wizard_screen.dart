@@ -536,7 +536,73 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           const SizedBox(height: 16),
           _buildErrorCard(_discoveryError!),
         ],
+        if (_discoveryResult != null && _discoveryResult!.hasNodes) ...[
+          const SizedBox(height: 16),
+          _buildSuccessCard(_discoveryResult!),
+        ],
       ],
+    );
+  }
+
+  Widget _buildSuccessCard(DiscoveryResponse result) {
+    return Container(
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: Colors.green.shade50,
+        borderRadius: BorderRadius.circular(8.0),
+        border: Border.all(color: Colors.green.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green.shade700),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Discovery Successful!',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green.shade900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Found ${result.nodes.length} node${result.nodes.length != 1 ? 's' : ''} in the cluster. Continue to Step 2 to select nodes.',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.green.shade900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: result.nodes.map((node) {
+              final isPublisher = node.role?.toLowerCase() == 'publisher';
+              return Chip(
+                avatar: Icon(
+                  Icons.computer,
+                  size: 16,
+                  color: isPublisher ? Colors.blue.shade700 : Colors.grey.shade700,
+                ),
+                label: Text(
+                  node.displayName,
+                  style: const TextStyle(fontSize: 12),
+                ),
+                backgroundColor: isPublisher ? Colors.blue.shade50 : Colors.grey.shade100,
+                side: BorderSide(
+                  color: isPublisher ? Colors.blue.shade300 : Colors.grey.shade300,
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 

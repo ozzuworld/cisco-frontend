@@ -177,6 +177,50 @@ flutter run -d chrome --release
    - ✅ No console errors
    - ✅ No memory leaks
 
+### How Debug UI is Hidden (Technical)
+
+The app uses Flutter's `kDebugMode` constant to conditionally render debug elements:
+
+**Renderer Badge** (collection_wizard_screen.dart:368):
+```dart
+if (kDebugMode && kIsWeb)
+  Positioned(
+    bottom: 16,
+    left: 16,
+    child: Container(
+      // Badge showing "Renderer: CanvasKit"
+    ),
+  ),
+```
+
+**Debug Menu Icon** (collection_wizard_screen.dart:186):
+```dart
+if (kDebugMode)
+  IconButton(
+    icon: const Icon(Icons.developer_mode),
+    tooltip: 'Debug Tools',
+    onPressed: () => DebugMenu.show(context, ...),
+  ),
+```
+
+**Background Debug Panel** (collection_wizard_screen.dart:406):
+```dart
+if (kDebugMode && _showBackgroundDebugPanel)
+  const BackgroundDebugPanel(),
+```
+
+**How kDebugMode Works:**
+- `kDebugMode = true` → Debug builds (`flutter run`)
+- `kDebugMode = false` → Production builds (`flutter build web --release`)
+- When `false`, all code inside `if (kDebugMode)` blocks is **tree-shaken** (removed from compiled output)
+- Result: Zero debug UI in production builds, smaller bundle size
+
+**Verification:**
+✅ Build with `flutter build web --release`
+✅ Check `build/web/main.dart.js` - debug code is completely removed
+✅ Run locally - no debug UI elements visible
+✅ Performance improved due to smaller bundle
+
 ---
 
 ## 🌐 Deployment

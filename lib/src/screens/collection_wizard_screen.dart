@@ -1166,9 +1166,13 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
 
   // Step 3: Profile Selection Content
   Widget _buildProfileSelectionContent(CollectionFlowState flowState) {
-    // Load profiles on first display
+    // Load profiles on first display (FE-019.9 fix: use post-frame callback)
     if (_profiles == null && !_isLoadingProfiles && _profilesErrorMessage == null) {
-      _loadProfiles();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _profiles == null && !_isLoadingProfiles) {
+          _loadProfiles();
+        }
+      });
     }
 
     if (_isLoadingProfiles) {
@@ -1251,6 +1255,9 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
   }
 
   Future<void> _loadProfiles() async {
+    // FE-019.9: Enhanced error handling and logging
+    if (!mounted) return;
+
     setState(() {
       _isLoadingProfiles = true;
       _profilesErrorMessage = null;
@@ -1258,17 +1265,45 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
 
     try {
       final httpClient = context.read<HttpClientService>();
+
+      // Add debug logging
+      debugPrint('[CollectionWizard] Loading profiles...');
+
       final profiles = await httpClient.getProfiles();
+
+      debugPrint('[CollectionWizard] Loaded ${profiles.length} profiles');
+
+      if (!mounted) return;
 
       setState(() {
         _profiles = profiles;
         _isLoadingProfiles = false;
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[CollectionWizard] Profile loading failed: $e');
+      debugPrint('[CollectionWizard] Stack trace: $stackTrace');
+
+      if (!mounted) return;
+
       setState(() {
         _profilesErrorMessage = e.toString();
         _isLoadingProfiles = false;
       });
+
+      // Show snackbar for user feedback
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load profiles: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: _loadProfiles,
+            ),
+          ),
+        );
+      }
     }
   }
 

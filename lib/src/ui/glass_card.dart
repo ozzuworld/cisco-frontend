@@ -120,10 +120,16 @@ class GlassCard extends StatelessWidget {
                 color: Colors.white.withOpacity(0.40),
                 width: 1.0,
               ),
-              // FE-UI-061: HARD ZERO fill - rgba(255,255,255,0.0)
-              // Glass defined ONLY by edges, NOT fill
-              // Use constant to enforce no-fill rule permanently
-              color: _glassFillColor,
+              // FE-UI-061: Frost layer (3-6% subtle tint for liquid glass)
+              // Very low alpha to maintain translucency while providing glass feel
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white.withOpacity(0.05),  // 5% top (frost layer)
+                  Colors.white.withOpacity(0.04),  // 4% bottom
+                ],
+              ),
             ),
             child: Stack(
               children: [
@@ -136,6 +142,22 @@ class GlassCard extends StatelessWidget {
                         color: Colors.white.withOpacity(0.15),
                         width: 1.0,
                       ),
+                    ),
+                  ),
+                ),
+                // FE-UI-062: Inner shadow for thickness/depth
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: effectiveBorderRadius,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.25),
+                          blurRadius: 8,
+                          spreadRadius: -4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -197,6 +219,45 @@ class GlassCard extends StatelessWidget {
                         colors: [
                           Colors.white.withOpacity(0.10),
                           Colors.white.withOpacity(0.03),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // FE-UI-063: Corner glow/bloom (subtle refraction at corners)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(effectiveBorderRadius.topLeft.x),
+                      ),
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.white.withOpacity(0.18),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(effectiveBorderRadius.topRight.x),
+                      ),
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.white.withOpacity(0.12),
                           Colors.transparent,
                         ],
                       ),

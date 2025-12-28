@@ -28,19 +28,38 @@ class DesignTokens {
   /// Muted text - white at 50% opacity
   static const Color textMuted = Color(0xFF808080); // ~50% white
 
-  // ==================== GLASS FILL & BORDER (FE-UI-046) ====================
+  // ==================== LIQUID GLASS TOKENS (FE-UI-066) ====================
 
-  /// Glass fill base opacity (6-10% range)
-  static const double glassFillOpacity = 0.08;
+  /// Frost layer opacity (3-6% for liquid glass feel)
+  static const double glassFrostOpacity = 0.05;
+  static const double glassFrostOpacityBottom = 0.04;
 
-  /// Glass fill opacity for focused/active elements
-  static const double glassFillOpacityFocus = 0.10;
+  /// Outer rim border opacity (35-45% range for crisp edges)
+  static const double glassRimOuterOpacity = 0.40;
 
-  /// Glass border opacity (14-18% range)
-  static const double glassBorderOpacity = 0.16;
+  /// Inner rim border opacity (12-18% range for edge lighting)
+  static const double glassRimInnerOpacity = 0.15;
 
-  /// Inner highlight opacity (top edge only)
-  static const double glassHighlightOpacity = 0.10;
+  /// Specular sheen opacity (top-left highlight)
+  static const double glassSheenOpacity = 0.17;
+  static const double glassSheenOpacityStart = 0.10;
+
+  /// Edge highlight opacities
+  static const double glassEdgeHighlightTop = 0.14;
+  static const double glassEdgeHighlightBottom = 0.07;
+
+  /// Corner glow opacity
+  static const double glassCornerGlowTopLeft = 0.18;
+  static const double glassCornerGlowTopRight = 0.12;
+
+  /// Inner shadow for thickness
+  static const double glassInnerShadowOpacity = 0.25;
+  static const double glassInnerShadowBlur = 8.0;
+  static const double glassInnerShadowSpread = -4.0;
+
+  /// Environment detail opacity
+  static const double glassEnvNoiseOpacity = 0.04;
+  static const double glassEnvVignetteOpacity = 0.15;
 
   // ==================== GLASS BLUR (FE-UI-048) ====================
 

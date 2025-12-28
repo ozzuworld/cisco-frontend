@@ -6,6 +6,7 @@ import 'src/services/http_client.dart';
 import 'src/services/background_service.dart';
 import 'src/models/collection_flow_state.dart';
 import 'src/screens/home_screen.dart';
+import 'src/screens/collection_wizard_screen.dart';
 import 'src/ui/design_tokens.dart';
 
 void main() async {
@@ -232,7 +233,17 @@ class CiscoApp extends StatelessWidget {
         theme: _buildLiquidGlassTheme(Brightness.light),
         darkTheme: _buildLiquidGlassTheme(Brightness.dark),
         themeMode: ThemeMode.dark, // Default to dark theme for liquid glass
-        home: const HomeScreen(),
+        // FE-SPRINT-LANDING-001: Conditional routing based on API key configuration
+        home: Consumer<ConfigService>(
+          builder: (context, config, _) {
+            // Show landing page if no API key configured
+            if (!config.isConfigured) {
+              return const HomeScreen();
+            }
+            // Show main app (collection wizard) if already configured
+            return const CollectionWizardScreen();
+          },
+        ),
       ),
     );
   }

@@ -42,3 +42,4 @@ flutter:
     - assets/lottie/weather_rain.json
     - assets/lottie/weather_leaves.json
     - assets/lottie/weather_petals.json
+    - assets/lottie/voip.json

@@ -185,10 +185,8 @@ class BackgroundService extends ChangeNotifier {
     // Determine current season
     final season = _getCurrentSeason();
 
-    // Auto-enable low weather effects in winter if not manually set
-    if (season == Season.winter && _weatherIntensity == 0.0) {
-      _weatherIntensity = 0.33; // Low intensity
-    }
+    // FE-REFACTOR-3: Removed auto-enable weather logic
+    // Users should explicitly enable weather effects via debug panel
 
     return BackgroundPresetRegistry.bySeason[season]!;
   }

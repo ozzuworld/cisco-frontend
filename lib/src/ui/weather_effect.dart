@@ -82,9 +82,13 @@ class _WeatherEffectState extends State<WeatherEffect>
   }
 
   /// FE-BG-102: Determine if weather should be shown based on season
+  /// FE-REFACTOR-2: Enable all seasonal Lottie weather effects
   bool _shouldShowWeather() {
     if (widget.intensity == 0.0) return false;
-    return widget.season == Season.winter; // Snow only in winter for now
+    // Enable weather effects for winter (snow), spring (petals), and fall (leaves)
+    return widget.season == Season.winter ||
+           widget.season == Season.spring ||
+           widget.season == Season.fall;
   }
 
   /// Get the appropriate Lottie asset path based on season

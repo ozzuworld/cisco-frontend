@@ -6,6 +6,7 @@ import '../models/cucm_node.dart';
 import '../models/profile.dart';
 import '../models/api_error.dart';
 import '../services/http_client.dart';
+import '../ui/design_tokens.dart';
 import 'job_status_screen.dart';
 import 'settings_screen.dart';
 
@@ -310,21 +311,22 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
       decoration: BoxDecoration(
         // FE-024: Reduced "green wash" - use white for completed, subtle accent
         color: isCurrent ? Colors.blue.shade50 : Colors.white,
-        borderRadius: BorderRadius.circular(16), // FE-023: Larger radius for card feel
+        borderRadius: DesignTokens.cardBorderRadius,
         border: Border.all(
+          // FE-034: Softer border colors
           color: isCompleted
-              ? Colors.green.shade300
+              ? Colors.green.shade200
               : isCurrent
-                  ? Colors.blue.shade400
-                  : Colors.grey.shade300,
-          width: isCompleted || isCurrent ? 2 : 1,
+                  ? Colors.blue.shade300
+                  : Colors.grey.shade200,
+          width: isCompleted || isCurrent ? 1.5 : 1,
         ),
-        // FE-023: Card elevation for all steps
+        // FE-034: Softer shadow/elevation
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isCurrent ? 0.1 : 0.05),
-            blurRadius: isCurrent ? 12 : 6,
-            offset: Offset(0, isCurrent ? 4 : 2),
+            color: Colors.black.withOpacity(isCurrent ? 0.08 : 0.04),
+            blurRadius: isCurrent ? 8 : 4,
+            offset: Offset(0, isCurrent ? 3 : 2),
           ),
         ],
       ),
@@ -409,29 +411,40 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           ),
           children: [
             if (isUnlocked)
+              // FE-034: Inner content column with max width and consistent padding
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: content,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: DesignTokens.stepContentMaxWidth),
+                    child: content,
+                  ),
+                ),
               )
             else
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Icon(Icons.lock_outline, color: Colors.grey.shade400, size: 20),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Complete previous steps to unlock',
-                        // FE-024: Smaller, more muted helper text
-                        style: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontSize: 13,
-                          fontStyle: FontStyle.italic,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: DesignTokens.stepContentMaxWidth),
+                    child: Row(
+                      children: [
+                        Icon(Icons.lock_outline, color: Colors.grey.shade400, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Complete previous steps to unlock',
+                            // FE-024: Smaller, more muted helper text
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 13,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
           ],
@@ -495,12 +508,16 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
+        // FE-032: Constrain form width for better readability
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: DesignTokens.formMaxWidth),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextFormField(
                 controller: _publisherHostController,
                 decoration: const InputDecoration(
                   labelText: 'Publisher Host',
@@ -599,6 +616,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
               ),
             ],
           ),
+            ),
+          ),
         ),
         if (_discoveryError != null) ...[
           const SizedBox(height: 16),
@@ -648,8 +667,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           ),
           const SizedBox(height: 8),
           Wrap(
-            spacing: 8,
-            runSpacing: 4,
+            spacing: DesignTokens.spacingChip,
+            runSpacing: DesignTokens.spacingInline,
             children: result.nodes.map((node) {
               final isPublisher = node.role?.toLowerCase() == 'publisher';
               return Chip(
@@ -1023,39 +1042,104 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
         ),
         const SizedBox(height: 16),
 
-        // Node grid (FE-027: 3-column responsive grid)
+        // FE-033: Wrap layout for nodes (content-sized, not grid-based)
         Text(
           'Discovered ${_discoveryResult!.nodes.length} node(s)',
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
         const SizedBox(height: 12),
-        // Responsive grid: 3 columns on desktop, 2 on tablet, 1 on mobile
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth;
-            final crossAxisCount = width > 900 ? 3 : (width > 600 ? 2 : 1);
-
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                childAspectRatio: 1.8,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: _discoveryResult!.nodes.length,
-              itemBuilder: (context, index) {
-                return _buildNodeCard(_discoveryResult!.nodes[index]);
-              },
-            );
-          },
+        // FE-033: Use Wrap for natural flow and content-based sizing
+        Wrap(
+          spacing: DesignTokens.spacingComponent,
+          runSpacing: DesignTokens.spacingComponent,
+          children: _discoveryResult!.nodes.map((node) {
+            return _buildNodeChip(node);
+          }).toList(),
         ),
       ],
     );
   }
 
-  // FE-027: Compact node card for grid layout
+  // FE-033: Compact node chip with Wrap layout (content-based width)
+  Widget _buildNodeChip(CucmNode node) {
+    final isSelected = _selectedNodeIps.contains(node.ip);
+    final isPublisher = node.role?.toLowerCase() == 'publisher';
+
+    return InkWell(
+      onTap: () => _toggleNodeSelection(node.ip),
+      borderRadius: DesignTokens.chipBorderRadius,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isPublisher ? Colors.blue.shade50 : Colors.grey.shade50)
+              : Colors.white,
+          borderRadius: DesignTokens.chipBorderRadius,
+          border: Border.all(
+            color: isSelected
+                ? (isPublisher ? Colors.blue.shade400 : Colors.grey.shade400)
+                : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isSelected ? 0.06 : 0.03),
+              blurRadius: isSelected ? 6 : 3,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.computer,
+              size: 18,
+              color: isPublisher ? Colors.blue.shade600 : Colors.grey.shade600,
+            ),
+            const SizedBox(width: 8),
+            // Node name
+            Text(
+              node.displayName,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Role badge
+            if (node.role != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isPublisher ? Colors.blue : Colors.grey,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  node.role!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            if (isSelected) ...[
+              const SizedBox(width: 8),
+              Icon(
+                Icons.check_circle,
+                size: 18,
+                color: isPublisher ? Colors.blue.shade600 : Colors.grey.shade600,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // FE-027: Compact node card for grid layout (kept for reference, not currently used)
   Widget _buildNodeCard(CucmNode node) {
     final isSelected = _selectedNodeIps.contains(node.ip);
     final isPublisher = node.role?.toLowerCase() == 'publisher';
@@ -1503,8 +1587,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
           ),
           const SizedBox(height: 12),
           Wrap(
-            spacing: 16,
-            runSpacing: 8,
+            spacing: DesignTokens.paddingStandard,
+            runSpacing: DesignTokens.spacingInline,
             children: [
               _buildProfileDetail(Icons.schedule, 'Time', '${profile.reltimeMinutes} min'),
               _buildProfileDetail(Icons.compress, 'Compress', profile.compress ? 'Yes' : 'No'),
@@ -1814,8 +1898,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
               ),
               const SizedBox(height: 12),
               Wrap(
-                spacing: 16,
-                runSpacing: 8,
+                spacing: DesignTokens.paddingStandard,
+                runSpacing: DesignTokens.spacingInline,
                 children: [
                   _buildProfileDetail(Icons.schedule, 'Time', '${profile.reltimeMinutes} min'),
                   _buildProfileDetail(Icons.compress, 'Compress', profile.compress ? 'Yes' : 'No'),

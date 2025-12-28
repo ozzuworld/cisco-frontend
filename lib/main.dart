@@ -5,6 +5,7 @@ import 'src/services/storage_service.dart';
 import 'src/services/http_client.dart';
 import 'src/models/collection_flow_state.dart';
 import 'src/screens/home_screen.dart';
+import 'src/ui/design_tokens.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,14 +52,14 @@ class CiscoApp extends StatelessWidget {
           ),
           useMaterial3: true,
           cardTheme: CardThemeData(
-            elevation: 2,
+            elevation: DesignTokens.elevationCard,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: DesignTokens.buttonBorderRadius,
             ),
           ),
           inputDecorationTheme: InputDecorationTheme(
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: DesignTokens.inputBorderRadius,
             ),
           ),
         ),
@@ -69,14 +70,14 @@ class CiscoApp extends StatelessWidget {
           ),
           useMaterial3: true,
           cardTheme: CardThemeData(
-            elevation: 2,
+            elevation: DesignTokens.elevationCard,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: DesignTokens.buttonBorderRadius,
             ),
           ),
           inputDecorationTheme: InputDecorationTheme(
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: DesignTokens.inputBorderRadius,
             ),
           ),
         ),

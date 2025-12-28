@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/config_service.dart';
 import 'settings_screen.dart';
-import 'discover_cluster_screen.dart';
+import 'collection_wizard_screen.dart';
 import 'job_history_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -129,12 +129,12 @@ class HomeScreen extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                const DiscoverClusterScreen(),
+                                const CollectionWizardScreen(),
                           ),
                         );
                       },
-                      icon: const Icon(Icons.search),
-                      label: const Text('Discover Cluster'),
+                      icon: const Icon(Icons.auto_fix_high),
+                      label: const Text('Start Collection Wizard'),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 32,
@@ -178,13 +178,13 @@ class HomeScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const DiscoverClusterScreen(),
+                  builder: (context) => const CollectionWizardScreen(),
                 ),
               );
             },
-            icon: const Icon(Icons.search),
-            label: const Text('Discover'),
-            tooltip: 'Discover CUCM Cluster',
+            icon: const Icon(Icons.auto_fix_high),
+            label: const Text('Wizard'),
+            tooltip: 'Start Collection Wizard',
           );
         },
       ),

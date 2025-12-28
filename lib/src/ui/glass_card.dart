@@ -51,7 +51,7 @@ class GlassCard extends StatelessWidget {
     super.key,
     this.header,
     required this.body,
-    this.blurStrength = 10.0,
+    this.blurStrength = 5.0, // FE-UI-054: Reduced by 50% (was 10.0)
     this.backgroundOpacity = 0.15,
     this.borderOpacity = 0.2,
     this.padding,
@@ -103,25 +103,30 @@ class GlassCard extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: effectiveBorderRadius,
-              // FE-UI-053: Thin bright border (20-35% range)
+              // FE-UI-054: 1px outer border (25-35% range) - edge-only glass
               border: Border.all(
                 color: Colors.white.withOpacity(0.30),
-                width: 1.5,
+                width: 1.0,
               ),
-              // FE-UI-053: Near-zero fill (0-2%) - true transparent glass
-              // Readability comes from edges, NOT fill
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white.withOpacity(0.02),
-                  Colors.white.withOpacity(0.01),
-                ],
-              ),
+              // FE-UI-053: HARD ZERO fill - rgba(255,255,255,0.0)
+              // Glass defined ONLY by edges, NOT fill
+              color: Colors.transparent,
             ),
             child: Stack(
               children: [
-                // FE-UI-053: Top-left inner highlight sheen (15-25% range)
+                // FE-UI-054: 1px inner border (10-15% range) - edge-only lighting
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: effectiveBorderRadius,
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.12),
+                        width: 1.0,
+                      ),
+                    ),
+                  ),
+                ),
+                // FE-UI-054: Top highlight band (very subtle)
                 Positioned(
                   top: 0,
                   left: 0,
@@ -185,27 +190,7 @@ class GlassCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // FE-UI-053: Optional specular streak (diagonal) - very subtle
-                Positioned.fill(
-                  child: ClipRRect(
-                    borderRadius: effectiveBorderRadius,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white.withOpacity(0.12),
-                            Colors.white.withOpacity(0.03),
-                            Colors.transparent,
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // FE-UI-048: Subtle noise/grain overlay
+                // FE-UI-048: Subtle noise/grain overlay (for refraction detail)
                 Positioned.fill(
                   child: ClipRRect(
                     borderRadius: effectiveBorderRadius,

@@ -64,7 +64,6 @@ class GlassCard extends StatefulWidget {
   final double borderOpacity;
 
   /// Custom padding for the card content
-  /// FE-043: Default reduced to 16 for compact design
   final EdgeInsets? padding;
 
   /// Custom border radius
@@ -87,7 +86,7 @@ class GlassCard extends StatefulWidget {
     super.key,
     this.header,
     required this.body,
-    this.blurStrength = 5.0, // FE-UI-054: Reduced by 50% (was 10.0)
+    this.blurStrength = 5.0, // Reduced for subtlety (was 10.0)
     this.backgroundOpacity = 0.15,
     this.borderOpacity = 0.2,
     this.padding,
@@ -107,7 +106,6 @@ class _GlassCardState extends State<GlassCard> {
 
   @override
   Widget build(BuildContext context) {
-    // FE-UI-050: Use card-specific padding tokens
     final effectivePadding = widget.padding ??
         const EdgeInsets.symmetric(
           horizontal: DesignTokens.paddingCardHorizontal,
@@ -136,15 +134,14 @@ class _GlassCardState extends State<GlassCard> {
         margin: effectiveMargin,
         decoration: BoxDecoration(
           borderRadius: effectiveBorderRadius,
-          // FE-UI-111: THIN SHEET contact shadow (not panel depth)
-          // Minimal contact shadow only - thin glass sheet on surface
+          // Minimal contact shadow - thin glass sheet on surface
           boxShadow: widget.showShadow
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.07),  // FE-UI-111: 10% → 7%
-                    blurRadius: 6,  // FE-UI-111: 8 → 6 (tighter)
-                    offset: const Offset(0, 0.5),  // FE-UI-111: (0,1) → (0,0.5)
-                    spreadRadius: 0,  // No spread (strict requirement)
+                    color: Colors.black.withOpacity(0.07),
+                    blurRadius: 6,
+                    offset: const Offset(0, 0.5),
+                    spreadRadius: 0,
                   ),
                 ]
               : null,
@@ -164,24 +161,22 @@ class _GlassCardState extends State<GlassCard> {
     );
   }
 
-  /// FE-UI-096: Helper to build glass container content (used in both blur/no-blur modes)
+  /// Helper to build glass container content
   Widget _buildGlassContent(BorderRadius effectiveBorderRadius, EdgeInsets effectivePadding) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: effectiveBorderRadius,
-        // FE-UI-058: 1px outer border (35-45% range) - crisp crystal edges
+        // Outer border - crisp crystal edges
         border: Border.all(
           color: Colors.white.withOpacity(0.40),
           width: 1.0,
         ),
-        // FE-UI-068: ZERO FILL (hard requirement)
-        // Glass defined by reflections + environment, NOT fill
-        // Any fill on black = grey slab
-        color: GlassCard._glassFillColor, // Colors.transparent (0.0%)
+        // ZERO FILL - glass defined by reflections, not fill
+        color: GlassCard._glassFillColor,
       ),
       child: Stack(
         children: [
-          // FE-UI-058: 1px inner border (12-18% range) - sharper edge lighting
+          // Inner border - sharper edge lighting
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -193,18 +188,17 @@ class _GlassCardState extends State<GlassCard> {
               ),
             ),
           ),
-          // FE-UI-111: Inner shadow MINIMAL (thin sheet, not thick panel)
-          // Extremely subtle - just enough for perceived surface, no dark banding
+          // Inner shadow - minimal for thin sheet effect
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: effectiveBorderRadius,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08), // FE-UI-111: 12% → 8%
-                    blurRadius: 4, // FE-UI-111: 6 → 4 (tighter)
-                    spreadRadius: -2, // FE-UI-111: -3 → -2 (smaller)
-                    offset: const Offset(0, 0.5), // FE-UI-111: (0,1) → (0,0.5)
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 4,
+                    spreadRadius: -2,
+                    offset: const Offset(0, 0.5),
                   ),
                 ],
               ),
@@ -234,7 +228,7 @@ class _GlassCardState extends State<GlassCard> {
               ),
             ),
           ),
-          // FE-UI-091 / FE-UI-120: Left edge highlight - clean from corner
+          // Left edge highlight
           Positioned(
             top: effectiveBorderRadius.topLeft.y, // Start below corner radius
             left: 0,
@@ -382,10 +376,10 @@ class BreadcrumbChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: effectivePadding,
         decoration: BoxDecoration(
-          // FE-UI-077: Stroke-first liquid glass - zero fill, border-only
+          // Stroke-first glass - zero fill for unselected state
           color: isSelected
               ? DesignTokens.accentPrimary.withOpacity(0.20)
-              : Colors.transparent,  // Was 5% fill - now 0%
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
           border: Border.all(
             color: isSelected

@@ -8,9 +8,9 @@ import '../models/background_preset.dart';
 class WeatherEffect extends StatefulWidget {
   final Season? season;
   final double intensity; // 0.0 = Off, 0.33 = Low, 0.66 = Medium, 1.0 = High
-  final double timeOfDayOpacity; // FE-BG-103: Day=1.0, Night=0.7-0.8
-  final bool enabled; // FE-BG-106: Debug toggle
-  final bool enablePerformanceMode; // FE-BG-105: Performance enforcement
+  final double timeOfDayOpacity; // Day=1.0, Night=0.7-0.8
+  final bool enabled; // Debug toggle
+  final bool enablePerformanceMode; // Performance mode reduces quality slightly
 
   const WeatherEffect({
     super.key,

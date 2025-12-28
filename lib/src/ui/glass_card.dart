@@ -79,6 +79,11 @@ class GlassCard extends StatelessWidget {
   /// Shows hot pink overlay if any non-transparent fill is detected
   final bool debugShowFillProof;
 
+  /// FE-UI-096: Debug mode to disable blur for intersection testing
+  /// Toggle blur OFF → see background features clearly
+  /// Toggle blur ON → see same features distort (proves refraction)
+  final bool debugDisableBlur;
+
   const GlassCard({
     super.key,
     this.header,
@@ -91,6 +96,7 @@ class GlassCard extends StatelessWidget {
     this.showShadow = true,
     this.margin,
     this.debugShowFillProof = false, // FE-UI-083: Debug overlay toggle
+    this.debugDisableBlur = false, // FE-UI-096: Blur toggle for intersection test
   });
 
   @override
@@ -123,270 +129,278 @@ class GlassCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: effectiveBorderRadius,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            // FE-UI-048: Real blur sigma 16 (web-optimized)
-            sigmaX: blurStrength,
-            sigmaY: blurStrength,
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: effectiveBorderRadius,
-              // FE-UI-058: 1px outer border (35-45% range) - crisp crystal edges
-              border: Border.all(
-                color: Colors.white.withOpacity(0.40),
-                width: 1.0,
+        // FE-UI-096: Conditionally apply blur for intersection testing
+        child: debugDisableBlur
+            ? _buildGlassContent(effectiveBorderRadius, effectivePadding)
+            : BackdropFilter(
+                filter: ImageFilter.blur(
+                  // FE-UI-048: Real blur sigma 16 (web-optimized)
+                  sigmaX: blurStrength,
+                  sigmaY: blurStrength,
+                ),
+                child: _buildGlassContent(effectiveBorderRadius, effectivePadding),
               ),
-              // FE-UI-068: ZERO FILL (hard requirement)
-              // Glass defined by reflections + environment, NOT fill
-              // Any fill on black = grey slab
-              color: _glassFillColor,  // Colors.transparent (0.0%)
+      ),
+    );
+  }
+
+  /// FE-UI-096: Helper to build glass container content (used in both blur/no-blur modes)
+  Widget _buildGlassContent(BorderRadius effectiveBorderRadius, EdgeInsets effectivePadding) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: effectiveBorderRadius,
+        // FE-UI-058: 1px outer border (35-45% range) - crisp crystal edges
+        border: Border.all(
+          color: Colors.white.withOpacity(0.40),
+          width: 1.0,
+        ),
+        // FE-UI-068: ZERO FILL (hard requirement)
+        // Glass defined by reflections + environment, NOT fill
+        // Any fill on black = grey slab
+        color: _glassFillColor, // Colors.transparent (0.0%)
+      ),
+      child: Stack(
+        children: [
+          // FE-UI-058: 1px inner border (12-18% range) - sharper edge lighting
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: effectiveBorderRadius,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.15),
+                  width: 1.0,
+                ),
+              ),
             ),
-            child: Stack(
-              children: [
-                // FE-UI-058: 1px inner border (12-18% range) - sharper edge lighting
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: effectiveBorderRadius,
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.15),
-                        width: 1.0,
-                      ),
-                    ),
+          ),
+          // FE-UI-086: Inner shadow EXTREMELY subtle (not slab depth cue)
+          // Provides perceived thickness without dark fog band
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: effectiveBorderRadius,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.12), // Reduced from 25%
+                    blurRadius: 6, // Reduced from 8
+                    spreadRadius: -3, // Tighter than -4
+                    offset: const Offset(0, 1), // Reduced from 2
                   ),
+                ],
+              ),
+            ),
+          ),
+          // FE-UI-091: LIGHT DIRECTION SYSTEM (top-left → bottom-right)
+          // Top highlight band - stronger on left (light source side)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 2,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(effectiveBorderRadius.topLeft.x),
+                  topRight: Radius.circular(effectiveBorderRadius.topRight.x),
                 ),
-                // FE-UI-086: Inner shadow EXTREMELY subtle (not slab depth cue)
-                // Provides perceived thickness without dark fog band
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: effectiveBorderRadius,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.12), // Reduced from 25%
-                          blurRadius: 6, // Reduced from 8
-                          spreadRadius: -3, // Tighter than -4
-                          offset: const Offset(0, 1), // Reduced from 2
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // FE-UI-091: LIGHT DIRECTION SYSTEM (top-left → bottom-right)
-                // Top highlight band - stronger on left (light source side)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 2,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(effectiveBorderRadius.topLeft.x),
-                        topRight: Radius.circular(effectiveBorderRadius.topRight.x),
-                      ),
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          Colors.white.withOpacity(0.22), // Brighter left (light source)
-                          Colors.white.withOpacity(0.17),
-                          Colors.white.withOpacity(0.08), // Dimmer right (away from light)
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                // FE-UI-091: Left edge highlight - STRONG (receiving light)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 2, // Increased from 1.5
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.white.withOpacity(0.20), // Brighter top (light)
-                          Colors.white.withOpacity(0.10),
-                          Colors.white.withOpacity(0.03), // Dimmer bottom
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                // FE-UI-091: Right edge highlight - WEAK (shadow side)
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 1,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.white.withOpacity(0.06), // Much dimmer (shadow side)
-                          Colors.white.withOpacity(0.02),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                // FE-UI-091: Diagonal specular sweep (top-left → bottom-right)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: effectiveBorderRadius,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.white.withOpacity(0.08), // Light source
-                          Colors.transparent,
-                          Colors.transparent,
-                        ],
-                        stops: const [0.0, 0.3, 1.0],
-                      ),
-                    ),
-                  ),
-                ),
-                // FE-UI-063: Corner glow/bloom (subtle refraction at corners)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(effectiveBorderRadius.topLeft.x),
-                      ),
-                      gradient: RadialGradient(
-                        colors: [
-                          Colors.white.withOpacity(0.18),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(effectiveBorderRadius.topRight.x),
-                      ),
-                      gradient: RadialGradient(
-                        colors: [
-                          Colors.white.withOpacity(0.12),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                // FE-UI-048: Subtle noise/grain overlay (for refraction detail)
-                Positioned.fill(
-                  child: ClipRRect(
-                    borderRadius: effectiveBorderRadius,
-                    child: CustomPaint(
-                      painter: _NoisePainter(
-                        opacity: 0.04, // Very subtle (3-6% range)
-                        seed: 42, // Fixed seed for consistent pattern
-                      ),
-                    ),
-                  ),
-                ),
-                // Content
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (header != null) ...[
-                      Padding(
-                        padding: EdgeInsets.only(
-                          left: effectivePadding.left,
-                          right: effectivePadding.right,
-                          top: effectivePadding.top,
-                          bottom: DesignTokens.spacingComponent,
-                        ),
-                        child: header!,
-                      ),
-                      Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: Colors.white.withOpacity(0.12),
-                      ),
-                      SizedBox(height: effectivePadding.bottom),
-                    ],
-                    Padding(
-                      padding: header != null
-                          ? EdgeInsets.only(
-                              left: effectivePadding.left,
-                              right: effectivePadding.right,
-                              bottom: effectivePadding.bottom,
-                            )
-                          : effectivePadding,
-                      child: body,
-                    ),
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Colors.white.withOpacity(0.22), // Brighter left (light source)
+                    Colors.white.withOpacity(0.17),
+                    Colors.white.withOpacity(0.08), // Dimmer right (away from light)
                   ],
                 ),
-                // FE-UI-083: Debug overlay - hot pink if fill is NOT transparent
-                if (debugShowFillProof)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: effectiveBorderRadius,
-                          // Hot pink if _glassFillColor is not transparent
-                          // This should NEVER show if zero-fill is correct
+              ),
+            ),
+          ),
+          // FE-UI-091: Left edge highlight - STRONG (receiving light)
+          Positioned(
+            top: 0,
+            left: 0,
+            bottom: 0,
+            child: Container(
+              width: 2, // Increased from 1.5
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white.withOpacity(0.20), // Brighter top (light)
+                    Colors.white.withOpacity(0.10),
+                    Colors.white.withOpacity(0.03), // Dimmer bottom
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // FE-UI-091: Right edge highlight - WEAK (shadow side)
+          Positioned(
+            top: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              width: 1,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white.withOpacity(0.06), // Much dimmer (shadow side)
+                    Colors.white.withOpacity(0.02),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // FE-UI-091: Diagonal specular sweep (top-left → bottom-right)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: effectiveBorderRadius,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withOpacity(0.08), // Light source
+                    Colors.transparent,
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.3, 1.0],
+                ),
+              ),
+            ),
+          ),
+          // FE-UI-063: Corner glow/bloom (subtle refraction at corners)
+          Positioned(
+            top: 0,
+            left: 0,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(effectiveBorderRadius.topLeft.x),
+                ),
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.18),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(effectiveBorderRadius.topRight.x),
+                ),
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.12),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // FE-UI-048: Subtle noise/grain overlay (for refraction detail)
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: effectiveBorderRadius,
+              child: CustomPaint(
+                painter: _NoisePainter(
+                  opacity: 0.04, // Very subtle (3-6% range)
+                  seed: 42, // Fixed seed for consistent pattern
+                ),
+              ),
+            ),
+          ),
+          // Content
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (header != null) ...[
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: effectivePadding.left,
+                    right: effectivePadding.right,
+                    top: effectivePadding.top,
+                    bottom: DesignTokens.spacingComponent,
+                  ),
+                  child: header!,
+                ),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Colors.white.withOpacity(0.12),
+                ),
+                SizedBox(height: effectivePadding.bottom),
+              ],
+              Padding(
+                padding: header != null
+                    ? EdgeInsets.only(
+                        left: effectivePadding.left,
+                        right: effectivePadding.right,
+                        bottom: effectivePadding.bottom,
+                      )
+                    : effectivePadding,
+                child: body,
+              ),
+            ],
+          ),
+          // FE-UI-083: Debug overlay - hot pink if fill is NOT transparent
+          if (debugShowFillProof)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: effectiveBorderRadius,
+                    // Hot pink if _glassFillColor is not transparent
+                    // This should NEVER show if zero-fill is correct
+                    color: _glassFillColor.opacity > 0.0
+                        ? const Color(0xFFFF1493).withOpacity(0.8) // Hot pink
+                        : Colors.transparent,
+                    border: Border.all(
+                      color: const Color(0xFF00FF00), // Green border = debug mode active
+                      width: 3,
+                    ),
+                  ),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      color: Colors.black.withOpacity(0.8),
+                      child: Text(
+                        _glassFillColor.opacity > 0.0
+                            ? 'FAIL: Fill opacity = ${(_glassFillColor.opacity * 100).toStringAsFixed(1)}%'
+                            : 'PASS: Fill = 0% (transparent)',
+                        style: TextStyle(
                           color: _glassFillColor.opacity > 0.0
-                              ? const Color(0xFFFF1493).withOpacity(0.8) // Hot pink
-                              : Colors.transparent,
-                          border: Border.all(
-                            color: const Color(0xFF00FF00), // Green border = debug mode active
-                            width: 3,
-                          ),
-                        ),
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            color: Colors.black.withOpacity(0.8),
-                            child: Text(
-                              _glassFillColor.opacity > 0.0
-                                  ? 'FAIL: Fill opacity = ${(_glassFillColor.opacity * 100).toStringAsFixed(1)}%'
-                                  : 'PASS: Fill = 0% (transparent)',
-                              style: TextStyle(
-                                color: _glassFillColor.opacity > 0.0
-                                    ? const Color(0xFFFF1493)
-                                    : const Color(0xFF00FF00),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
+                              ? const Color(0xFFFF1493)
+                              : const Color(0xFF00FF00),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
                       ),
                     ),
                   ),
-              ],
+                ),
+              ),
             ),
-          ),
-        ),
+        ],
       ),
     );
   }

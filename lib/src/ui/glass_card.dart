@@ -3,21 +3,24 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'design_tokens.dart';
 
-/// FE-037: Reusable GlassCard component with glass morphism effect
+/// FE-037: Reusable GlassCard component with liquid glass effect
 ///
-/// ⚠️ FE-UI-061: NON-NEGOTIABLE "NO FILL" RULE ⚠️
+/// ⚠️ FE-UI-068: ZERO-FILL GLASS MODE (HARD REQUIREMENT) ⚠️
 /// GlassCard MUST have transparent fill (alpha = 0.0)
-/// Glass is defined by EDGES ONLY: borders + highlights
-/// Any future fill/tint MUST be rejected in code review
+/// Glass definition comes from: reflections + environment + edges
+/// Any fill on black = grey slab (blur over flat black = grey fog)
 /// This prevents grey slab regression permanently
 ///
+/// Key Principle:
+/// "Reference look requires reflections + background texture, NOT fill tint"
+///
 /// Features:
-/// - Blur effect behind the card (glass effect)
-/// - ZERO fill - edges define the glass
-/// - Subtle border for definition
-/// - Soft shadow for depth
-/// - Optional header and body slots for flexible content
-/// - Optimized for Flutter Web performance
+/// - Backdrop blur (refracts environment layer)
+/// - ZERO fill - reflections define the glass
+/// - Dual-stroke rim (outer 40% + inner 15%)
+/// - Specular sheen + edge catchlights
+/// - Minimal contact shadow (thin glass sheet)
+/// - Rich environment layer behind (prevents grey fog)
 class GlassCard extends StatelessWidget {
   // FE-UI-061: Enforce transparent fill rule
   static const Color _glassFillColor = Colors.transparent;
@@ -87,19 +90,14 @@ class GlassCard extends StatelessWidget {
       margin: effectiveMargin,
       decoration: BoxDecoration(
         borderRadius: effectiveBorderRadius,
-        // FE-UI-048: Soft shadows (not heavy gray block)
+        // FE-UI-070: Minimal contact shadow only (thin glass sheet, not thick panel)
         boxShadow: showShadow
             ? [
                 BoxShadow(
-                  color: Colors.black.withOpacity(DesignTokens.shadowOuterOpacity),
-                  blurRadius: DesignTokens.shadowOuterBlur,
-                  offset: const Offset(0, 8),
-                  spreadRadius: DesignTokens.shadowOuterSpread,
-                ),
-                BoxShadow(
-                  color: Colors.black.withOpacity(DesignTokens.shadowInnerOpacity),
-                  blurRadius: DesignTokens.shadowInnerBlur,
-                  offset: const Offset(0, 4),
+                  color: Colors.black.withOpacity(0.15),  // Reduced from 45%
+                  blurRadius: 12,  // Reduced from 38
+                  offset: const Offset(0, 2),  // Reduced from 8
+                  spreadRadius: 0,  // No spread
                 ),
               ]
             : null,
@@ -120,16 +118,10 @@ class GlassCard extends StatelessWidget {
                 color: Colors.white.withOpacity(0.40),
                 width: 1.0,
               ),
-              // FE-UI-061: Frost layer (3-6% subtle tint for liquid glass)
-              // Very low alpha to maintain translucency while providing glass feel
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white.withOpacity(0.05),  // 5% top (frost layer)
-                  Colors.white.withOpacity(0.04),  // 4% bottom
-                ],
-              ),
+              // FE-UI-068: ZERO FILL (hard requirement)
+              // Glass defined by reflections + environment, NOT fill
+              // Any fill on black = grey slab
+              color: _glassFillColor,  // Colors.transparent (0.0%)
             ),
             child: Stack(
               children: [

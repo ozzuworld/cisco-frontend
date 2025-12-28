@@ -85,4 +85,29 @@ class StorageService {
       _memoryStorage.clear();
     }
   }
+
+  // Generic read/write methods for key-value storage
+  Future<String?> read(String key) async {
+    if (_secureStorage != null) {
+      return await _secureStorage!.read(key: key);
+    } else {
+      return _memoryStorage[key];
+    }
+  }
+
+  Future<void> write(String key, String value) async {
+    if (_secureStorage != null) {
+      await _secureStorage!.write(key: key, value: value);
+    } else {
+      _memoryStorage[key] = value;
+    }
+  }
+
+  Future<void> delete(String key) async {
+    if (_secureStorage != null) {
+      await _secureStorage!.delete(key: key);
+    } else {
+      _memoryStorage.remove(key);
+    }
+  }
 }

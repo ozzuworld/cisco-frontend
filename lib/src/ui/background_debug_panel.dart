@@ -205,7 +205,7 @@ class _BackgroundDebugPanelState extends State<BackgroundDebugPanel> {
   }
 
   Widget _buildTimeOfDaySelector(BackgroundService service) {
-    final times = [null, TimeOfDay.dawn, TimeOfDay.day, TimeOfDay.dusk, TimeOfDay.night];
+    final times = [null, BackgroundTimeOfDay.dawn, BackgroundTimeOfDay.day, BackgroundTimeOfDay.dusk, BackgroundTimeOfDay.night];
 
     return Wrap(
       spacing: 6,
@@ -452,15 +452,15 @@ class _BackgroundDebugPanelState extends State<BackgroundDebugPanel> {
     );
   }
 
-  String _timeOfDayLabel(TimeOfDay time) {
+  String _timeOfDayLabel(BackgroundTimeOfDay time) {
     switch (time) {
-      case TimeOfDay.dawn:
+      case BackgroundTimeOfDay.dawn:
         return 'Dawn';
-      case TimeOfDay.day:
+      case BackgroundTimeOfDay.day:
         return 'Day';
-      case TimeOfDay.dusk:
+      case BackgroundTimeOfDay.dusk:
         return 'Dusk';
-      case TimeOfDay.night:
+      case BackgroundTimeOfDay.night:
         return 'Night';
     }
   }

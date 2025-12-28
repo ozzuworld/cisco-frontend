@@ -9,7 +9,7 @@ class BackgroundPresetRegistry {
   static final BackgroundPreset dawn = BackgroundPreset(
     id: 'dawn',
     name: 'Dawn',
-    timeOfDay: TimeOfDay.dawn,
+    timeOfDay: BackgroundTimeOfDay.dawn,
     baseColor: const Color(0xFF0A0D15),
     blooms: [
       // Soft orange-pink sunrise bloom
@@ -63,7 +63,7 @@ class BackgroundPresetRegistry {
   static final BackgroundPreset day = BackgroundPreset(
     id: 'day',
     name: 'Day',
-    timeOfDay: TimeOfDay.day,
+    timeOfDay: BackgroundTimeOfDay.day,
     baseColor: const Color(0xFF05060A),
     blooms: [
       // Primary blue-white bloom
@@ -117,7 +117,7 @@ class BackgroundPresetRegistry {
   static final BackgroundPreset dusk = BackgroundPreset(
     id: 'dusk',
     name: 'Dusk',
-    timeOfDay: TimeOfDay.dusk,
+    timeOfDay: BackgroundTimeOfDay.dusk,
     baseColor: const Color(0xFF0D0A0F),
     blooms: [
       // Deep orange-red sunset bloom
@@ -171,7 +171,7 @@ class BackgroundPresetRegistry {
   static final BackgroundPreset night = BackgroundPreset(
     id: 'night',
     name: 'Night',
-    timeOfDay: TimeOfDay.night,
+    timeOfDay: BackgroundTimeOfDay.night,
     baseColor: const Color(0xFF020305),
     blooms: [
       // Deep blue-purple bloom
@@ -453,11 +453,11 @@ class BackgroundPresetRegistry {
       };
 
   /// Get presets by time of day
-  static Map<TimeOfDay, BackgroundPreset> get byTimeOfDay => {
-        TimeOfDay.dawn: dawn,
-        TimeOfDay.day: day,
-        TimeOfDay.dusk: dusk,
-        TimeOfDay.night: night,
+  static Map<BackgroundTimeOfDay, BackgroundPreset> get byTimeOfDay => {
+        BackgroundTimeOfDay.dawn: dawn,
+        BackgroundTimeOfDay.day: day,
+        BackgroundTimeOfDay.dusk: dusk,
+        BackgroundTimeOfDay.night: night,
       };
 
   /// Get presets by season

@@ -31,7 +31,7 @@ class BackgroundService extends ChangeNotifier {
   double _snowIntensity = 0.0; // 0.0 = Off, 0.33 = Low, 0.66 = Medium, 1.0 = High
 
   // Debug overrides
-  TimeOfDay? _debugTimeOfDay;
+  BackgroundTimeOfDay? _debugTimeOfDay;
   Season? _debugSeason;
 
   BackgroundService(this._storageService) {
@@ -43,7 +43,7 @@ class BackgroundService extends ChangeNotifier {
   BackgroundPreset? get manualPreset => _manualPreset;
   String? get sessionOverride => _sessionOverride;
   Hemisphere get hemisphere => _hemisphere;
-  TimeOfDay? get debugTimeOfDay => _debugTimeOfDay;
+  BackgroundTimeOfDay? get debugTimeOfDay => _debugTimeOfDay;
   Season? get debugSeason => _debugSeason;
   double get snowIntensity => _snowIntensity;
   double get transitionProgress => _transitionProgress;
@@ -206,18 +206,18 @@ class BackgroundService extends ChangeNotifier {
   }
 
   /// Get current time of day
-  TimeOfDay _getCurrentTimeOfDay() {
+  BackgroundTimeOfDay _getCurrentTimeOfDay() {
     final now = DateTime.now();
     final hour = now.hour;
 
     if (hour >= 5 && hour < 8) {
-      return TimeOfDay.dawn; // 5am - 8am
+      return BackgroundTimeOfDay.dawn; // 5am - 8am
     } else if (hour >= 8 && hour < 17) {
-      return TimeOfDay.day; // 8am - 5pm
+      return BackgroundTimeOfDay.day; // 8am - 5pm
     } else if (hour >= 17 && hour < 20) {
-      return TimeOfDay.dusk; // 5pm - 8pm
+      return BackgroundTimeOfDay.dusk; // 5pm - 8pm
     } else {
-      return TimeOfDay.night; // 8pm - 5am
+      return BackgroundTimeOfDay.night; // 8pm - 5am
     }
   }
 
@@ -324,7 +324,7 @@ class BackgroundService extends ChangeNotifier {
   // Debug methods
 
   /// Force a specific time of day (debug only)
-  void setDebugTimeOfDay(TimeOfDay? timeOfDay) {
+  void setDebugTimeOfDay(BackgroundTimeOfDay? timeOfDay) {
     _debugTimeOfDay = timeOfDay;
     _debugSeason = null; // Clear season override
     if (_mode == BackgroundMode.auto) {

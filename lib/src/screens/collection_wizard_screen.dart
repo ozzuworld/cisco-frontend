@@ -218,23 +218,25 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
             ),
             child: Stack(
               children: [
-                // FE-UI-085: Environment plate (toggle for A/B proof)
+                // FE-UI-090: Environment plate HARD REQUIREMENT
+                // ≥ 3 large gradients (800-1200px), ≥ 2 mid blobs (300-500px)
+                // Visible luminance contrast (12-18% delta minimum)
                 if (_showEnvironmentPlate) ...[
-                  // FE-UI-047: Subtle bloom - top center (white/blue @ 6-8%)
+                  // Large bloom #1: Top center (blue/white @ 12-15%)
                   Positioned(
                   top: -200,
                   left: 0,
                   right: 0,
                   child: Center(
                     child: Container(
-                      width: 800,
-                      height: 800,
+                      width: 1000, // Increased from 800
+                      height: 1000,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            DesignTokens.bloomSecondary.withOpacity(0.07),
-                            DesignTokens.bloomPrimary.withOpacity(0.04),
+                            DesignTokens.bloomSecondary.withOpacity(0.15), // Was 7%
+                            DesignTokens.bloomPrimary.withOpacity(0.08), // Was 4%
                             Colors.transparent,
                           ],
                           stops: const [0.0, 0.4, 0.8],
@@ -243,21 +245,41 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                   ),
                 ),
-                // FE-UI-047: Subtle bloom - bottom left (purple @ 4-6%)
+                // Large bloom #2: Bottom left (purple @ 12-14%)
                 Positioned(
                   bottom: -250,
                   left: -250,
                   child: Container(
-                    width: 700,
-                    height: 700,
+                    width: 900, // Increased from 700
+                    height: 900,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          DesignTokens.bloomTertiary.withOpacity(0.05),
+                          DesignTokens.bloomTertiary.withOpacity(0.12), // Was 5%
                           Colors.transparent,
                         ],
                         stops: const [0.0, 0.7],
+                      ),
+                    ),
+                  ),
+                ),
+                // FE-UI-090: Large bloom #3 (requirement: ≥ 3 large gradients)
+                Positioned(
+                  top: 100,
+                  right: -300,
+                  child: Container(
+                    width: 1200,
+                    height: 1200,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.white.withOpacity(0.14),
+                          DesignTokens.bloomSecondary.withOpacity(0.06),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.5, 0.9],
                       ),
                     ),
                   ),
@@ -392,6 +414,55 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
                     ),
                   ),
                 ], // End environment plate elements
+                // FE-UI-092: Refraction content visibility test
+                // Recognizable shapes that will visibly distort under glass blur
+                if (_showGlassTestPattern) ...[
+                  // Striped circle - will show refraction/distortion through glass
+                  Positioned(
+                    top: 250,
+                    left: 100,
+                    child: Container(
+                      width: 300,
+                      height: 300,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: SweepGradient(
+                          colors: [
+                            Colors.cyan.withOpacity(0.4),
+                            Colors.magenta.withOpacity(0.4),
+                            Colors.yellow.withOpacity(0.4),
+                            Colors.cyan.withOpacity(0.4),
+                          ],
+                        ),
+                      ),
+                      child: CustomPaint(
+                        painter: _RefractionTestPainter(),
+                      ),
+                    ),
+                  ),
+                  // Sharp-edged rectangle - edge will bend under blur
+                  Positioned(
+                    bottom: 200,
+                    right: 150,
+                    child: Container(
+                      width: 200,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.orange.withOpacity(0.6),
+                          width: 3,
+                        ),
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.orange.withOpacity(0.3),
+                            Colors.red.withOpacity(0.3),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 // FE-UI-066: Debug test pattern for glass QA
                 if (_showGlassTestPattern)
                   Positioned.fill(
@@ -2925,4 +2996,50 @@ class _TestPatternPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_TestPatternPainter oldDelegate) => false;
+}
+
+/// FE-UI-092: Refraction test painter - stripes that bend under blur
+/// Proves glass blur actually distorts background content
+class _RefractionTestPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    // Draw concentric circles with alternating colors
+    // These will visibly bend/soften when glass card covers them
+    for (double radius = 20; radius < size.width / 2; radius += 20) {
+      paint.color = radius % 40 == 0
+          ? Colors.white.withOpacity(0.5)
+          : Colors.cyan.withOpacity(0.5);
+      canvas.drawCircle(
+        Offset(size.width / 2, size.height / 2),
+        radius,
+        paint,
+      );
+    }
+
+    // Draw radial lines (like clock spokes)
+    // These will show refraction distortion clearly
+    paint.strokeWidth = 3;
+    for (double angle = 0; angle < 360; angle += 30) {
+      final radians = angle * (3.14159 / 180);
+      final x = size.width / 2 + (size.width / 2) * math.cos(radians);
+      final y = size.height / 2 + (size.height / 2) * math.sin(radians);
+
+      paint.color = angle % 60 == 0
+          ? Colors.yellow.withOpacity(0.6)
+          : Colors.magenta.withOpacity(0.4);
+
+      canvas.drawLine(
+        Offset(size.width / 2, size.height / 2),
+        Offset(x, y),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RefractionTestPainter oldDelegate) => false;
 }

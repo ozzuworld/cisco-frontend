@@ -1,0 +1,172 @@
+Issue Type,Summary,Priority,Story Points,Sprint,Description,Acceptance Criteria,Labels,Component
+Technical Debt,Delete Dead Snow Effect Code,High,1,Sprint 1,"Remove unused snow_effect.dart file (424 lines) which contains a complex Canvas-based particle system that has been fully replaced by the Lottie-based weather system.
+
+Files to delete:
+- lib/src/ui/snow_effect.dart","- Delete lib/src/ui/snow_effect.dart
+- Verify no imports reference this file
+- Confirm app builds successfully
+- Run smoke tests","refactoring,quick-win,technical-debt",UI/Weather
+Story,Enable All Seasonal Lottie Weather Effects,High,2,Sprint 1,"Currently only winter (snow) Lottie animation is enabled. Enable spring (petals) and fall (leaves) animations which are already prepared and registered in pubspec.yaml.
+
+Technical Details:
+- File: lib/src/ui/weather_effect.dart line 87
+- Change _shouldShowWeather() method to enable all seasons
+
+Impact: Unlocks 3 prepared assets worth of seasonal ambiance","- Modify _shouldShowWeather() to return true for winter, spring, and fall
+- Test winter season shows snow
+- Test spring season shows petals
+- Test fall season shows leaves
+- Test summer season shows no weather (as designed)
+- Verify performance mode still works
+- Update debug panel if needed","feature,quick-win,lottie,weather",UI/Weather
+Bug,Remove Auto-Enable Weather Logic,Medium,1,Sprint 1,"Remove auto-enable logic in background_service.dart that turns on snow without user consent when winter season is detected.
+
+Technical Details:
+- File: lib/src/services/background_service.dart lines 187-191
+- Remove the conditional auto-enable in _resolveAutoPreset()","- Remove auto-enable logic
+- Weather effects remain off by default
+- Users can manually enable via debug panel
+- Verify saved preferences are respected
+- Test session persistence","bug,ux,weather",Services
+Task,QA & Regression Testing for Sprint 1,High,2,Sprint 1,Full regression testing for Sprint 1 changes to ensure no regressions and validate all weather effects work correctly across all scenarios.,"- Full regression test on all 7 screens
+- Test weather effects on all seasons
+- Test performance mode
+- Test debug panel controls
+- Cross-browser testing (Chrome, Firefox, Safari)
+- Mobile responsive testing
+- Document any issues found","qa,testing",QA
+Task,Update Documentation for Sprint 1,Medium,2,Sprint 1,Update all documentation to reflect Sprint 1 changes including removal of snow_effect.dart and enablement of all seasonal Lottie effects.,"- Update weather effects documentation
+- Remove references to snow_effect.dart
+- Document enabled seasonal effects
+- Update QA guides if needed
+- Add migration notes for developers","documentation",Documentation
+Technical Debt,Audit & Plan Glass Card Simplification,High,3,Sprint 2,"Analyze glass_card.dart (639 lines) and create detailed refactoring plan to reduce complexity while maintaining visual quality.
+
+Current state: 7+ reflection layers, 639 lines of code
+Target: 3-4 layers, ~400 lines of code","- Identify critical vs nice-to-have reflection layers
+- Measure performance impact of each layer
+- Create visual comparison tests
+- Define acceptance criteria for 'good enough' quality
+- Create detailed refactoring sub-tickets
+
+Deliverable: Technical design document with before/after comparisons","research,planning,over-engineering",UI/Components
+Technical Debt,Reduce Glass Card Reflection Layers,High,8,Sprint 2,"Reduce glass card reflection system from 7+ layers to 3-4 essential layers while maintaining visual quality.
+
+Current Layers (7+):
+1. Primary radial sheen (light-position driven)
+2. Top edge highlight
+3. Left edge highlight
+4. Right edge highlight
+5. Secondary edge catchlight
+6. Top-left corner caustic glow
+7. Top-right corner caustic glow
+8. Upper-left specular hotspot
+
+Proposed Simplified (3-4):
+1. Primary radial sheen (keep - main glass effect)
+2. Combined edge highlight (merge top/left/right)
+3. Single corner glow (merge both corners)
+4. (Optional) Minimal specular hotspot
+
+Dependencies: Requires completion of FE-REFACTOR-6","- Reduce to 3-4 reflection layers maximum
+- Maintain visual quality at 80%+ of original
+- Reduce glass_card.dart from 639 to ~400 lines
+- No performance regression
+- Side-by-side visual comparison approved
+- Update all glass card documentation","refactoring,over-engineering,ui",UI/Components
+Technical Debt,Extract Glass Card Debug Modes,Medium,3,Sprint 2,"Extract debug modes (debugShowFillProof, debugDisableBlur, debugExaggerateReflections) from GlassCard into a separate debug wrapper component.
+
+This will clean up production code and separate debug concerns.","- Create DebugGlassCard wrapper widget
+- Move all debug logic to wrapper
+- Clean up GlassCard to production-only code
+- Update debug panel to use wrapper
+- Verify debug modes still work
+- Update documentation","refactoring,debug,separation-of-concerns",UI/Components
+Task,Evaluate Interactive Mouse Lighting,Low,2,Sprint 2,"Evaluate whether interactive mouse tracking for lighting in GlassCard is necessary or can be removed/simplified.
+
+This feature adds complexity - need to validate if it's worth keeping.","- Gather user feedback on interactive lighting
+- Measure usage analytics (if available)
+- Test with lighting disabled
+- Make keep/remove decision
+- Document decision rationale
+
+Outcome: Decision document + optional removal ticket","research,ux,decision",UI/Components
+Technical Debt,Simplify Noise Painter,Low,2,Sprint 2,"Evaluate if custom noise painter adds sufficient value for its complexity. Consider removing or using simpler implementation.
+
+The noise painter is subtle - need to validate visual impact vs complexity cost.","- A/B test with noise vs without
+- Measure performance impact
+- Make keep/remove/simplify decision
+- Implement decision
+- Update documentation","refactoring,performance,over-engineering",UI/Components
+Task,QA & Performance Testing for Sprint 2,High,3,Sprint 2,Comprehensive QA and performance testing for all Sprint 2 refactoring work. Focus on visual regression and performance benchmarks.,"- Visual regression testing (before/after screenshots)
+- Performance benchmarking (FPS, render time)
+- Cross-browser testing
+- Mobile testing
+- Accessibility testing
+- Document performance improvements","qa,testing,performance",QA
+Technical Debt,Create PersistedService Base Class,High,5,Sprint 3,"Extract common service pattern into abstract base class to reduce duplication across ConfigService, BackgroundService, and future services.
+
+Current duplication: _loadPreferences(), _savePreferences(), error handling, ChangeNotifier pattern repeated across 3+ services.","- Create PersistedService abstract base class
+- Implement common initialization pattern
+- Implement common load/save pattern
+- Implement common error handling
+- Refactor ConfigService to extend base class
+- Refactor BackgroundService to extend base class
+- No behavior changes (regression test)
+- Update service documentation","refactoring,code-duplication,architecture",Services
+Technical Debt,Create GlassScaffold Reusable Widget,High,5,Sprint 3,"Extract common screen scaffold pattern (Stack → BackgroundRenderer → WeatherEffect → SafeArea → GlassCard) into reusable widget to eliminate duplication across 7 screens.
+
+Impact: Reduces screen boilerplate by ~50-100 lines per screen.","- Create GlassScaffold widget
+- Support customizable maxWidth
+- Support optional appBar
+- Integrate with BackgroundService
+- Refactor collection_wizard_screen to use GlassScaffold
+- Refactor other screens (6 more)
+- Verify all screens work identically
+- Update screen documentation","refactoring,code-duplication,ui",UI/Components
+Technical Debt,Refactor Large Collection Wizard Screen,Medium,8,Sprint 3,"Break down collection_wizard_screen.dart (3,065 lines) into smaller, more manageable components.
+
+Proposed Structure:
+- Main wizard orchestrator (200-300 lines)
+- Step 1: Profile selection widget
+- Step 2: Cluster discovery widget
+- Step 3: Node selection widget
+- Step 4: Artifact selection widget
+- Step 5: Summary widget","- Create separate widget files for each step
+- Reduce main file to <500 lines
+- Extract shared step logic
+- No behavior changes
+- Improved testability
+- Update documentation","refactoring,code-organization,maintainability",Screens
+Task,Clean Up Feature ID Comments,Low,3,Sprint 3,"Reduce excessive inline feature ID comments (100+ throughout codebase) to improve code readability while maintaining traceability.
+
+Approach:
+- Keep feature IDs in commit messages
+- Keep feature IDs in documentation
+- Remove most inline comments
+- Keep only critical architectural notes in code","- Audit all feature ID comments
+- Remove 70%+ of inline feature IDs
+- Keep critical architectural comments
+- Update CONTRIBUTING.md with new convention
+- Ensure traceability maintained via git history","code-cleanup,documentation,readability",Code Quality
+Task,Evaluate Background Preset System Complexity,Low,2,Sprint 3,"Evaluate if background preset system (854 lines across 3 files) matches product requirements or is over-engineered.
+
+Questions to Answer:
+- Do we need auto-updating backgrounds based on time-of-day?
+- Do we need hemisphere-aware seasons?
+- Do we need smooth crossfade transitions?
+- Could we use simpler static preset selector?","Deliverable: Decision document with keep/simplify recommendation
+
+Questions answered:
+- Auto-updating requirements validated
+- Hemisphere feature usage validated
+- Crossfade necessity validated
+- Decision documented with rationale","research,decision,architecture",UI/Background
+Task,Final QA & Performance Testing,High,3,Sprint 3,Comprehensive final QA and performance testing for entire refactoring project. Validate all success metrics achieved.,"- Full end-to-end regression testing
+- Performance benchmarking vs Sprint 1 baseline
+- Bundle size analysis (before/after)
+- Code coverage report
+- Cross-browser final testing
+- Mobile final testing
+- Accessibility audit
+- Security scan","qa,testing,performance,final",QA

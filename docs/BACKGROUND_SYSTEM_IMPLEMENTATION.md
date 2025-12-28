@@ -78,39 +78,54 @@ This document summarizes the implementation of the comprehensive background pres
 
 ---
 
-## Epic 2: Winter Effects (Snow)
+## Epic 2: Weather Effects (Lottie-Based) ⭐ UPDATED
 
-### ✅ FE-BG-010: Snow Particle System (Performance-Safe)
+### ✅ FE-BG-100-106: Lottie-Based Seasonal Weather Effects
 **Files Created:**
-- `/lib/src/ui/snow_effect.dart` - Efficient snow particle renderer
+- `/lib/src/ui/weather_effect.dart` - Lottie-based weather renderer
 
 **Implementation:**
-- CustomPainter-based particle system with Ticker animation
-- Particle properties: radius (1-3.5px), speed (20-60px/s), sway (15-40px)
-- Intensity levels: Off (0), Low (50), Medium (100), High (150 particles)
-- Performance-optimized: <1ms (Low), <3ms (High) render time
-- Soft blur edges for natural snowflake appearance
+- Lottie animation system for all seasonal weather:
+  - **Winter:** Snow particles (weather_snow.json)
+  - **Spring:** Flower petals (weather_petals.json)
+  - **Fall:** Falling leaves (weather_leaves.json)
+  - **Summer:** No weather effect
+- Intensity levels: Off (0.0), Low (0.33), Medium (0.66), High (1.0)
+- Time-of-day opacity modulation: Day (100%), Night (75%), Dawn/Dusk (85%)
+- Performance mode toggle (FrameRate.composition vs FrameRate.max)
+- Tab lifecycle awareness (pause when inactive)
+- Simple, maintainable approach vs. complex Canvas particle system
+
+**Refactoring Note (Sprint 1):**
+- ❌ Removed: `/lib/src/ui/snow_effect.dart` (424 lines of unused Canvas particle system)
+- ✅ Enabled: All seasonal Lottie weather effects (FE-REFACTOR-2)
+- ✅ Removed: Auto-enable weather logic (FE-REFACTOR-3)
 
 **Acceptance Criteria Met:**
 - ✅ 60fps target on desktop; no major input lag
 - ✅ Configurable intensity: Off / Low / Medium / High
-- ✅ Snow respects safe areas and doesn't cover key UI excessively
+- ✅ Weather respects safe areas and doesn't cover key UI
+- ✅ All seasons supported (not just winter)
+- ✅ User must explicitly enable weather (no auto-enable)
 
 ---
 
-### ✅ FE-BG-011: Snow Interaction Rules
-**Files Created:**
-- `/lib/src/services/background_service.dart` - Snow auto-enable logic
+### ✅ FE-BG-011: Weather Interaction Rules ⭐ UPDATED
+**Files Modified:**
+- `/lib/src/services/background_service.dart` - Weather preferences
+- `/lib/src/ui/weather_effect.dart` - Weather rendering logic
 
 **Implementation:**
-- Winter preset auto-enables Low snow (0.33 intensity)
-- User can override intensity manually (0.0 to 1.0)
-- Debug toggle available in BackgroundDebugPanel
-- Persistent snow intensity preference
+- User must explicitly enable weather effects (no auto-enable)
+- Intensity controlled via debug panel (0.0 to 1.0)
+- Weather enabled/disabled toggle
+- Performance mode toggle
+- Persistent weather preferences across sessions
+- Season automatically determines which Lottie file to use
 
 **Acceptance Criteria Met:**
-- ✅ Winter auto-enables default "Low"
-- ✅ User can override intensity
+- ✅ User has full control over weather intensity
+- ✅ Weather preferences persist
 - ✅ Debug toggle available
 
 ---
@@ -267,7 +282,7 @@ lib/src/
 │   └── background_service.dart              # State management
 └── ui/
     ├── background_renderer.dart             # Rendering widget
-    ├── snow_effect.dart                     # Snow particles
+    ├── weather_effect.dart                  # Lottie-based seasonal weather (replaces snow_effect.dart)
     ├── readability_overlay.dart             # Contrast utilities
     └── background_debug_panel.dart          # Debug controls
 
@@ -285,7 +300,11 @@ docs/qa/backgrounds/
 - [ ] Verify BackgroundDebugPanel appears (top-right)
 - [ ] Test all time-of-day presets (Dawn/Day/Dusk/Night)
 - [ ] Test all seasonal presets (Spring/Summer/Fall/Winter)
-- [ ] Verify snow intensity levels (Off/Low/Medium/High)
+- [ ] Verify weather intensity levels (Off/Low/Medium/High) for all seasons:
+  - [ ] Winter → Snow particles visible
+  - [ ] Spring → Petal particles visible
+  - [ ] Fall → Leaf particles visible
+  - [ ] Summer → No weather (as designed)
 - [ ] Test hemisphere switching (Northern/Southern)
 - [ ] Verify preset transitions are smooth
 - [ ] Check glass card transparency (no grey fog)
@@ -301,6 +320,12 @@ docs/qa/backgrounds/
 ---
 
 ## Version History
+- **v1.1** (2025-12-28): Sprint 1 Refactoring
+  - Replaced Canvas-based snow_effect.dart with Lottie-based weather_effect.dart
+  - Enabled all seasonal weather effects (winter, spring, fall)
+  - Removed auto-enable weather logic (user must explicitly enable)
+  - Removed 424 lines of unused code
+  - Improved maintainability and simplicity
 - **v1.0** (2024-01-15): Initial implementation
   - All 4 epics completed
   - 11 feature requirements met
@@ -318,10 +343,11 @@ docs/qa/backgrounds/
 5. **Accessibility**: Add motion reduction support (reduce snow/transitions)
 
 ### Known Limitations
-- Snow particles don't interact with wind or physics
+- Weather animations controlled by Lottie files (limited customization without editing JSON)
 - Crossfade transitions use simple easing (no spring animations)
 - Preset registry is compile-time (no runtime preset creation)
 - Hemisphere setting requires manual configuration
+- Rain weather effect prepared but not currently used (weather_rain.json)
 
 ---
 

@@ -4,7 +4,9 @@ A Flutter application with API configuration and authentication (API Key) suppor
 
 ## Features
 
-### FE-001: App Shell + Configuration + Auth (API Key)
+### Core Features
+
+#### FE-001: App Shell + Configuration + Auth (API Key)
 
 This implementation includes:
 
@@ -18,6 +20,33 @@ This implementation includes:
   - Error normalization with request ID tracking
   - Standard headers (Content-Type, Accept)
 - **Test Connection**: Built-in connection testing with `/health` endpoint
+
+#### FE-BG: Background & Weather System (v1.1)
+
+**Lottie-Based Seasonal Weather Effects:**
+- **Winter** → Snow particles (weather_snow.json)
+- **Spring** → Flower petals (weather_petals.json)
+- **Fall** → Falling leaves (weather_leaves.json)
+- **Summer** → No weather effect (clean background)
+
+**Background Presets:**
+- Time-of-day aware backgrounds (Dawn/Day/Dusk/Night)
+- Seasonal presets (Spring/Summer/Fall/Winter)
+- Smooth crossfade transitions
+- Hemisphere-aware season calculation
+- User-configurable weather intensity (Off/Low/Medium/High)
+- Debug panel for testing (debug builds only)
+
+**Glass UI System:**
+- Liquid glass card components with reflections
+- Backdrop blur effects
+- Stroke-based borders for clarity
+- Interactive lighting (mouse-driven highlights)
+
+📖 **Documentation:**
+- See [`docs/BACKGROUND_SYSTEM_IMPLEMENTATION.md`](docs/BACKGROUND_SYSTEM_IMPLEMENTATION.md) for architecture
+- See [`SPRINT_1_RELEASE_NOTES.md`](SPRINT_1_RELEASE_NOTES.md) for latest changes
+- See [`AUDIT_REPORT.md`](AUDIT_REPORT.md) for refactoring analysis
 
 ## Project Structure
 
@@ -190,6 +219,8 @@ print('Has API Key: ${config.hasApiKey}');
 - **dio** (^5.4.0): HTTP client with interceptor support
 - **provider** (^6.1.1): State management
 - **flutter_secure_storage** (^9.0.0): Secure storage for Android/iOS
+- **lottie** (^3.0.0): Lottie animations for weather effects
+- **url_launcher** (^6.2.2): URL launching for downloads
 
 ## Architecture
 

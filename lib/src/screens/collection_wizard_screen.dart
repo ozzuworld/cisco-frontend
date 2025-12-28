@@ -7,6 +7,7 @@ import '../models/profile.dart';
 import '../models/api_error.dart';
 import '../services/http_client.dart';
 import '../ui/design_tokens.dart';
+import '../ui/glass_card.dart';
 import 'job_status_screen.dart';
 import 'settings_screen.dart';
 
@@ -154,6 +155,8 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
         return Scaffold(
           appBar: AppBar(
             title: const Text('Collection Wizard'),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh),
@@ -162,80 +165,64 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
               ),
             ],
           ),
-          body: SingleChildScrollView(
-            controller: _scrollController,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-            child: Center(
-              // FE-022: Responsive container with max width for web
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1200),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Progress indicator
-                    _buildProgressIndicator(flowState),
-                    const SizedBox(height: 24),
+          // FE-036: Gradient background for Glass UI
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.blue.shade50,
+                  Colors.purple.shade50,
+                  Colors.pink.shade50,
+                ],
+                stops: const [0.0, 0.5, 1.0],
+              ),
+            ),
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 900),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // FE-039: Floating timeline chips
+                      _buildTimelineChips(flowState, currentStepIndex),
+                      const SizedBox(height: 24),
 
-                    // FE-028: Progressive reveal - only show unlocked steps
-                    // Step 1: Cluster Discovery (always shown)
-                    _buildWizardStep(
-                      stepIndex: 0,
-                      title: 'Cluster Discovery',
-                      icon: Icons.cloud_done,
-                      flowState: flowState,
-                      content: _buildClusterDiscoveryContent(flowState),
-                    ),
+                      // FE-038: Show completed steps as small chips
+                      if (currentStepIndex > 0)
+                        _buildCompletedStepsChips(flowState, currentStepIndex),
 
-                    // Step 2: Node Selection (show after discovery)
-                    if (_isStepUnlocked(1, flowState)) ...[
-                      const SizedBox(height: 16),
-                      _buildWizardStep(
-                        stepIndex: 1,
-                        title: 'Node Selection',
-                        icon: Icons.devices,
-                        flowState: flowState,
-                        content: _buildNodeSelectionContent(flowState),
+                      if (currentStepIndex > 0)
+                        const SizedBox(height: 16),
+
+                      // FE-038: Single focused card - only show current step
+                      // FE-040: Animated transition between steps
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 400),
+                        switchInCurve: Curves.easeInOut,
+                        switchOutCurve: Curves.easeInOut,
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0, 0.05),
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: _buildCurrentStepCard(flowState, currentStepIndex),
                       ),
-                    ],
 
-                    // Step 3: Profile Selection (show after node selection)
-                    if (_isStepUnlocked(2, flowState)) ...[
-                      const SizedBox(height: 16),
-                      _buildWizardStep(
-                        stepIndex: 2,
-                        title: 'Profile Selection',
-                        icon: Icons.description,
-                        flowState: flowState,
-                        content: _buildProfileSelectionContent(flowState),
-                      ),
+                      const SizedBox(height: 24),
                     ],
-
-                    // Step 4: Time Configuration (show after profile selection)
-                    if (_isStepUnlocked(3, flowState)) ...[
-                      const SizedBox(height: 16),
-                      _buildWizardStep(
-                        stepIndex: 3,
-                        title: 'Time Configuration',
-                        icon: Icons.schedule,
-                        flowState: flowState,
-                        content: _buildTimeConfigurationContent(flowState),
-                      ),
-                    ],
-
-                    // Step 5: Review & Start (show after time config valid)
-                    if (_isStepUnlocked(4, flowState)) ...[
-                      const SizedBox(height: 16),
-                      _buildWizardStep(
-                        stepIndex: 4,
-                        title: 'Review & Start',
-                        icon: Icons.play_arrow,
-                        flowState: flowState,
-                        content: _buildReviewStartContent(flowState),
-                      ),
-                    ],
-
-                    const SizedBox(height: 24),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -245,254 +232,262 @@ class _CollectionWizardScreenState extends State<CollectionWizardScreen> {
     );
   }
 
-  Widget _buildProgressIndicator(CollectionFlowState flowState) {
-    return Card(
-      color: Colors.blue.shade50,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+  /// FE-039: Floating timeline chips above the card
+  Widget _buildTimelineChips(CollectionFlowState flowState, int currentStepIndex) {
+    final steps = [
+      {'title': 'Discovery', 'icon': Icons.cloud_done},
+      {'title': 'Nodes', 'icon': Icons.devices},
+      {'title': 'Profile', 'icon': Icons.description},
+      {'title': 'Time', 'icon': Icons.schedule},
+      {'title': 'Start', 'icon': Icons.play_arrow},
+    ];
+
+    return Wrap(
+      spacing: DesignTokens.spacingComponent,
+      runSpacing: DesignTokens.spacingInline,
+      alignment: WrapAlignment.center,
+      children: List.generate(steps.length, (index) {
+        final step = steps[index];
+        final isCompleted = index < currentStepIndex;
+        final isCurrent = index == currentStepIndex;
+        final isUnlocked = _isStepUnlocked(index, flowState);
+
+        if (!isUnlocked && !isCurrent) {
+          return const SizedBox.shrink();
+        }
+
+        return GlassChip(
+          isSelected: isCurrent,
+          onTap: isCompleted
+              ? () {
+                  setState(() {
+                    _expandedStepIndex = index;
+                  });
+                  _scrollToStep(index);
+                }
+              : null,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isCompleted ? Icons.check_circle : step['icon'] as IconData,
+                size: 16,
+                color: isCurrent
+                    ? Colors.blue.shade700
+                    : isCompleted
+                        ? Colors.green.shade700
+                        : Colors.grey.shade600,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                step['title'] as String,
+                style: TextStyle(
+                  fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600,
+                  fontSize: 14,
+                  color: isCurrent
+                      ? Colors.blue.shade900
+                      : isCompleted
+                          ? Colors.green.shade900
+                          : Colors.grey.shade700,
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+
+  /// FE-038: Completed steps shown as small chips
+  Widget _buildCompletedStepsChips(CollectionFlowState flowState, int currentStepIndex) {
+    final completedSteps = <Map<String, dynamic>>[];
+
+    if (currentStepIndex > 0) {
+      completedSteps.add({
+        'title': 'Cluster Discovered',
+        'icon': Icons.check_circle,
+        'detail': _discoveryResult?.nodes.length.toString() ?? '0',
+      });
+    }
+    if (currentStepIndex > 1) {
+      completedSteps.add({
+        'title': '${_selectedNodeIps.length} Nodes Selected',
+        'icon': Icons.devices,
+      });
+    }
+    if (currentStepIndex > 2) {
+      completedSteps.add({
+        'title': _selectedProfile?.name ?? 'Profile Selected',
+        'icon': Icons.description,
+      });
+    }
+    if (currentStepIndex > 3) {
+      completedSteps.add({
+        'title': 'Time Configured',
+        'icon': Icons.schedule,
+      });
+    }
+
+    if (completedSteps.isEmpty) return const SizedBox.shrink();
+
+    return Wrap(
+      spacing: DesignTokens.spacingInline,
+      runSpacing: DesignTokens.spacingInline,
+      children: completedSteps.map((step) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.green.shade50.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
+            border: Border.all(
+              color: Colors.green.shade300,
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                step['icon'] as IconData,
+                size: 14,
+                color: Colors.green.shade700,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                step['title'] as String,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.green.shade900,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  /// FE-038: Single focused card showing only current step
+  Widget _buildCurrentStepCard(CollectionFlowState flowState, int currentStepIndex) {
+    final stepData = _getStepData(currentStepIndex);
+
+    return GlassCard(
+      key: ValueKey('step_$currentStepIndex'),
+      header: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade100.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              stepData['icon'] as IconData,
+              size: 24,
+              color: Colors.blue.shade700,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.dashboard, color: Colors.blue.shade700),
-                const SizedBox(width: 8),
                 Text(
-                  'Collection Setup Progress',
+                  stepData['title'] as String,
                   style: TextStyle(
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
                     color: Colors.blue.shade900,
                   ),
                 ),
+                if (stepData['subtitle'] != null)
+                  Text(
+                    stepData['subtitle'] as String,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
               ],
             ),
-            const SizedBox(height: 12),
-            LinearProgressIndicator(
-              value: flowState.progress,
-              backgroundColor: Colors.grey.shade300,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade700),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade100.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusSmall),
             ),
-            const SizedBox(height: 8),
-            Text(
-              '${(flowState.progress * 100).toInt()}% Complete - ${flowState.stepName}',
+            child: Text(
+              'Step ${currentStepIndex + 1}/5',
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
                 color: Colors.blue.shade900,
-                fontWeight: FontWeight.w500,
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWizardStep({
-    required int stepIndex,
-    required String title,
-    required IconData icon,
-    required CollectionFlowState flowState,
-    required Widget content,
-  }) {
-    final isUnlocked = _isStepUnlocked(stepIndex, flowState);
-    final isCompleted = _isStepCompleted(stepIndex, flowState);
-    final isExpanded = _expandedStepIndex == stepIndex;
-    final currentStepIndex = _getCurrentStepIndex(flowState);
-    final isCurrent = stepIndex == currentStepIndex;
-
-    // Wrap with key for scroll tracking (FE-019.8)
-    // FE-023: Improved card styling with consistent elevation
-    return Container(
-      key: _stepKeys[stepIndex],
-      child: AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      decoration: BoxDecoration(
-        // FE-024: Reduced "green wash" - use white for completed, subtle accent
-        color: isCurrent ? Colors.blue.shade50 : Colors.white,
-        borderRadius: DesignTokens.cardBorderRadius,
-        border: Border.all(
-          // FE-034: Softer border colors
-          color: isCompleted
-              ? Colors.green.shade200
-              : isCurrent
-                  ? Colors.blue.shade300
-                  : Colors.grey.shade200,
-          width: isCompleted || isCurrent ? 1.5 : 1,
-        ),
-        // FE-034: Softer shadow/elevation
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isCurrent ? 0.08 : 0.04),
-            blurRadius: isCurrent ? 8 : 4,
-            offset: Offset(0, isCurrent ? 3 : 2),
           ),
         ],
       ),
-      child: Theme(
-        data: Theme.of(context).copyWith(
-          dividerColor: Colors.transparent,
-          splashColor: isUnlocked ? null : Colors.transparent,
-          highlightColor: isUnlocked ? null : Colors.transparent,
-        ),
-        child: ExpansionTile(
-          key: ValueKey('step_$stepIndex'),
-          initiallyExpanded: isExpanded,
-          maintainState: true,
-          onExpansionChanged: isUnlocked
-              ? (expanded) {
-                  setState(() {
-                    _expandedStepIndex = expanded ? stepIndex : null;
-                  });
-                }
-              : null,
-          leading: _buildStepIcon(stepIndex, icon, isCompleted, isUnlocked, isCurrent),
-          title: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  // FE-024: Improved typography hierarchy
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18, // Larger for better hierarchy
-                    letterSpacing: -0.5,
-                    color: isUnlocked
-                        ? (isCompleted ? Colors.green.shade800 : Colors.black87)
-                        : Colors.grey.shade400,
-                  ),
-                ),
-              ),
-              if (isCompleted)
-                // FE-024: Subtle outlined badge instead of solid green
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.green.shade600, width: 1.5),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.check_circle, size: 14, color: Colors.green.shade700),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Complete',
-                        style: TextStyle(
-                          color: Colors.green.shade800,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              else if (isCurrent)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade700,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    'Current',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                )
-              else if (!isUnlocked)
-                Icon(Icons.lock, size: 20, color: Colors.grey.shade400),
-            ],
-          ),
-          children: [
-            if (isUnlocked)
-              // FE-034: Inner content column with max width and consistent padding
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: DesignTokens.stepContentMaxWidth),
-                    child: content,
-                  ),
-                ),
-              )
-            else
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: DesignTokens.stepContentMaxWidth),
-                    child: Row(
-                      children: [
-                        Icon(Icons.lock_outline, color: Colors.grey.shade400, size: 20),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Complete previous steps to unlock',
-                            // FE-024: Smaller, more muted helper text
-                            style: TextStyle(
-                              color: Colors.grey.shade500,
-                              fontSize: 13,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    ),
+      body: _getStepContent(currentStepIndex, flowState),
     );
   }
 
-  Widget _buildStepIcon(
-    int stepIndex,
-    IconData icon,
-    bool isCompleted,
-    bool isUnlocked,
-    bool isCurrent,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: isCompleted
-            ? Colors.green.shade100
-            : isCurrent
-                ? Colors.blue.shade100
-                : isUnlocked
-                    ? Colors.grey.shade100
-                    : Colors.grey.shade50,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isCompleted
-              ? Colors.green.shade700
-              : isCurrent
-                  ? Colors.blue.shade700
-                  : Colors.grey.shade400,
-          width: 2,
-        ),
-      ),
-      child: Icon(
-        isCompleted ? Icons.check : icon,
-        color: isCompleted
-            ? Colors.green.shade700
-            : isCurrent
-                ? Colors.blue.shade700
-                : isUnlocked
-                    ? Colors.grey.shade700
-                    : Colors.grey.shade400,
-        size: 24,
-      ),
-    );
+  Map<String, dynamic> _getStepData(int stepIndex) {
+    switch (stepIndex) {
+      case 0:
+        return {
+          'title': 'Cluster Discovery',
+          'subtitle': 'Enter your CUCM Publisher credentials',
+          'icon': Icons.cloud_done,
+        };
+      case 1:
+        return {
+          'title': 'Node Selection',
+          'subtitle': 'Choose which nodes to collect from',
+          'icon': Icons.devices,
+        };
+      case 2:
+        return {
+          'title': 'Profile Selection',
+          'subtitle': 'Select a collection profile',
+          'icon': Icons.description,
+        };
+      case 3:
+        return {
+          'title': 'Time Configuration',
+          'subtitle': 'Configure time range for collection',
+          'icon': Icons.schedule,
+        };
+      case 4:
+        return {
+          'title': 'Review & Start',
+          'subtitle': 'Review configuration and start collection',
+          'icon': Icons.play_arrow,
+        };
+      default:
+        return {
+          'title': 'Unknown Step',
+          'icon': Icons.help,
+        };
+    }
+  }
+
+  Widget _getStepContent(int stepIndex, CollectionFlowState flowState) {
+    switch (stepIndex) {
+      case 0:
+        return _buildClusterDiscoveryContent(flowState);
+      case 1:
+        return _buildNodeSelectionContent(flowState);
+      case 2:
+        return _buildProfileSelectionContent(flowState);
+      case 3:
+        return _buildTimeConfigurationContent(flowState);
+      case 4:
+        return _buildReviewStartContent(flowState);
+      default:
+        return const Text('Unknown step');
+    }
   }
 
   // Step 1: Cluster Discovery Content

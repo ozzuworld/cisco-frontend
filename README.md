@@ -255,6 +255,58 @@ flutter run -d android
 flutter run -d linux
 ```
 
+## Production Build & Deployment
+
+### Building for Production
+
+To create a production-ready build for web deployment:
+
+```bash
+# Clean build
+flutter clean
+flutter pub get
+
+# Analyze code
+flutter analyze --no-fatal-infos
+
+# Build for production (CanvasKit renderer - recommended)
+flutter build web --release --web-renderer canvaskit
+```
+
+**Output:** Production-optimized files in `build/web/`
+
+### Key Production Considerations
+
+- **Debug UI Hidden**: All debug icons and panels are hidden in production builds
+- **No Debug Mode**: `kDebugMode` flag ensures debug tools only appear in development
+- **Optimized Assets**: Production builds are minified and optimized
+- **CanvasKit Renderer**: Recommended for glass effects and blur features
+
+### Comprehensive Guides
+
+For complete production build and deployment instructions, see:
+
+- **[PRODUCTION_BUILD_GUIDE.md](PRODUCTION_BUILD_GUIDE.md)** - Detailed build commands, testing procedures, deployment platforms (Netlify, Vercel, Firebase, GitHub Pages), server configuration, and security setup
+- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Step-by-step deployment checklist covering pre-deployment, build verification, testing, deployment, post-deployment monitoring, and rollback procedures
+
+### Quick Production Test
+
+Test the production build locally before deployment:
+
+```bash
+cd build/web
+python3 -m http.server 8000
+# Open http://localhost:8000
+```
+
+Verify:
+- ❌ No debug icon in AppBar
+- ❌ No "Background Debug" panel visible
+- ❌ No renderer badge (bottom-left)
+- ✅ Glass effects render correctly
+- ✅ Weather animations work
+- ✅ All features functional
+
 ## Acceptance Criteria
 
 ✅ User can set base URL + API key

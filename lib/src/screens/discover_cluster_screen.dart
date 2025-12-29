@@ -639,40 +639,40 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                 ),
               ),
             ),
-            // Bottom navigation bar as positioned overlay
-            if (_discoveryResult != null && _discoveryResult!.hasNodes)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: DesignTokens.backgroundBase.withOpacity(0.8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 8,
-                        offset: const Offset(0, -2),
-                      ),
-                    ],
-                  ),
-                  child: SafeArea(
-                    child: ElevatedButton.icon(
-                      onPressed:
-                          _selectedNodeIps.isEmpty ? null : _proceedToNextScreen,
-                      icon: const Icon(Icons.arrow_forward),
-                      label: Text(
-                        'Continue with ${_selectedNodeIps.length} node${_selectedNodeIps.length != 1 ? 's' : ''}',
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
-                        minimumSize: const Size(double.infinity, 48),
-                      ),
+          // Bottom navigation bar as positioned overlay
+          if (_discoveryResult != null && _discoveryResult!.hasNodes)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  color: DesignTokens.backgroundBase.withOpacity(0.8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: SafeArea(
+                  child: ElevatedButton.icon(
+                    onPressed:
+                        _selectedNodeIps.isEmpty ? null : _proceedToNextScreen,
+                    icon: const Icon(Icons.arrow_forward),
+                    label: Text(
+                      'Continue with ${_selectedNodeIps.length} node${_selectedNodeIps.length != 1 ? 's' : ''}',
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      minimumSize: const Size(double.infinity, 48),
                     ),
                   ),
                 ),
               ),
+            ),
         ],
       ),
     );

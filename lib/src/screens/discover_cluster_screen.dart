@@ -301,17 +301,21 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: DesignTokens.textPrimary),
       ),
-      body: Stack(
-        children: [
-          // Blue gradient background - using NIGHT preset for true blue colors
-          Positioned.fill(
-            child: BackgroundRenderer(
-              preset: BackgroundPresetRegistry.night,
-              enabled: true,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: DesignTokens.backgroundBase,
+        child: Stack(
+          children: [
+            // Blue gradient background - using NIGHT preset for true blue colors
+            Positioned.fill(
+              child: BackgroundRenderer(
+                preset: BackgroundPresetRegistry.night,
+                enabled: true,
+              ),
             ),
-          ),
-          // Main content
-          SingleChildScrollView(
+            // Main content
+            SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -634,13 +638,13 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
               ),
             ),
           ],
+        ),
+      ),
         ],
       ),
     ),
-      ],
-    ),
     bottomNavigationBar: _discoveryResult != null &&
-              _discoveryResult!.hasNodes
+            _discoveryResult!.hasNodes
           ? Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(

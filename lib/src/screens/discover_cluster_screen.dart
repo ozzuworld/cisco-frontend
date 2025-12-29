@@ -302,30 +302,31 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: DesignTokens.textPrimary),
       ),
-      body: Stack(
-        children: [
-          // Blue gradient background - using NIGHT preset for true blue colors
-          Positioned.fill(
-            child: BackgroundRenderer(
-              preset: BackgroundPresetRegistry.night,
-              enabled: true,
+      body: SizedBox.expand(
+        child: Stack(
+          children: [
+            // Blue gradient background - using NIGHT preset for true blue colors
+            Positioned.fill(
+              child: BackgroundRenderer(
+                preset: BackgroundPresetRegistry.night,
+                enabled: true,
+              ),
             ),
-          ),
-          // Main content
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(
-              top: 16.0,
-              left: 16.0,
-              right: 16.0,
-              bottom: 100.0, // Extra padding for bottom button overlay
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Discovery Form
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: BackdropFilter(
+            // Main content
+            SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                top: 16.0,
+                left: 16.0,
+                right: 16.0,
+                bottom: 100.0, // Extra padding for bottom button overlay
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Discovery Form
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Container(
                       decoration: BoxDecoration(
@@ -639,41 +640,42 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                 ),
               ),
             ),
-                // Bottom navigation bar as positioned overlay
-                if (_discoveryResult != null && _discoveryResult!.hasNodes)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: DesignTokens.backgroundBase.withOpacity(0.8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, -2),
-                          ),
-                        ],
+            // Bottom navigation bar as positioned overlay
+            if (_discoveryResult != null && _discoveryResult!.hasNodes)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: DesignTokens.backgroundBase.withOpacity(0.8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, -2),
                       ),
-                      child: SafeArea(
-                        child: ElevatedButton.icon(
-                          onPressed:
-                              _selectedNodeIps.isEmpty ? null : _proceedToNextScreen,
-                          icon: const Icon(Icons.arrow_forward),
-                          label: Text(
-                            'Continue with ${_selectedNodeIps.length} node${_selectedNodeIps.length != 1 ? 's' : ''}',
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16.0),
-                            minimumSize: const Size(double.infinity, 48),
-                          ),
-                        ),
+                    ],
+                  ),
+                  child: SafeArea(
+                    child: ElevatedButton.icon(
+                      onPressed:
+                          _selectedNodeIps.isEmpty ? null : _proceedToNextScreen,
+                      icon: const Icon(Icons.arrow_forward),
+                      label: Text(
+                        'Continue with ${_selectedNodeIps.length} node${_selectedNodeIps.length != 1 ? 's' : ''}',
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        minimumSize: const Size(double.infinity, 48),
                       ),
                     ),
                   ),
-        ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

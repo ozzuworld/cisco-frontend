@@ -293,6 +293,7 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
+      extendBody: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text('Discover Cluster', style: TextStyle(color: DesignTokens.textPrimary)),

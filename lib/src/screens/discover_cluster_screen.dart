@@ -643,9 +643,6 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                 ),
               ),
             ),
-          ],
-        ),
-      ),
                 // Bottom navigation bar as positioned overlay
                 if (_discoveryResult != null && _discoveryResult!.hasNodes)
                   Positioned(

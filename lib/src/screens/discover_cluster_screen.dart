@@ -11,6 +11,7 @@ import '../models/background_preset_registry.dart';
 import '../ui/background_renderer.dart';
 import '../ui/glass_scaffold.dart';
 import '../ui/design_tokens.dart';
+import '../ui/weather_effect.dart';
 import 'settings_screen.dart';
 import 'profile_selection_screen.dart';
 
@@ -302,59 +303,73 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: DesignTokens.textPrimary),
       ),
-      body: Stack(
-        children: [
-          // Blue gradient background - using NIGHT preset for true blue colors
-          Positioned.fill(
-            child: BackgroundRenderer(
-              preset: BackgroundPresetRegistry.night,
-              enabled: true,
-            ),
-          ),
-          // Main content
-          SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: DesignTokens.wizardCardMaxWidth),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Discovery Form
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
-                              width: 1,
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Publisher Credentials',
-                                    style: Theme.of(context).textTheme.titleLarge,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextFormField(
-                        controller: _publisherHostController,
-                        decoration: const InputDecoration(
-                          labelText: 'Publisher Host',
-                          hintText: 'IP address or FQDN',
-                          prefixIcon: Icon(Icons.dns),
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
+      body: Consumer<BackgroundService>(
+        builder: (context, backgroundService, child) {
+          return Stack(
+            children: [
+              // Dynamic background renderer
+              Positioned.fill(
+                child: BackgroundRenderer(
+                  preset: backgroundService.activePreset,
+                  enabled: true,
+                ),
+              ),
+
+              // Weather effects
+              WeatherEffect(
+                season: backgroundService.activePreset.season,
+                intensity: backgroundService.weatherIntensity,
+                timeOfDayOpacity: WeatherOpacityHelper.getTimeOfDayOpacity(
+                  backgroundService.activePreset.timeOfDay,
+                ),
+                enabled: backgroundService.weatherEffectsEnabled,
+                enablePerformanceMode: backgroundService.weatherPerformanceMode,
+              ),
+
+              // Main content
+              SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: DesignTokens.wizardCardMaxWidth),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Discovery Form
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Form(
+                                  key: _formKey,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Publisher Credentials',
+                                        style: Theme.of(context).textTheme.titleLarge,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      TextFormField(
+                                        controller: _publisherHostController,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Publisher Host',
+                                          hintText: 'IP address or FQDN',
+                                          prefixIcon: Icon(Icons.dns),
+                                          border: OutlineInputBorder(),
+                                        ),
+                                        validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'Publisher host is required';
                           }
@@ -676,7 +691,9 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                 ),
               ),
             ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }

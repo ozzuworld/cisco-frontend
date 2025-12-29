@@ -293,7 +293,7 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: DesignTokens.backgroundBase,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text('Discover Cluster', style: TextStyle(color: DesignTokens.textPrimary)),
         backgroundColor: Colors.transparent,
@@ -313,42 +313,40 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
           ),
           // Main content
           SingleChildScrollView(
-            padding: const EdgeInsets.only(
-              top: 16.0,
-              left: 16.0,
-              right: 16.0,
-              bottom: 100.0, // Extra padding for bottom button overlay
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Discovery Form
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
-                          width: 1,
-                        ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Publisher Credentials',
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: DesignTokens.wizardCardMaxWidth),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Discovery Form
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Publisher Credentials',
+                                    style: Theme.of(context).textTheme.titleLarge,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  TextFormField(
                         controller: _publisherHostController,
                         decoration: const InputDecoration(
                           labelText: 'Publisher Host',
@@ -639,7 +637,9 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                 ),
               ),
             ),
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
           // Bottom navigation bar as positioned overlay

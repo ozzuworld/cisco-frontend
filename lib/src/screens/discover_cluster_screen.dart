@@ -302,9 +302,11 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: DesignTokens.textPrimary),
       ),
-      body: SizedBox.expand(
-        child: Stack(
-          children: [
+      body: Container(
+        color: DesignTokens.backgroundBase,
+        child: SizedBox.expand(
+          child: Stack(
+            children: [
             // Blue gradient background - using NIGHT preset for true blue colors
             Positioned.fill(
               child: BackgroundRenderer(
@@ -674,7 +676,8 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                   ),
                 ),
               ),
-          ],
+            ],
+          ),
         ),
       ),
     );

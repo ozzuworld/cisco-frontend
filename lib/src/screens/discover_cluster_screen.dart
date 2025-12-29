@@ -293,7 +293,7 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: DesignTokens.backgroundBase,
       appBar: AppBar(
         title: Text('Discover Cluster', style: TextStyle(color: DesignTokens.textPrimary)),
         backgroundColor: Colors.transparent,
@@ -302,33 +302,30 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: DesignTokens.textPrimary),
       ),
-      body: Container(
-        color: DesignTokens.backgroundBase,
-        child: SizedBox.expand(
-          child: Stack(
-            children: [
-            // Blue gradient background - using NIGHT preset for true blue colors
-            Positioned.fill(
-              child: BackgroundRenderer(
-                preset: BackgroundPresetRegistry.night,
-                enabled: true,
-              ),
+      body: Stack(
+        children: [
+          // Blue gradient background - using NIGHT preset for true blue colors
+          Positioned.fill(
+            child: BackgroundRenderer(
+              preset: BackgroundPresetRegistry.night,
+              enabled: true,
             ),
-            // Main content
-            SingleChildScrollView(
-              padding: const EdgeInsets.only(
-                top: 16.0,
-                left: 16.0,
-                right: 16.0,
-                bottom: 100.0, // Extra padding for bottom button overlay
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Discovery Form
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: BackdropFilter(
+          ),
+          // Main content
+          SingleChildScrollView(
+            padding: const EdgeInsets.only(
+              top: 16.0,
+              left: 16.0,
+              right: 16.0,
+              bottom: 100.0, // Extra padding for bottom button overlay
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Discovery Form
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Container(
                       decoration: BoxDecoration(
@@ -676,9 +673,7 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                   ),
                 ),
               ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }

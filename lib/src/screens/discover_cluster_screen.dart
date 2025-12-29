@@ -292,6 +292,7 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text('Discover Cluster', style: TextStyle(color: DesignTokens.textPrimary)),
@@ -311,9 +312,10 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
             ),
           ),
               // Main content
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
+              SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
             // Discovery Form
@@ -637,6 +639,8 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
               ),
             ],
                   ],
+                ),
+              ),
                 ),
               ),
             ],

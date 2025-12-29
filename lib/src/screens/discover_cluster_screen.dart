@@ -318,6 +318,8 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                   children: [
             // Discovery Form
             Card(
+              color: Colors.white.withOpacity(0.05),
+              elevation: 0,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Form(
@@ -441,6 +443,8 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
             // Discovery Results
             if (_discoveryResult != null) ...[
               Card(
+                color: Colors.white.withOpacity(0.05),
+                elevation: 0,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -651,8 +655,9 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
     final isSelected = _selectedNodeIps.contains(node.ip);
 
     return Card(
+      color: Colors.white.withOpacity(0.05),
+      elevation: 0,
       margin: const EdgeInsets.only(bottom: 12.0),
-      elevation: 1,
       child: InkWell(
         onTap: () => _toggleNodeSelection(node.ip),
         borderRadius: BorderRadius.circular(12),

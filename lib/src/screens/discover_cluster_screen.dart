@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dio/dio.dart';
@@ -6,6 +7,7 @@ import '../services/background_service.dart';
 import '../models/cucm_node.dart';
 import '../models/api_error.dart';
 import '../models/collection_flow_state.dart';
+import '../models/background_preset_registry.dart';
 import '../ui/background_renderer.dart';
 import '../ui/design_tokens.dart';
 import 'settings_screen.dart';
@@ -299,17 +301,15 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: DesignTokens.textPrimary),
       ),
-      body: Consumer<BackgroundService>(
-        builder: (context, backgroundService, child) {
-          return Stack(
-            children: [
-              // Blue gradient background
-              Positioned.fill(
-                child: BackgroundRenderer(
-                  preset: backgroundService.activePreset,
-                  enabled: true,
-                ),
-              ),
+      body: Stack(
+        children: [
+          // Blue gradient background - using NIGHT preset for true blue colors
+          Positioned.fill(
+            child: BackgroundRenderer(
+              preset: BackgroundPresetRegistry.night,
+              enabled: true,
+            ),
+          ),
               // Main content
               SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
@@ -317,10 +317,20 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
             // Discovery Form
-            Card(
-              color: Colors.white.withOpacity(0.05),
-              elevation: 0,
-              child: Padding(
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Form(
                   key: _formKey,
@@ -437,15 +447,27 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                   ),
                 ),
               ),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
 
             // Discovery Results
             if (_discoveryResult != null) ...[
-              Card(
-                color: Colors.white.withOpacity(0.05),
-                elevation: 0,
-                child: Padding(
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -610,13 +632,14 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
                   ),
                 ),
               ),
+                  ),
+                ),
+              ),
             ],
                   ],
                 ),
               ),
             ],
-          );
-        },
       ),
       bottomNavigationBar: _discoveryResult != null &&
               _discoveryResult!.hasNodes
@@ -654,14 +677,25 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
   Widget _buildNodeCard(CucmNode node) {
     final isSelected = _selectedNodeIps.contains(node.ip);
 
-    return Card(
-      color: Colors.white.withOpacity(0.05),
-      elevation: 0,
+    return Container(
       margin: const EdgeInsets.only(bottom: 12.0),
-      child: InkWell(
-        onTap: () => _toggleNodeSelection(node.ip),
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: Padding(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: InkWell(
+              onTap: () => _toggleNodeSelection(node.ip),
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -744,6 +778,9 @@ class _DiscoverClusterScreenState extends State<DiscoverClusterScreen> {
           ],
         ),
       ),
+            ),
+          ),
+        ),
       ),
     );
   }
